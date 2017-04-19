@@ -21,9 +21,6 @@ function install_twist(){
 }
 
 function twist(){
-    echo ""
-    echo "######################################################################"
-    echo ""
     echo "   ##################################################################"
     echo "   #################################################################"
     echo "       ###       ###         ###     ###      #########   #########"
@@ -35,8 +32,8 @@ function twist(){
 }
 
 function notice(){
-    echo -e "#[\033[32;1mInstall ShadowsocksR for Ubuntu, Debian or CentOS By Unbinilium\033[0m]#"
-    echo -e "#[\033[32;1m            Installation will Start in 5 Seconds\033[0m]#"
+    echo -e "#[\033[32;1m Install ShadowsocksR for Ubuntu, Debian or CentOS By Unbinilium\033[0m ]#"
+    echo -e "#[\033[32;1m            Installation will Start in 5 Seconds\033[0m                 ]#"
     echo "######################################################################"
     sleep 5
 }
@@ -224,7 +221,7 @@ function installssr(){
    wget -t 3 -T 30 -nv -O master.zip https://github.com/jedisct1/libsodium/archive/master.zip
    [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot download libsodium source. Aborting.\033[0m]"; echo ""; exit 1; }
    unzip -q -o master.zip
-   cd master
+   cd libsodium-master
    ./configure --prefix=/usr && make && make install || { echo ""; echo －e "# [\033[31;1mLibsodium failed to build. Aborting.\033[0m]"; echo ""; exit 1; }  
    rm -rf manyuser.zip shadowsocksr-manyuser master.zip master
 }
