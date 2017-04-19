@@ -33,8 +33,8 @@ function twist(){
 
 function notice(){
     echo -e "#[\033[32;1m Install ShadowsocksR for Ubuntu, Debian or CentOS By Unbinilium\033[0m ]#"
-    echo -e "#[\033[32;1m            Installation will Start in 5 Seconds\033[0m                 ]#"
-    echo "######################################################################"
+    echo -e "#[\033[32;1m             Installation will Start in 5 Seconds\033[0m                ]#"
+    echo "#####################################################################"
     sleep 5
 }
 
