@@ -25,7 +25,7 @@ TCP 443
 ```
 
 ## Setup Accounts for Connect on your Devices
-It is Required a Shadowsocks Client on Your Device such as Shadowsocks-qt5
+It is Required a Shadowsocks Client on Your Device for Manually Set up or Use URL-Scheme
 
 ## Author
 <a href="https://github.com/Unbinilium" target="_blank">Unbinilium</a> --  This Project is Using OpenSource Software <a href="https://github.com/shadowsocksr/shadowsocksr" target="_blank">ShadowsocksR</a> and <a href="https://github.com/jedisct1/libsodium" target="_blank">Libsodium</a>.
