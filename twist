@@ -16,7 +16,7 @@ function install_twist(){
     installssr
     configssr
     configiptables
-    configservices
+    startservices
     twiststatus
 }
 
