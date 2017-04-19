@@ -1,0 +1,417 @@
+#! /bin/bash
+
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+function install_route(){
+    clear
+    twist
+    confirm
+    rootness
+    disableselinux
+    defaultvalue
+    getsystem
+    getip
+    getinformation
+    configdefult
+    configinformation
+    installlibs
+    installbbr
+    installswan
+    configswan
+    configiptables
+    configservices
+    routestatus
+}
+
+function twist(){
+    echo ""
+    echo "######################################################################"
+    echo ""
+    echo "   ###########"
+    echo "   ###########"
+    echo "       ###       ###         ##     ###      #########   #########"
+    echo "       ###        ###    #  ##     ###      ##              ##"
+    echo "       ###         ###  ## ##     ###      #########       ##"
+    echo "       ###          ### ## #     ###             ##       ##"
+    echo "       ###           ### ##     ###      #########       ##"
+    echo ""
+    echo -e "#[\033[32;1mInstall ShadowsocksR for Ubuntu, Debian or CentOS By Unbinilium\033[0m]#"
+    echo -e "#[\033[32;1mInstallation will Start in 5 Seconds\033[0m]#"
+    echo "######################################################################"
+}
+
+
+function rootness(){
+    if [ $EUID -ne 0 ]; then
+        echo -e "# [\033[31;1mError:This script must be run as root! Please Run this script with root access\033[0m]" 1>&2
+        echo ""
+        exit 1
+    fi
+}
+
+function disableselinux(){
+    if [ -s /etc/selinux/config ] && grep 'SELINUX=enforcing' /etc/selinux/config; then
+        sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+        setenforce 0
+    fi
+}
+
+function defaultvalue(){
+    BBR="enable"
+    PORT="443"
+    ETH="eth0"
+    ETH2="eth+"
+    IPREGEX="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
+}
+
+function getsystem(){
+    echo "`cat /etc/issue`" | grep -q "CentOS"
+    if [ $? -eq 0 ]; then
+        if [ ! -f /etc/redhat-release ] || ! grep -qs -e "release 6" -e "release 7" /etc/redhat-release; then
+            echo -e "# [\033[31;1mPlease Make Sure the Server OS Verison is CentOS/RHEL 6 or 7! Aborting!\033[0m]"
+            echo ""
+            exit 1
+        else
+             systemtype="0"
+        fi
+    else
+        echo "`cat /etc/issue`" | grep -q "Ubuntu"
+	    if [ $? -eq 0 ]; then
+            systemtype="1"
+        else
+            echo "`cat /etc/issue`" | grep -q "Debian"
+	        if [ $? -eq 0 ]; then
+                systemtype="1"
+            else
+	            echo -e "# [\033[31;1mThis Script Must be Run on Ubuntu, Debian or CentOS! Aborating!\033[0m]"
+                echo ""
+                exit 1
+	        fi
+        fi
+    fi
+    ethstatus=$(cat /sys/class/net/$ETH/operstate 2>/dev/null)
+    if [ -z "$ethstatus" ] || [ "$ethstatus" = "down" ]; then
+        echo -e "# [\033[31;1mNetwork Interface '$ETH' is Not Available. Please try Another Network Interface Listed Below.\033[0m]" 1>&2
+        echo ""
+        ip link
+        echo ""
+        echo -e "Please Enter [\033[32;1mNetwork Interface Name\033[0m]:"
+        read -p "Input Devices Name (Default:${ETH}):" eth
+     	if [ ! "$eth" = "" ]; then
+            ethstatus=$(cat /sys/class/net/$eth/operstate 2>/dev/null)
+            if [ -z "$ethstatus" ] || [ "$ethstatus" = "down" ]; then
+                echo ""
+                echo -e "# [\033[31;1mNetwork Interface Your Entered is Not Available! Aborting!\033[0m]" 1>&2
+                echo ""
+                exit 1
+            else
+                ETH=$eth
+                ETH2=$eth
+                echo ""
+                echo -e "# Network Interface Check Passed, your VPN Will be Setup Using Interface '$ETH'"
+                echo ""
+             fi
+        fi
+     fi
+     if [ -f /proc/user_beancounters ]; then
+         BBR="disable"
+     fi
+}
+
+function getip(){
+    PUBLICIP=`curl -s checkip.dyndns.com | cut -d' ' -f 6  | cut -d'<' -f 1`
+    [ -z "$PUBLICIP" ] && PUBLICIP=`curl -s ifconfig.me/ip`
+    [ -z "$PUBLICIP" ] && PUBLICIP=$(dig @resolver1.opendns.com -t A -4 myip.opendns.com +short)
+    if ! printf %s "$PUBLICIP" | grep -Eq "$IPREGEX"; then
+        echo ""
+        echo -e "# [\033[31;1mCannot find Valid Public IP. Please Fill Your IP Address Below!\033[0m]"
+        read -p "Input Your Public IP:" publicip
+        if ! printf %s "$publicip" | grep -Eq "$IPREGEX"; then
+            echo ""
+            echo -e "# [\033[31;1mThe IP:$publicip You Entered is Out of Range! Aborting!\033[0m]"
+            echo ""
+            exit 1
+        else
+            PUBLICIP="$publicip"
+            echo ""
+            echo -e "# [\033[32;1mYour Public IP:$PUBLICIP, Server will Detect Connection Automaticly.\033[0m]"
+            echo ""
+        fi
+    fi
+}
+
+function installlibs(){
+    if [ "$systemtype" = "0" ]; then
+	      yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        yum -y install wget bind-utils || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        yum -y install gawk grep sed net-tools || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+	      yum -y install epel-release
+        yum list installed epel-release >/dev/null 2>&1
+        [ "$?" != "0" ] && { echo -e "# [\033[31;1mCannot Add EPEL repository! Aborting!\033[0m]"; exit 1; }
+        yum -y install unzip openssl-devel gcc swig python python-devel python-setuptools autoconf libtool libevent automake make curl curl-devel zlib-devel perl perl-devel cpio expat-devel gettext-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }      
+	      yum -y install radvd || { echo ""; echo -e "# [\033[31;1mCannot Install Radvd! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+	      if grep -qs "release 6" /etc/redhat-release; then
+            yum -y install iptables-ipv6
+            yum -y remove libevent-devel
+            yum -y install libevent2-devel
+        elif grep -qs "release 7" /etc/redhat-release; then
+            yum -y install libevent-devel
+        fi
+    else
+        apt-get -yq update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        apt-get -yq install wget dnsutils || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        apt-get -yq install gawk grep sed net-tools || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+	      apt-get -yq install python python-dev python-pip python-m2crypto curl wget unzip gcc swig automake make perl cpio build-essential || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        apt-get -yq install radvd || { echo ""; echo -e "# [\033[31;1mCannot Install Radvd! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+    fi
+}
+
+function installbbr(){
+    [ "$BBR" = "enable" ] && KERNELVER=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/ | awk -F'\"v' '/v[4-9]./{print $2}' | cut -d/ -f1 | grep -v -  | sort -V | tail -1)
+    [ "$BBR" = "enable" ] && [ -z "$KERNELVER" ] && BBR="disable" && echo -e "# [\033[31;1mCannot Check Linux KERNEL Verison. BBR will NOT Working!\033[0m]"
+    if [ "$BBR" = "enable" ] && [ "`echo "$KERNELVER" | cut -d'.' -f1,2`">="`uname -a | grep -oE '[0-9]+\.[0-9]+' | cut -d'.' -f1,2`" ]; then
+        if grep -qs "Ubunut" /etc/issue || ! grep -qs "Debian" /etc/issue; then
+            SYSTYPE="`dpkg --print-architecture`"
+            if [ "$SYSTYPE" = "amd64" ]; then
+                KERNEL=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/amd64.deb/{print $2}' | cut -d'<' -f1 | head -1)
+            else
+                if [ "$SYSTYPE" = "i386" ]; then
+                    KERNEL=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/i386.deb/{print $2}' | cut -d'<' -f1 | head -1)
+                else
+                    if [ "$SYSTYPE" = "armhf" ]; then
+                        KERNEL=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/armhf.deb/{print $2}' | cut -d'<' -f1 | head -1)
+                    else
+                        if [ "$SYSTYPE" = "arm64" ]; then
+                            KERNEL=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/arm64.deb/{print $2}' | cut -d'<' -f1 | head -1)
+                        else
+                            if [ "$SYSTYPE" = "ppc64el" ]; then
+                                KERNEL=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/ppc64el.deb/{print $2}' | cut -d'<' -f1 | head -1)
+                            else
+                                if [ "$SYSTYPE" = "s390x" ]; then
+                                    KERNEL=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/s390x.deb/{print $2}' | cut -d'<' -f1 | head -1)
+                                else 
+                                    echo ""
+                                    echo -e "# \033[31;1mUnable to Find New KERNEL! Aborting!\033[0m"
+                                    echo ""
+                                    exit 1
+                                fi
+                            fi
+                        fi
+                    fi
+                fi
+            fi                                    
+            wget -t 3 -T 30 -nv -O "$KERNEL" "http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/${KERNEL}"
+            [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Linux KERNEL! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+            dpkg -i $KERNEL || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            dpkg -l | grep linux-image
+            rm -f $KERNEL
+            update-grub
+        fi
+        if grep -qs "CentOS" /etc/issue; then
+            if centosversion 6; then
+                yum --enablerepo=elrepo-kernel install kernel-lt || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            elif centosversion 7; then
+                yum --enablerepo=elrepo-kernel install kernel-ml || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            fi
+        fi
+    fi
+}
+
+function installssr(){
+   wget -t 3 -T 30 -nv -O manyuser.zip https://github.com/shadowsocksr/shadowsocksr/archive/manyuser.zip
+   [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot download shadowsocksr source. Aborting.\033[0m]"; echo ""; exit 1; }
+   unzip -q -o manyuser.zip
+   mv shadowsocksr-manyuser/shadowsocks /usr/local/
+   wget -t 3 -T 30 -nv -O master.zip https://github.com/jedisct1/libsodium/archive/master.zip
+   [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot download libsodium source. Aborting.\033[0m]"; echo ""; exit 1; }
+   unzip -q -o master.zip
+   cd master
+   ./configure --prefix=/usr && make && make install || { echo ""; echo －e "# [\033[31;1mLibsodium failed to build. Aborting.\033[0m]"; echo ""; exit 1; }  
+}
+
+function configssr(){
+    date="$(date +%Y-%m-%d-%H:%M:%S)"
+    PASSWORD="$(< /dev/urandom tr -dc 'A-HJ-NPR-Za-km-z2-9' | head -c 16)"
+    cat > /etc/shadowsocks.json <<EOF
+{
+    "server":"0.0.0.0",
+    "server_ipv6":"::",
+    "server_port":443,
+    "local_address":"127.0.0.1",
+    "local_port":1080,
+    "password":"${PASSWORD}",
+    "timeout":120,
+    "method":"chacha20-ietf",
+    "protocol":"origin",
+    "protocol_param":"",
+    "obfs":"plain",
+    "obfs_param":"",
+    "redirect":"",
+    "dns_ipv6":true,
+    "fast_open":true,
+    "workers":1
+}
+EOF
+    if ! grep -qs "Twist" /etc/sysctl.conf; then
+        /bin/cp -f /etc/sysctl.conf "/etc/sysctl.conf.old-$date" 2>/dev/null
+        /bin/cp -f /etc/sysctl.conf /etc/sysctl.conf.route
+        cat >> /etc/sysctl.conf <<EOF
+
+# Twist Configs
+kernel.msgmnb = 65536
+kernel.msgmax = 65536
+kernel.shmmax = 68719476736
+kernel.shmall = 4294967296
+net.core.wmem_max = 12582912
+net.core.rmem_max = 12582912
+net.ipv4.tcp_rmem = 10240 87380 12582912
+net.ipv4.tcp_wmem = 10240 87380 12582912
+net.ipv4.ip_forward = 1
+net.ipv4.tcp_syncookies = 1
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+net.ipv4.conf.lo.send_redirects = 0
+net.ipv4.conf.$ETH.send_redirects = 0
+net.ipv4.conf.all.rp_filter = 0
+net.ipv4.conf.default.rp_filter = 0
+net.ipv4.conf.lo.rp_filter = 0
+net.ipv4.conf.$ETH.rp_filter = 0
+net.ipv4.icmp_echo_ignore_broadcasts = 1
+net.ipv4.icmp_ignore_bogus_error_responses = 1
+net.ipv6.conf.all.forwarding=1
+net.ipv6.conf.all.accept_redirects = 1
+net.ipv6.conf.all.accept_source_route = 1
+net.ipv6.conf.all.accept_ra = 2
+net.ipv6.conf.all.autoconf = 1
+EOF
+        if [ "$BBR" = "enable" ]; then
+            echo "net.core.default_qdisc = fq" >> /etc/sysctl.conf
+            echo "net.ipv4.tcp_congestion_control = bbr" >> /etc/sysctl.conf
+        fi
+    fi
+}
+
+function configiptables(){
+    if [ "$systemtype" = "1" ]; then
+        iptables-save > "/etc/iptables.rules.old-$date"
+        iptables -I FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+        iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j ACCEPT
+        iptables -I INPUT -m state --state NEW -m udp -p udp --dport 443 -j ACCEPT
+        /etc/init.d/iptables save
+        /etc/init.d/iptables restart
+        /bin/cp -f /etc/ip6tables.rules "/etc/ip6tables.rules.old-$date" 2>/dev/null
+        if [ -f /etc/ip6tables.rules.route ]; then
+            /bin/cp -f /etc/ip6tables.rules "/etc/ip6tables.rules.route"
+        fi
+        cat > /etc/ip6tables.rules <<EOF
+# Twist Configs
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -i lo -j ACCEPT
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -m rt --rt-type 0 -j DROP
+-A INPUT -s fe80::/10 -j ACCEPT
+-A INPUT -p ipv6-icmp -j ACCEPT
+-A INPUT -j DROP
+COMMIT
+EOF
+        if [ -f /etc/iptables/rules.v6 ]; then
+            /bin/cp -f /etc/iptables/rules.v6 "/etc/iptables/rules.v6.old-$date"
+            /bin/cp -f /etc/ip6tables.rules /etc/iptables/rules.v6
+        fi  
+    else
+        systemctl start firewalld
+        firewall-cmd --permanent --zone=public --add-port=443/tcp
+        firewall-cmd --permanent --zone=public --add-port=443/udp
+        firewall-cmd --reload
+    fi
+    if [ "$systemtype" = "1" ]; then
+        cat > /etc/network/if-pre-up.d/iptablesload <<EOF
+#!/bin/sh
+iptables-restore < "$IPTFILE"
+exit 0
+EOF
+        cat > /etc/network/if-pre-up.d/ip6tablesload <<EOF
+#!/bin/sh
+ip6tables-restore < /etc/ip6tables.rules
+exit 0
+EOF
+    else
+       cat > /etc/network/if-pre-up.d/iptablesload <<EOF
+#!/bin/sh
+iptables-restore < "$IPTFILE"
+exit 0
+EOF
+        if grep -qs "release 6" /etc/redhat-release; then
+            chkconfig iptables on
+            chkconfig fail2ban on
+        else
+            systemctl --now mask firewalld 2>/dev/null
+            systemctl enable iptables fail2ban 2>/dev/null
+        fi
+    fi
+    if ! grep -qs "Twist" /etc/rc.local; then
+       /bin/cp -f /etc/rc.local "/etc/rc.local.old-$date" 2>/dev/null
+       sed --follow-symlinks -i -e '/^exit 0/d' /etc/rc.local
+       cat >> /etc/rc.local <<EOF
+
+# Twist Configs
+iptables -I FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+if [ -z `ps -ef | grep -v grep | grep -i "/usr/local/shadowsocks/server.py" | awk '{print $2}'` ]; then
+    if [ -f /etc/shadowsocks-r/config.json ]; then
+        /usr/local/shadowsocks/server.py -c /etc/shadowsocks-r/config.json -d start
+    else
+        /usr/local/shadowsocks/server.py -c /etc/shadowsocks.json -d start
+    fi
+fi
+echo 1 > /proc/sys/net/ipv4/ip_forward
+exit 0
+EOF
+    fi
+}
+
+function startservices(){
+    sysctl -e -q -p 2>/dev/null
+    chmod +x /etc/rc.local
+    chmod +x /etc/network/if-pre-up.d/iptablesload
+    chmod +x /etc/network/if-pre-up.d/ip6tablesload
+    if [ "$systemtype" = "1" ]; then
+        iptables-restore < "$IPTFILE"
+        ip6tables-restore < /etc/ip6tables.rules
+    else
+        iptables-restore < "$IPTFILE"
+    fi
+    if [ -z `ps -ef | grep -v grep | grep -i "/usr/local/shadowsocks/server.py" | awk '{print $2}'` ]; then
+        if [ -f /etc/shadowsocks-r/config.json ]; then
+            /usr/local/shadowsocks/server.py -c /etc/shadowsocks-r/config.json -d start
+        else
+            /usr/local/shadowsocks/server.py -c /etc/shadowsocks.json -d start
+        fi
+    fi
+}
+
+function twiststatus(){
+    clear
+    route
+    echo -e "                            [\033[32;1mInstall Complete\033[0m]"
+    echo -e "    There is the Default Login Info of your SSR on IP: ***.***.***.***"
+    echo -e "    Port: ****    PassWord: ***  Encryption: ***  LOCALHOST: ***"
+    echo -e " [\033[32;1mPlease Press Enter to Show Login Infomation and EXIT\033[0m]"
+    echo -e "########################################################################"
+    read -p ""
+    echo -e "# [\033[32;1mServer IP:\033[0m \033[34;1m$PUBLICIP\033[0m \033[32;1mPassWord:\033[0m \033[34;1m$PASSWORD\033[0m \033[32;1mEncryption:\033[0m \033[34;1mchacha20-ietf\033[0m \033[32;1mLOCALHOST:\033[0m \033[34;1m127.0.0.1:1080\033[0m]"
+    if [ "$BBR" = "enable" ]; then
+        echo -e "\033[34;1mThe Server Requires Restart to Enable Google BBR,Please Press Enter to Reboot!\033[0m"
+        read -p ""
+        sleep 3
+	      reboot
+    fi
+}
+
+install_route
