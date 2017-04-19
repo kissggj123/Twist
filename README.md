@@ -1,6 +1,6 @@
 ## A Light Script For You To Setup ShadowsocksR Server with High-Speed Connections
 
-## Route Features
+## Twist Features
 - **Fast, Secured and Stable Connections**
 - Supported **IPv4 & IPv6** Environment and Connections
 - **Optimised Performance** Using Google BBR TCP Controler and Supported UDP Port
@@ -11,7 +11,7 @@
 - Debian 9(Stretch) and Debian 8(Jessie) 
 - CentOS 6 and 7
 
-## Set Up your VPN Server
+## Set Up your ShadowsocksR Server
 Please **Run Bash Command** Below on Your Server to **Install Twist**
 ```bash
 sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh
@@ -24,7 +24,7 @@ UDP 443
 TCP 443
 ```
 
-## Setup Accounts for Connect on your Devices
+## Setup ShadowsocksR for Connect on your Devices
 It is Required a Shadowsocks Client on Your Device for Manually Set up or Use URL-Scheme
 
 ## Author
