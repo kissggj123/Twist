@@ -2,25 +2,22 @@
 
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-function install_route(){
+function install_twist(){
     clear
     twist
-    confirm
+    notice
     rootness
     disableselinux
     defaultvalue
     getsystem
     getip
-    getinformation
-    configdefult
-    configinformation
     installlibs
     installbbr
-    installswan
-    configswan
+    installssr
+    configsssr
     configiptables
     configservices
-    routestatus
+    twiststatus
 }
 
 function twist(){
@@ -29,17 +26,20 @@ function twist(){
     echo ""
     echo "   ###########"
     echo "   ###########"
-    echo "       ###       ###         ##     ###      #########   #########"
-    echo "       ###        ###    #  ##     ###      ##              ##"
-    echo "       ###         ###  ## ##     ###      #########       ##"
-    echo "       ###          ### ## #     ###             ##       ##"
-    echo "       ###           ### ##     ###      #########       ##"
+    echo "       ###       ###         ###     ###      #########   #########"
+    echo "       ###        ###    #  ###     ###      ##              ##"
+    echo "       ###         ###  ## ###     ###      #########       ##"
+    echo "       ###          ### ## ##     ###             ##       ##"
+    echo "       ###           ### ###     ###      #########       ##"
     echo ""
-    echo -e "#[\033[32;1mInstall ShadowsocksR for Ubuntu, Debian or CentOS By Unbinilium\033[0m]#"
-    echo -e "#[\033[32;1mInstallation will Start in 5 Seconds\033[0m]#"
-    echo "######################################################################"
 }
 
+function notice(){
+    echo -e "#[\033[32;1mInstall ShadowsocksR for Ubuntu, Debian or CentOS By Unbinilium\033[0m]#"
+    echo -e "#[\033[32;1m            Installation will Start in 5 Seconds\033[0m]#"
+    echo "######################################################################"
+    sleep 5
+}
 
 function rootness(){
     if [ $EUID -ne 0 ]; then
@@ -60,7 +60,6 @@ function defaultvalue(){
     BBR="enable"
     PORT="443"
     ETH="eth0"
-    ETH2="eth+"
     IPREGEX="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
 }
 
@@ -106,7 +105,6 @@ function getsystem(){
                 exit 1
             else
                 ETH=$eth
-                ETH2=$eth
                 echo ""
                 echo -e "# Network Interface Check Passed, your VPN Will be Setup Using Interface '$ETH'"
                 echo ""
@@ -142,15 +140,15 @@ function getip(){
 
 function installlibs(){
     if [ "$systemtype" = "0" ]; then
-	      yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+	yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         yum -y install wget bind-utils || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        yum -y install gawk grep sed net-tools || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-	      yum -y install epel-release
+        yum -y install gawk grep sed net-tools git || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+	yum -y install epel-release
         yum list installed epel-release >/dev/null 2>&1
         [ "$?" != "0" ] && { echo -e "# [\033[31;1mCannot Add EPEL repository! Aborting!\033[0m]"; exit 1; }
         yum -y install unzip openssl-devel gcc swig python python-devel python-setuptools autoconf libtool libevent automake make curl curl-devel zlib-devel perl perl-devel cpio expat-devel gettext-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }      
-	      yum -y install radvd || { echo ""; echo -e "# [\033[31;1mCannot Install Radvd! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-	      if grep -qs "release 6" /etc/redhat-release; then
+	yum -y install radvd || { echo ""; echo -e "# [\033[31;1mCannot Install Radvd! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        if grep -qs "release 6" /etc/redhat-release; then
             yum -y install iptables-ipv6
             yum -y remove libevent-devel
             yum -y install libevent2-devel
@@ -160,8 +158,8 @@ function installlibs(){
     else
         apt-get -yq update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         apt-get -yq install wget dnsutils || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        apt-get -yq install gawk grep sed net-tools || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-	      apt-get -yq install python python-dev python-pip python-m2crypto curl wget unzip gcc swig automake make perl cpio build-essential || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        apt-get -yq install gawk grep sed net-tools git || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+	apt-get -yq install python python-dev python-pip python-m2crypto curl wget unzip gcc swig automake make perl cpio build-essential || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         apt-get -yq install radvd || { echo ""; echo -e "# [\033[31;1mCannot Install Radvd! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
     fi
 }
@@ -218,6 +216,7 @@ function installbbr(){
 }
 
 function installssr(){
+   cd `pwd`
    wget -t 3 -T 30 -nv -O manyuser.zip https://github.com/shadowsocksr/shadowsocksr/archive/manyuser.zip
    [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot download shadowsocksr source. Aborting.\033[0m]"; echo ""; exit 1; }
    unzip -q -o manyuser.zip
@@ -227,6 +226,7 @@ function installssr(){
    unzip -q -o master.zip
    cd master
    ./configure --prefix=/usr && make && make install || { echo ""; echo －e "# [\033[31;1mLibsodium failed to build. Aborting.\033[0m]"; echo ""; exit 1; }  
+   rm -rf manyuser.zip shadowsocksr-manyuser master.zip master
 }
 
 function configssr(){
@@ -254,7 +254,6 @@ function configssr(){
 EOF
     if ! grep -qs "Twist" /etc/sysctl.conf; then
         /bin/cp -f /etc/sysctl.conf "/etc/sysctl.conf.old-$date" 2>/dev/null
-        /bin/cp -f /etc/sysctl.conf /etc/sysctl.conf.route
         cat >> /etc/sysctl.conf <<EOF
 
 # Twist Configs
@@ -304,9 +303,6 @@ function configiptables(){
         /etc/init.d/iptables save
         /etc/init.d/iptables restart
         /bin/cp -f /etc/ip6tables.rules "/etc/ip6tables.rules.old-$date" 2>/dev/null
-        if [ -f /etc/ip6tables.rules.route ]; then
-            /bin/cp -f /etc/ip6tables.rules "/etc/ip6tables.rules.route"
-        fi
         cat > /etc/ip6tables.rules <<EOF
 # Twist Configs
 *filter
@@ -326,6 +322,11 @@ EOF
             /bin/cp -f /etc/ip6tables.rules /etc/iptables/rules.v6
         fi  
     else
+        iptables -I FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+        iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j ACCEPT
+        iptables -I INPUT -m state --state NEW -m udp -p udp --dport 443 -j ACCEPT
+        /etc/init.d/iptables save
+        /etc/init.d/iptables restart
         systemctl start firewalld
         firewall-cmd --permanent --zone=public --add-port=443/tcp
         firewall-cmd --permanent --zone=public --add-port=443/udp
@@ -334,7 +335,7 @@ EOF
     if [ "$systemtype" = "1" ]; then
         cat > /etc/network/if-pre-up.d/iptablesload <<EOF
 #!/bin/sh
-iptables-restore < "$IPTFILE"
+iptables-restore < /etc/iptables.rules
 exit 0
 EOF
         cat > /etc/network/if-pre-up.d/ip6tablesload <<EOF
@@ -343,18 +344,11 @@ ip6tables-restore < /etc/ip6tables.rules
 exit 0
 EOF
     else
-       cat > /etc/network/if-pre-up.d/iptablesload <<EOF
+        cat > /etc/network/if-pre-up.d/iptablesload <<EOF
 #!/bin/sh
-iptables-restore < "$IPTFILE"
+iptables-restore < /etc/iptables.rules
 exit 0
 EOF
-        if grep -qs "release 6" /etc/redhat-release; then
-            chkconfig iptables on
-            chkconfig fail2ban on
-        else
-            systemctl --now mask firewalld 2>/dev/null
-            systemctl enable iptables fail2ban 2>/dev/null
-        fi
     fi
     if ! grep -qs "Twist" /etc/rc.local; then
        /bin/cp -f /etc/rc.local "/etc/rc.local.old-$date" 2>/dev/null
@@ -364,11 +358,7 @@ EOF
 # Twist Configs
 iptables -I FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 if [ -z `ps -ef | grep -v grep | grep -i "/usr/local/shadowsocks/server.py" | awk '{print $2}'` ]; then
-    if [ -f /etc/shadowsocks-r/config.json ]; then
-        /usr/local/shadowsocks/server.py -c /etc/shadowsocks-r/config.json -d start
-    else
-        /usr/local/shadowsocks/server.py -c /etc/shadowsocks.json -d start
-    fi
+    /usr/local/shadowsocks/server.py -c /etc/shadowsocks.json -d start
 fi
 echo 1 > /proc/sys/net/ipv4/ip_forward
 exit 0
@@ -388,20 +378,16 @@ function startservices(){
         iptables-restore < "$IPTFILE"
     fi
     if [ -z `ps -ef | grep -v grep | grep -i "/usr/local/shadowsocks/server.py" | awk '{print $2}'` ]; then
-        if [ -f /etc/shadowsocks-r/config.json ]; then
-            /usr/local/shadowsocks/server.py -c /etc/shadowsocks-r/config.json -d start
-        else
-            /usr/local/shadowsocks/server.py -c /etc/shadowsocks.json -d start
-        fi
+        /usr/local/shadowsocks/server.py -c /etc/shadowsocks.json -d start
     fi
 }
 
 function twiststatus(){
     clear
-    route
+    twist
     echo -e "                            [\033[32;1mInstall Complete\033[0m]"
     echo -e "    There is the Default Login Info of your SSR on IP: ***.***.***.***"
-    echo -e "    Port: ****    PassWord: ***  Encryption: ***  LOCALHOST: ***"
+    echo -e "     Port: ****    PassWord: ***    Encryption: ***    LOCALHOST: ***"
     echo -e " [\033[32;1mPlease Press Enter to Show Login Infomation and EXIT\033[0m]"
     echo -e "########################################################################"
     read -p ""
@@ -410,8 +396,8 @@ function twiststatus(){
         echo -e "\033[34;1mThe Server Requires Restart to Enable Google BBR,Please Press Enter to Reboot!\033[0m"
         read -p ""
         sleep 3
-	      reboot
+	reboot
     fi
 }
 
-install_route
+install_twist
