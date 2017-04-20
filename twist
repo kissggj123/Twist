@@ -367,7 +367,7 @@ RETVAL=0
 
 ssr_running(){
     PID=\`ps -ef | grep -v grep | grep -i /usr/local/shadowsocks/server.py | awk '{print $2}' \`
-    if [ ! -z \$PID ]; then
+    if [ ! -z "\$PID" ]; then
         return 0
     else
         return 1
@@ -376,13 +376,13 @@ ssr_running(){
 
 ssr_start(){
     ssr_running
-    if [ \$? -eq 0 ]; then
+    if [ "\$?" -eq "0" ]; then
         echo "ShadowsocksR is Already Running..."
         exit 0
     else
         /usr/local/shadowsocks/server.py -c /etc/shadowsocks.json -d start
         RETVAL=\$?
-        if [ \$RETVAL -eq 0 ]; then
+        if [ "\$RETVAL" -eq "0" ]; then
             echo "Starting ShadowsocksR Success..."
         else
             echo "Starting ShadowsocksR Failed..."
@@ -392,10 +392,10 @@ ssr_start(){
 
 ssr_stop(){
     ssr_running
-    if [ \$? -eq 0 ]; then
+    if [ "\$?" -eq "0" ]; then
         /usr/local/shadowsocks/server.py -c /etc/shadowsocks.json -d stop
         RETVAL=\$?
-        if [ \$RETVAL -eq 0 ]; then
+        if [ "\$RETVAL" -eq "0" ]; then
             echo "Stopping ShadowsocksR Success..."
         else
             echo "Stopping ShadowsocksR Failed..."
@@ -408,7 +408,7 @@ ssr_stop(){
 
 ssr_status(){
     ssr_running
-    if [ \$? -eq 0 ]; then
+    if [ "\$?" -eq "0" ]; then
         echo "ShadowsocksR is Running..."
     else
         echo "ShadowsocksR is Stopped..."
