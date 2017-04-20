@@ -396,7 +396,7 @@ ssr_stop(){
     ssr_running
     if [ $? -eq 0 ]; then
         /usr/local/shadowsocks/server.py -c /etc/shadowsocks.json -d stop
-        RETVAL=$?
+        RETVAL=\$?
         if [ $RETVAL -eq 0 ]; then
             echo "Stopping ShadowsocksR Success..."
         else
@@ -425,10 +425,10 @@ ssr_restart(){
 
 case "$1" in
     start|stop|restart|status)
-    ssr_$1
+    ssr_\$1
     ;;
     *)
-    echo "Usage: $0 { start | stop | restart | status }"
+    echo "Usage: \$0 { start | stop | restart | status }"
     RETVAL=1
     ;;
 esac
