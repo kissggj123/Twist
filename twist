@@ -355,8 +355,8 @@ EOF
 
 ### BEGIN INIT INFO
 # Provides:          ShadowsocksR
-# Required-Start:    $network $syslog
-# Required-Stop:     $network
+# Required-Start:    \$network \$syslog
+# Required-Stop:     \$network
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: ShadowsocksR
@@ -366,7 +366,7 @@ EOF
 RETVAL=0
 
 ssr_running(){
-    PID='`'ps -ef | grep -v grep | grep -i /usr/local/shadowsocks/server.py | awk '{print $2}'`
+    PID='`ps -ef | grep -v grep | grep -i /usr/local/shadowsocks/server.py | awk '{print $2}'`'
     if [ ! -z \$PID ]; then
         return 0
     else
