@@ -55,6 +55,7 @@ function disableselinux(){
 
 function defaultvalue(){
     BBR="enable"
+    ipv6="false"
     ETH="eth0"
     IPREGEX="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
 }
@@ -134,8 +135,9 @@ function getip(){
     fi
     sslibevport="\"0.0.0.0\""
     if [ -f /proc/net/if_inet6 ]; then
+       ipv6="true"
        PUBLICIPv6=`ifconfig | grep -E '(Link|inet6)'|grep -v "Scope:Link"`
-       [ -z "$PUBLICIPv6" ] && ipv6=false
+       [ -z "$PUBLICIPv6" ] && ipv6="false"
        sslibevport="[\"[::0]\",\"0.0.0.0\"]"
     fi
 }
@@ -467,8 +469,12 @@ function twiststatus(){
     echo -e "########################################################################"
     read -p ""
     echo -e "ssr://\c"
-    echo "$PUBLICIP:443:origin:chacha20-ietf:obfs:`echo "$PASSWORD" | base64`" | base64
-    echo -e "# [\033[32;1mServer IP:\033[0m \033[34;1m$PUBLICIP\033[0m \033[32;1mPassWord:\033[0m \033[34;1m$PASSWORD\033[0m \033[32;1mEncryption:\033[0m \033[34;1mchacha20-ietf\033[0m \033[32;1mLOCALHOST:\033[0m \033[34;1m127.0.0.1:1080\033[0m]"
+    echo ""$PUBLICIP:443:origin:chacha20-ietf:obfs:`echo "$PASSWORD" | base64`" | base64"
+    if [ "$ipv6" = "false" ]; then
+        echo -e "# [\033[32;1mServer IP:\033[0m \033[34;1m$PUBLICIP\033[0m \033[32;1mPassWord:\033[0m \033[34;1m$PASSWORD\033[0m \033[32;1mEncryption:\033[0m \033[34;1mchacha20-ietf\033[0m \033[32;1mLOCALHOST:\033[0m \033[34;1m127.0.0.1:1080\033[0m]"
+    else
+        echo -e "# [\033[32;1mServer IP:\033[0m \033[34;1m$PUBLICIP\033[0m \033[32;1mServer IPv6:\033[0m \033[34;1m$PUBLICIPv6\033[0m \033[32;1mPassWord:\033[0m \033[34;1m$PASSWORD\033[0m \033[32;1mEncryption:\033[0m \033[34;1mchacha20-ietf\033[0m \033[32;1mLOCALHOST:\033[0m \033[34;1m127.0.0.1:1080\033[0m]"
+    fi
     if [ "$BBR" = "enable" ]; then
         echo -e "\033[34;1mThe Server Requires Restart to Enable Google BBR,Please Press Enter to Reboot!\033[0m"
         read -p ""
