@@ -12,7 +12,7 @@ function install_twist(){
     getsystem
     getip
     installlibs
-    #installbbr
+    installbbr
     installssr
     configssr
     configiptables
