@@ -350,8 +350,17 @@ iptables-restore < /etc/iptables.rules
 exit 0
 EOF
     fi
-    cat > /etc/init.d/shadowsocks <<EOF
-#!/bin/bash
+}
+
+function startservices(){
+    echo "#!/bin/bash" > /etc/init.d/shadowsocks
+    if [  "$systemtype" = "0" ]; then
+        cat >> /etc/init.d/shadowsocks <<EOF
+# chkconfig: 2345 90 10
+# description: A Secured Socks Proxy.
+EOF
+    fi
+    cat >> /etc/init.d/shadowsocks <<EOF
 
 ### BEGIN INIT INFO
 # Provides:          ShadowsocksR
@@ -440,9 +449,7 @@ EOF
         chkconfig --add shadowsocks
         chkconfig shadowsocks on
     fi   
-}
 
-function startservices(){
     sysctl -e -q -p 2>/dev/null
     chmod +x /etc/rc.local
     chmod +x /etc/network/if-pre-up.d/iptablesload
