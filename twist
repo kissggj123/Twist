@@ -366,7 +366,7 @@ EOF
 RETVAL=0
 
 ssr_running(){
-    PID=\`\ps -ef | grep -v grep | grep -i /usr/local/shadowsocks/server.py | awk '{print $2}'`
+    PID=\\`ps -ef | grep -v grep | grep -i /usr/local/shadowsocks/server.py | awk '{print $2}'`
     if [ ! -z \$PID ]; then
         return 0
     else
