@@ -302,8 +302,6 @@ function configiptables(){
         iptables -I FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j ACCEPT
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport 443 -j ACCEPT
-        /etc/init.d/iptables save
-        /etc/init.d/iptables restart
         /bin/cp -f /etc/ip6tables.rules "/etc/ip6tables.rules.old-$date" 2>/dev/null
         cat > /etc/ip6tables.rules <<EOF
 # Twist Configs
@@ -368,8 +366,8 @@ EOF
 RETVAL=0
 
 ssr_running(){
-    PID=`ps -ef | grep -v grep | grep -i /usr/local/shadowsocks/server.py | awk '{print $2}'`
-    if [ ! -z $PID ]; then
+    PID=\`ps -ef | grep -v grep | grep -i /usr/local/shadowsocks/server.py | awk '{print $2}'`
+    if [ ! -z \$PID ]; then
         return 0
     else
         return 1
@@ -378,13 +376,13 @@ ssr_running(){
 
 ssr_start(){
     ssr_running
-    if [ $? -eq 0 ]; then
+    if [ \$? -eq 0 ]; then
         echo "ShadowsocksR is Already Running..."
         exit 0
     else
         /usr/local/shadowsocks/server.py -c /etc/shadowsocks.json -d start
-        RETVAL=$?
-        if [ $RETVAL -eq 0 ]; then
+        RETVAL=\$?
+        if [ \$RETVAL -eq 0 ]; then
             echo "Starting ShadowsocksR Success..."
         else
             echo "Starting ShadowsocksR Failed..."
@@ -394,10 +392,10 @@ ssr_start(){
 
 ssr_stop(){
     ssr_running
-    if [ $? -eq 0 ]; then
+    if [ \$? -eq 0 ]; then
         /usr/local/shadowsocks/server.py -c /etc/shadowsocks.json -d stop
         RETVAL=\$?
-        if [ $RETVAL -eq 0 ]; then
+        if [ \$RETVAL -eq 0 ]; then
             echo "Stopping ShadowsocksR Success..."
         else
             echo "Stopping ShadowsocksR Failed..."
@@ -410,7 +408,7 @@ ssr_stop(){
 
 ssr_status(){
     ssr_running
-    if [ $? -eq 0 ]; then
+    if [ \$? -eq 0 ]; then
         echo "ShadowsocksR is Running..."
     else
         echo "ShadowsocksR is Stopped..."
@@ -423,7 +421,7 @@ ssr_restart(){
     ssr_start
 }
 
-case "$1" in
+case "\$1" in
     start|stop|restart|status)
     ssr_\$1
     ;;
@@ -433,7 +431,7 @@ case "$1" in
     ;;
 esac
 
-exit $RETVAL
+exit \$RETVAL
 EOF
     chmod +x /etc/init.d/shadowsocks
     if [ "$systemtype" = "1" ]; then
