@@ -32,7 +32,7 @@ function twist(){
 }
 
 function notice(){
-    echo -e "#[\033[32;1m Install ShadowsocksR for Ubuntu, Debian or CentOS By Unbinilium\033[0m ]#"
+    echo -e "#[\033[32;1m Install Shadowsocks for Ubuntu, Debian or CentOS By Unbinilium\033[0m  ]#"
     echo -e "#[\033[32;1m             Installation will Start in 5 Seconds\033[0m                ]#"
     echo "#####################################################################"
     sleep 5
@@ -242,7 +242,7 @@ function configssr(){
     if [ ! -d /etc/shadowsocks-libev ]; then
         mkdir -p /etc/shadowsocks-libev
     fi
-    cat > /etc/shadowsocks-libev/config.json<<-EOF
+    cat > /etc/shadowsocks-libev/config.json<<EOF
 {
     "server":${sslibevport},
     "server_port":443,
@@ -352,13 +352,93 @@ iptables-restore < /etc/iptables.rules
 exit 0
 EOF
     fi
+    cat > /etc/init.d/shadowsocks<<EOF
+#!/bin/bash
 
+SETVAL=0
+if [ -f /usr/local/bin/ss-server ]; then
+    SSLPATH=/usr/local/bin/ss-server
+elif [ -f /usr/bin/ss-server ]; then
+    SSLPATH=/usr/bin/ss-server
+fi
+[ -x $SSLPATH ] || exit 0
+[ ! -f /etc/shadowsocks-libev/config.json ] || exit 1
+if [ ! -d /var/run ]; then
+    mkdir -p /var/run
+    [ $? -ne 0 ] || exit 1
+fi
+
+check() {
+    if [ -r /var/run/shadowsocks-libev.pid ]; then
+        read SSLID < /var/run/shadowsocks-libev.pid
+        if [ -d "/proc/$SSLID" ]; then
+            return 0
+        else
+            rm -f /var/run/shadowsocks-libev.pid
+            return 1
+        fi
+    else
+        return 2
+    fi
+}
+
+shadowsocks_libev_status() {
+    check
+    case $? in
+        0)
+        echo "Shadowsocks-libev is Running..."
+        ;;
+        1|2)
+        echo "Shadowsocks-libev is Stopped..."
+        SETVAL=1
+        ;;
+    esac
+}
+
+shadowsocks_libev_start() {
+    if check; then
+        echo "Shadowsocks-libev is Already Running..."
+        return 0
+    fi
+    $SSLPATH -u -c /etc/shadowsocks-libev/config.json -f /var/run/shadowsocks-libev.pid
+    if check; then
+        echo "Starting Shadowsocks-libev Success..."
+    else
+        echo "Starting Shadowsocks-libev Failed..."
+        SETVAL=1
+    fi
+}
+
+shadowsocks_libev_stop() {
+    if check; then
+        kill -9 $SSLID
+        rm -f /var/run/shadowsocks-libev.pid
+        echo "Stopping Shadowsocks-libev Success..."
+    else
+        echo "Shadowsocks-libev is Stopped..."
+        SETVAL=1
+    fi
+}
+
+shadowsocks_libev_restart() {
+    shadowsocks_libev_stop
+    shadowsocks_libev_start
+}
+
+case "$1" in
+    start|stop|restart|status)
+    shadowsocks_libev_$1
+    ;;
+    *)
+    echo "Usage: $0 { start | stop | restart | status }"
+    SETVAL=1
+    ;;
+esac
+exit $SETVAL
+EOF
     chmod +x /etc/init.d/shadowsocks
     chkconfig --add shadowsocks
     chkconfig shadowsocks on
-
-
- 
 }
 
 function startservices(){
@@ -372,17 +452,16 @@ function startservices(){
     else
         iptables-restore < "$IPTFILE"
     fi
-    
-    if [ -z `ps -ef | grep -v grep | grep -i "/usr/local/shadowsocks/server.py" | awk '{print $2}'` ]; then
-        /usr/local/shadowsocks/server.py -c /etc/shadowsocks.json -d start
-    fi
+    /etc/init.d/shadowsocks start
+    sleep 3
+    /etc/init.d/shadowsocks status
 }
 
 function twiststatus(){
     clear
     twist
     echo -e "                            [\033[32;1mInstall Complete\033[0m]"
-    echo -e "    There is the Default Login Info of your SSR on IP: ***.***.***.***"
+    echo -e "     There is the Default Login Info of your SS on IP: ***.***.***.***"
     echo -e "     Port: ****    PassWord: ***    Encryption: ***    LOCALHOST: ***"
     echo -e "          [\033[32;1mPlease Press Enter to Show Login Infomation and EXIT\033[0m]"
     echo -e "########################################################################"
