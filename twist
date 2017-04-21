@@ -135,7 +135,7 @@ function getip(){
         fi
     fi
     if [ -f /proc/net/if_inet6 ]; then
-        PUBLICIPv6=`ifconfig | grep -E '(Link|inet6)'|grep -v "Scope:Global"`
+        PUBLICIPv6=`ifconfig | grep -E '(Link|inet6)' | grep -v "Scope:Global"`
         if [ -z "$PUBLICIPv6" ]; then
 	    IPv6="false"
 	else
