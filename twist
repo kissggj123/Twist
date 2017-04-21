@@ -57,6 +57,7 @@ function defaultvalue(){
     BBR="enable"
     PORT="443"
     ETH="eth0"
+    IPv6="true"
     IPREGEX="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
 }
 
@@ -132,6 +133,27 @@ function getip(){
             echo -e "# [\033[32;1mYour Public IP:$PUBLICIP, Server will Detect Connection Automaticly.\033[0m]"
             echo ""
         fi
+    fi
+    if [ -f /proc/net/if_inet6 ]; then
+        PUBLICIPv6=`ifconfig | grep -E '(Link|inet6)'|grep -v "Scope:Global"`
+        if [ -z "$PUBLICIPv6" ]; then
+	    IPv6="false"
+	else
+	    if [ "$systemtype" = "1" ]; then
+                echo "iface $ETH inet6 dhcp" > /etc/network/interfaces.d/60-default-with-ipv6.cfg
+	        sudo ifdown eth0 && sudo ifup eth0
+	        dhclient -6
+	    else
+	        sed -i "/^\<IPV6INIT=\>/d" /etc/sysconfig/network-scripts/ifcfg-eth0
+		cat >> /etc/sysconfig/network-scripts/ifcfg-eth0 <<EOF
+IPV6INIT="yes"
+DHCPV6C=yes
+NM_CONTROLLED=no
+EOF
+		echo "NETWORKING_IPV6=yes" >> /etc/sysconfig/network
+                sudo service network restart
+	    fi
+	fi
     fi
 }
 
@@ -252,7 +274,7 @@ function configssr(){
     "obfs":"plain",
     "obfs_param":"",
     "redirect":"",
-    "dns_ipv6":true,
+    "dns_ipv6":${IPv6},
     "fast_open":true,
     "workers":1
 }
