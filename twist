@@ -389,15 +389,15 @@ ssr_running(){
 ssr_start(){
     ssr_running
     if [ "\$?" -eq "0" ]; then
-        echo "ShadowsocksR is Already Running..."
+        echo -e "# \033[32;1mShadowsocksR is Already Running...\033[0m"
         exit 0
     else
         /usr/local/shadowsocks/server.py -c /etc/shadowsocks.json -d start
         RETVAL=\$?
         if [ "\$RETVAL" -eq "0" ]; then
-            echo "Starting ShadowsocksR Success..."
+            echo -e "# \033[32;1mStarting ShadowsocksR Success...\033[0m"
         else
-            echo "Starting ShadowsocksR Failed..."
+            echo -e "# \033[31;1mStarting ShadowsocksR Failed...\033[0m"
         fi
     fi
 }
@@ -408,12 +408,12 @@ ssr_stop(){
         /usr/local/shadowsocks/server.py -c /etc/shadowsocks.json -d stop
         RETVAL=\$?
         if [ "\$RETVAL" -eq "0" ]; then
-            echo "Stopping ShadowsocksR Success..."
+            echo -e "# \033[32;1mStopping ShadowsocksR Success...\033[0m"
         else
-            echo "Stopping ShadowsocksR Failed..."
+            echo -e "# \033[31;1mStopping ShadowsocksR Failed...\033[0m"
         fi
     else
-        echo "ShadowsocksR is Stopped..."
+        echo -e "# \033[34;1mShadowsocksR is Stopped...\033[0m"
         RETVAL=1
     fi
 }
@@ -421,9 +421,9 @@ ssr_stop(){
 ssr_status(){
     ssr_running
     if [ "\$?" -eq "0" ]; then
-        echo "ShadowsocksR is Running..."
+        echo -e "# \033[32;1mShadowsocksR is Running...\033[0m"
     else
-        echo "ShadowsocksR is Stopped..."
+        echo -e "# \033[34;1mShadowsocksR is Stopped...\033[0m"
         RETVAL=1
     fi
 }
