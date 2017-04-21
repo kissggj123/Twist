@@ -482,7 +482,7 @@ EOF
     if [ "$systemtype" = "1" ]; then
         ip6tables-restore < /etc/ip6tables.rules
     else
-        iptables-restore < "$IPTFILE"
+        iptables-restore < /etc/sysconfig/iptables
     fi
     /etc/init.d/shadowsocks start
 }
