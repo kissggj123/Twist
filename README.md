@@ -27,5 +27,15 @@ TCP 443
 ## Setup ShadowsocksR for Connect on your Devices
 It is Required a Shadowsocks Client on Your Device for Manually Set up or Use URL-Scheme
 
+## Uninstall Twist
+Please **Run Bash Command** to Uninstall Twist While You Once Downloaded it on Your Server
+```bash
+sudo twist.sh uninstall
+```
+or Uninstall by Download the Install Script Again
+```bash
+sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh uninstall
+```
+
 ## Author
 <a href="https://github.com/Unbinilium" target="_blank">Unbinilium</a> --  This Project is Using OpenSource Software <a href="https://github.com/shadowsocksr/shadowsocksr" target="_blank">ShadowsocksR</a> and <a href="https://github.com/jedisct1/libsodium" target="_blank">Libsodium</a>.
