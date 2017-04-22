@@ -27,6 +27,7 @@ function uninstall_twist(){
     echo -e "#[\033[32;1m              Uninstall will Start in 5 Seconds\033[0m                 ]#"
     echo "#####################################################################"
     sleep 5
+    rootness
     if [ -e /etc/init.d/shadowsocks ]; then
         /etc/init.d/shadowsocks stop
     else
@@ -54,6 +55,9 @@ function uninstall_twist(){
     twist
     echo -e "#[\033[32;1m               Twist Uninstallation Finished\033[0m                    ]#"
     echo "#####################################################################"
+    [ -e twist.sh ] || rm -f twist.sh
+    exit 1
+    echo ""
 }
 
 function twist(){
