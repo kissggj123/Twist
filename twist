@@ -20,6 +20,42 @@ function install_twist(){
     twiststatus
 }
 
+function uninstall_twist(){
+    clear
+    twist
+    echo -e "#[\033[32;1m                Uninstall Twist ShadowsocksR                    \033[0m]#"
+    echo -e "#[\033[32;1m              Uninstall will Start in 5 Seconds\033[0m                 ]#"
+    echo "#####################################################################"
+    sleep 5
+    if [ -e /etc/init.d/shadowsocks ]; then
+        /etc/init.d/shadowsocks stop
+    else
+        echo -e "#[\033[31;1m             Twist was Not Find on Your Server!\033[0m                 ]#"
+        echo ""
+	exit 1
+    fi   
+    if grep -qs "Ubunut" /etc/issue || grep -qs "Debian" /etc/issue; then
+        update-rc.d -f shadowsocks remove
+	iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j DROP
+	iptables -I INPUT -m state --state NEW -m udp -p udp --dport 443 -j DROP
+    fi
+    if grep -qs "CentOS" /etc/issue; then
+        chkconfig --del shadowsocks
+	systemctl start firewalld
+        firewall-cmd --permanent --zone=public --remove-port=443/tcp
+        firewall-cmd --permanent --zone=public --remove-port=443/udp
+        firewall-cmd --reloa
+    fi
+    rm -f /etc/shadowsocks.json
+    rm -f /etc/init.d/shadowsocks
+    rm -f /var/log/shadowsocks.log
+    rm -rf /usr/local/shadowsocks
+    clear
+    twist
+    echo -e "#[\033[32;1m               Twist Uninstallation Finished\033[0m                    ]#"
+    echo "#####################################################################"
+}
+
 function twist(){
     echo "######################################################################"
     echo "#####################################################################"
@@ -187,7 +223,7 @@ function installbbr(){
     [ "$BBR" = "enable" ] && KERNELVER=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/ | awk -F'\"v' '/v[4-9]./{print $2}' | cut -d/ -f1 | grep -v -  | sort -V | tail -1)
     [ "$BBR" = "enable" ] && [ -z "$KERNELVER" ] && BBR="disable" && echo -e "# [\033[31;1mCannot Check Linux KERNEL Verison. BBR will NOT Working!\033[0m]"
     if [ "$BBR" = "enable" ] && [ "`echo "$KERNELVER" | cut -d'.' -f1,2`">="`uname -a | grep -oE '[0-9]+\.[0-9]+' | cut -d'.' -f1,2`" ]; then
-        if grep -qs "Ubunut" /etc/issue || ! grep -qs "Debian" /etc/issue; then
+        if grep -qs "Ubunut" /etc/issue || grep -qs "Debian" /etc/issue; then
             SYSTYPE="`dpkg --print-architecture`"
             if [ "$SYSTYPE" = "amd64" ]; then
                 KERNEL=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/amd64.deb/{print $2}' | cut -d'<' -f1 | head -1)
@@ -350,8 +386,6 @@ EOF
         iptables -I FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j ACCEPT
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport 443 -j ACCEPT
-        /etc/init.d/iptables save
-        /etc/init.d/iptables restart
         systemctl start firewalld
         firewall-cmd --permanent --zone=public --add-port=443/tcp
         firewall-cmd --permanent --zone=public --add-port=443/udp
@@ -506,4 +540,13 @@ function twiststatus(){
     fi
 }
 
-install_twist
+action=$1
+[ -z $1 ] && action=install
+case "$action" in
+    install|uninstall)
+        ${action}_twist
+        ;;
+    *)
+        echo "Usage: $0 { install | uninstall }"
+        ;;
+esac
