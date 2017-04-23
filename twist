@@ -297,7 +297,7 @@ function installssr(){
 
 function configssr(){
     date="$(date +%Y-%m-%d-%H:%M:%S)"
-    PASSWORD="$(< /dev/urandom tr -dc 'A-HJ-NPR-Za-km-z2-9' | head -c 16)"
+    PASSWORD="$(< /dev/urandom tr -dc 'A-HJ-NPR-Za-km-z2-9' | head -c 32)"
     PASSWORD64="`echo "$PASSWORD" | base64`"
     cat > /etc/shadowsocks.json <<EOF
 {
