@@ -2,6 +2,7 @@
 
 ## Twist Features
 - **Fast, Secured and Stable Connections**
+- **Multithreading** Support
 - Supported **IPv4 & IPv6** Environment and Connections
 - **Optimised Performance** Using Google BBR TCP Controler and Supported UDP Port
 - **One-key Installation** and One-key Setup on your Devices
