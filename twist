@@ -274,6 +274,7 @@ function installbbr(){
             elif centosversion 7; then
                 yum --enablerepo=elrepo-kernel install kernel-ml || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
             fi
+	fi
     fi
 }
 
