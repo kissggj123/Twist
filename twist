@@ -175,14 +175,14 @@ function getip(){
         fi
     fi
     if [ -f /proc/net/if_inet6 ]; then
-        PUBLICIPv6=`ifconfig | grep -E '(Link|inet6)' | grep -v "Scope:Global"`
-        if [ -z "$PUBLICIPv6" ]; then
-	    IPv6="false"
-	else
 	    if [ "$systemtype" = "1" ]; then
                 echo "iface $ETH inet6 dhcp" > /etc/network/interfaces.d/60-default-with-ipv6.cfg
 	        sudo ifdown eth0 && sudo ifup eth0
 	        dhclient -6
+		PUBLICIPv6=`ifconfig | grep -E '(Link|inet6)' | grep -v "Scope:Global"`
+                if [ -z "$PUBLICIPv6" ]; then
+	            IPv6="false"
+                fi
 	    else
 	        sed -i "/^\<IPV6INIT=\>/d" /etc/sysconfig/network-scripts/ifcfg-eth0
 		cat >> /etc/sysconfig/network-scripts/ifcfg-eth0 <<EOF
@@ -192,8 +192,11 @@ NM_CONTROLLED=no
 EOF
 		echo "NETWORKING_IPV6=yes" >> /etc/sysconfig/network
                 sudo service network restart
+		PUBLICIPv6=`ifconfig | grep -E '(Link|inet6)' | grep -v "Scope:Global"`
+                if [ -z "$PUBLICIPv6" ]; then
+	            IPv6="false"
+	        fi
 	    fi
-	fi
     else
         IPv6="false
     fi
@@ -229,7 +232,7 @@ function installbbr(){
     [ "$BBR" = "enable" ] && KERNELVER=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/ | awk -F'\"v' '/v[4-9]./{print $2}' | cut -d/ -f1 | grep -v -  | sort -V | tail -1)
     [ "$BBR" = "enable" ] && [ -z "$KERNELVER" ] && BBR="disable" && echo -e "# [\033[31;1mCannot Check Linux KERNEL Verison. BBR will NOT Working!\033[0m]"
     if [ "$BBR" = "enable" ] && [ "`echo "$KERNELVER" | cut -d'.' -f1,2`">="`uname -a | grep -oE '[0-9]+\.[0-9]+' | cut -d'.' -f1,2`" ]; then
-        if grep -qs "Ubunut" /etc/issue || grep -qs "Debian" /etc/issue; then
+        if [ "$systemtype" = "1" ]; then
             SYSTYPE="`dpkg --print-architecture`"
             if [ "$SYSTYPE" = "amd64" ]; then
                 KERNEL=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/amd64.deb/{print $2}' | cut -d'<' -f1 | head -1)
@@ -248,7 +251,7 @@ function installbbr(){
                             else
                                 if [ "$SYSTYPE" = "s390x" ]; then
                                     KERNEL=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/s390x.deb/{print $2}' | cut -d'<' -f1 | head -1)
-                                else 
+                                else
                                     echo ""
                                     echo -e "# \033[31;1mUnable to Find New KERNEL! Aborting!\033[0m"
                                     echo ""
@@ -258,21 +261,19 @@ function installbbr(){
                         fi
                     fi
                 fi
-            fi                                    
+            fi
             wget -t 3 -T 30 -nv -O "$KERNEL" "http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/${KERNEL}"
             [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Linux KERNEL! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
             dpkg -i $KERNEL || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
             dpkg -l | grep linux-image
             rm -f $KERNEL
             update-grub
-        fi
-        if grep -qs "CentOS" /etc/issue; then
+        else
             if centosversion 6; then
                 yum --enablerepo=elrepo-kernel install kernel-lt || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
             elif centosversion 7; then
                 yum --enablerepo=elrepo-kernel install kernel-ml || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
             fi
-        fi
     fi
 }
 
