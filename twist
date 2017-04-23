@@ -316,7 +316,7 @@ function configssr(){
     "redirect":"",
     "dns_ipv6":${IPv6},
     "fast_open":true,
-    "workers":2
+    "workers":10
 }
 EOF
     if ! grep -qs "Twist" /etc/sysctl.conf; then
