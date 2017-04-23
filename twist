@@ -194,6 +194,8 @@ EOF
                 sudo service network restart
 	    fi
 	fi
+    else
+        IPv6="false
     fi
 }
 
