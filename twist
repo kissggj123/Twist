@@ -321,13 +321,14 @@ function configssr(){
     "redirect":"",
     "dns_ipv6":${IPv6},
     "fast_open":true,
-    "workers":128
+    "workers":256
 }
 EOF
     if ! grep -qs "Twist" /etc/sysctl.conf; then
         /bin/cp -f /etc/sysctl.conf "/etc/sysctl.conf.old-$date" 2>/dev/null
         cat >> /etc/sysctl.conf <<EOF
 # Twist Configs
+fs.file-max = 1024000
 kernel.msgmnb = 65536
 kernel.msgmax = 65536
 kernel.shmmax = 68719476736
@@ -363,6 +364,14 @@ EOF
             echo "net.core.default_qdisc = fq" >> /etc/sysctl.conf
             echo "net.ipv4.tcp_congestion_control = bbr" >> /etc/sysctl.conf
         fi
+	sed -i "/^\<# End of file\>/d" /etc/security/limits.conf
+	echo "*                soft    nofile           512000" >> /etc/security/limits.conf
+	echo "*                hard    nofile          1024000" >> /etc/security/limits.conf
+	echo "" >> /etc/security/limits.conf
+	echo "# End of file" >> /etc/security/limits.conf
+	if [ "$systemtype" = "0" ] && ! grep -qs "pam_limits.so" /etc/pam.d/login; then
+            echo "session    required     pam_limits.so" >> /etc/pam.d/login
+	fi
     fi
 }
 
@@ -536,11 +545,11 @@ function twiststatus(){
     echo -e "                            [\033[32;1mInstall Complete\033[0m]"
     echo -e "    There is the Default Login Info of your SSR on IP: ***.***.***.***"
     echo -e "     Port: ****    PassWord: ***    Encryption: ***    Localhost: ***"
-    echo -e "    Protocol: origin    Obfs: tls1.2_ticket_auth    TcpFastOpen: true"
+    echo -e "          Protocol: origin    Obfs: plain    TcpFastOpen: true"
     echo -e "          [\033[32;1mPlease Press Enter to Show Login Infomation and EXIT\033[0m]"
     echo -e "########################################################################"
     read -p ""
-    echo -e "# [\033[32;1mssr://\033[0m\033[34;1m`echo "$PUBLICIP:443:origin:chacha20-ietf:tls1.2_ticket_auth:$PASSWORD64" | base64`\033[0m]"
+    echo -e "# [\033[32;1mssr://\033[0m\033[34;1m`echo "$PUBLICIP:443:origin:chacha20-ietf:plain:$PASSWORD64" | base64`\033[0m]"
     echo -e "# [\033[32;1mServer IP:\033[0m \033[34;1m$PUBLICIP\033[0m \033[32;1mPassWord:\033[0m \033[34;1m$PASSWORD\033[0m \033[32;1mEncryption:\033[0m \033[34;1mchacha20-ietf\033[0m \033[32;1mLOCALHOST:\033[0m \033[34;1m127.0.0.1:1080\033[0m]"
     if [ "$BBR" = "enable" ]; then
         echo -e "\033[34;1mThe Server Requires Restart to Enable Google BBR,Please Press Enter to Reboot!\033[0m"
