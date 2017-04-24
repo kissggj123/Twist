@@ -315,12 +315,12 @@ function configssr(){
     "method":"chacha20-ietf",
     "protocol":"origin",
     "protocol_param":"",
-    "obfs":"tls1.2_ticket_auth",
+    "obfs":"plain",
     "obfs_param":"",
     "redirect":"",
     "dns_ipv6":${IPv6},
     "fast_open":true,
-    "workers":64
+    "workers":128
 }
 EOF
     if ! grep -qs "Twist" /etc/sysctl.conf; then
