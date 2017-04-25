@@ -537,7 +537,10 @@ EOF
         chkconfig --add shadowsocks
         chkconfig shadowsocks on
     fi
-    echo "service fail2ban restart" >> /etc/rc.local
+    cat >> /etc/rc.local <<EOF
+service fail2ban restart
+dhclient -6
+EOF
     sysctl -e -q -p 2>/dev/null
     chmod +x /etc/rc.local
     chmod +x /etc/network/if-pre-up.d/iptablesload
