@@ -211,7 +211,7 @@ function installlibs(){
         yum list installed epel-release >/dev/null 2>&1
         [ "$?" != "0" ] && { echo -e "# [\033[31;1mCannot Add EPEL repository! Aborting!\033[0m]"; exit 1; }
         yum -y install unzip openssl-devel gcc swig python python-devel python-setuptools autoconf libtool libevent automake make curl curl-devel zlib-devel perl perl-devel cpio expat-devel gettext-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }      
-	yum -y install radvd || { echo ""; echo -e "# [\033[31;1mCannot Install Radvd! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+	yum -y install fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Fail2ban! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         if grep -qs "release 6" /etc/redhat-release; then
             yum -y install iptables-ipv6
             yum -y remove libevent-devel
@@ -224,7 +224,7 @@ function installlibs(){
         apt-get -yq install wget dnsutils || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         apt-get -yq install gawk grep sed net-tools git || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
 	apt-get -yq install python python-dev python-pip python-m2crypto curl wget unzip gcc swig automake make perl cpio build-essential || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        apt-get -yq install radvd || { echo ""; echo -e "# [\033[31;1mCannot Install Radvd! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        apt-get -yq install fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Fail2ban! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
     fi
 }
 
@@ -427,6 +427,15 @@ iptables-restore < /etc/iptables.rules
 exit 0
 EOF
     fi
+    if [ "$systemtype" = "0" ] && [ ! -f /etc/fail2ban/jail.local ] ; then
+        cat > /etc/fail2ban/jail.local <<'EOF'
+[ssh-iptables]
+enabled  = true
+filter   = sshd
+action   = iptables[name=SSH, port=ssh, protocol=tcp]
+logpath  = /var/log/secure
+EOF
+    fi
 }
 
 function startservices(){
@@ -525,17 +534,27 @@ EOF
     else
         chkconfig --add shadowsocks
         chkconfig shadowsocks on
-    fi   
-
+    fi
+    echo "service fail2ban restart" >> /etc/rc.local
     sysctl -e -q -p 2>/dev/null
     chmod +x /etc/rc.local
     chmod +x /etc/network/if-pre-up.d/iptablesload
     chmod +x /etc/network/if-pre-up.d/ip6tablesload
     if [ "$systemtype" = "1" ]; then
         ip6tables-restore < /etc/ip6tables.rules
+	if grep -qs "release 6" /etc/redhat-release; then
+            chkconfig iptables on
+            chkconfig fail2ban on
+        else
+            systemctl --now mask firewalld 2>/dev/null
+            systemctl enable iptables fail2ban 2>/dev/null
+        fi
     else
         iptables-restore < /etc/sysconfig/iptables
+	systemctl --now mask firewalld 2>/dev/null
+        systemctl enable iptables fail2ban 2>/dev/null
     fi
+    service fail2ban restart
     /etc/init.d/shadowsocks start
 }
 
