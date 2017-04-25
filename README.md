@@ -3,8 +3,10 @@
 ## Twist Features
 - **Fast, Secured and Stable Connections**
 - **Multithreading** Support
+- **TCP Fast Open** Support
 - Supported **IPv4 & IPv6** Environment and Connections
-- **Optimised Performance** Using Google BBR TCP Controler and Supported UDP Port
+- **Optimised Performance** Using Google BBR TCP Controler and Supported UDP Transfer
+- **Fine Compatibility** and Support Original Shadowsocks Client
 - **One-key Installation** and One-key Setup on your Devices
 
 ## Server Requirements
