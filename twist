@@ -23,8 +23,8 @@ function install_twist(){
 function uninstall_twist(){
     clear
     twist
-    echo -e "#[\033[32;1m                Uninstall Twist ShadowsocksR                    \033[0m]#"
-    echo -e "#[\033[32;1m              Uninstall will Start in 5 Seconds\033[0m                 ]#"
+    echo -e "#[\033[31;1m                Uninstall Twist ShadowsocksR                    \033[0m]#"
+    echo -e "#[\033[31;1m              Uninstall will Start in 5 Seconds\033[0m                 ]#"
     echo "#####################################################################"
     sleep 5
     rootness
@@ -55,7 +55,7 @@ function uninstall_twist(){
     twist
     echo -e "#[\033[32;1m               Twist Uninstallation Finished\033[0m                    ]#"
     echo "#####################################################################"
-    [ -e twist.sh ] || rm -f twist.sh
+    rm -f twist.sh
     exit 1
     echo ""
 }
@@ -225,8 +225,8 @@ function installlibs(){
         apt-get -yq install gawk grep sed net-tools git || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
 	apt-get -yq install python python-dev python-pip python-setuptools python-m2crypto curl wget unzip gcc swig automake make perl cpio build-essential libevent-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         apt-get -yq install fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Fail2ban! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        easy_install greenlet
-        easy_install gevent
+        easy_install -q greenlet
+        easy_install -q gevent
    fi
 }
 
