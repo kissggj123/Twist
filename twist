@@ -206,11 +206,11 @@ function installlibs(){
     if [ "$systemtype" = "0" ]; then
 	yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         yum -y install wget bind-utils || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        yum -y install gawk grep sed net-tools git || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        yum -y install gawk grep sed net-tools git greenlet || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
 	yum -y install epel-release
         yum list installed epel-release >/dev/null 2>&1
         [ "$?" != "0" ] && { echo -e "# [\033[31;1mCannot Add EPEL repository! Aborting!\033[0m]"; exit 1; }
-        yum -y install unzip openssl-devel gcc swig python python-devel python-setuptools autoconf libtool libevent automake make curl curl-devel zlib-devel perl perl-devel cpio expat-devel gettext-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }      
+        yum -y install unzip openssl-devel gcc swig python python-devel python-setuptools autoconf libtool libevent automake make curl curl-devel zlib-devel perl perl-devel cpio expat-devel gettext-devel gevent || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }      
 	yum -y install fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Fail2ban! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         if grep -qs "release 6" /etc/redhat-release; then
             yum -y install iptables-ipv6
@@ -223,9 +223,11 @@ function installlibs(){
         apt-get -yq update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         apt-get -yq install wget dnsutils || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         apt-get -yq install gawk grep sed net-tools git || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-	apt-get -yq install python python-dev python-pip python-m2crypto curl wget unzip gcc swig automake make perl cpio build-essential || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+	apt-get -yq install python python-dev python-pip python-setuptools python-m2crypto curl wget unzip gcc swig automake make perl cpio build-essential libevent-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         apt-get -yq install fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Fail2ban! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-    fi
+        easy_install greenlet
+        easy_install gevent
+   fi
 }
 
 function installbbr(){
