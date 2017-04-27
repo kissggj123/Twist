@@ -13,8 +13,8 @@ function install_twist(){
     getip
     installlibs
     installbbr
-    installssr
-    configssr
+    installsslibev
+    configsslibev
     configiptables
     startservices
     twiststatus
@@ -23,7 +23,7 @@ function install_twist(){
 function uninstall_twist(){
     clear
     twist
-    echo -e "#[\033[31;1m                Uninstall Twist ShadowsocksR                    \033[0m]#"
+    echo -e "#[\033[31;1m              Uninstall Twist Shadowsocks-libev                 \033[0m]#"
     echo -e "#[\033[31;1m              Uninstall will Start in 5 Seconds\033[0m                 ]#"
     echo "#####################################################################"
     sleep 5
@@ -33,31 +33,48 @@ function uninstall_twist(){
     else
         echo -e "#[\033[31;1m             Twist was Not Find on Your Server!\033[0m                 ]#"
         echo ""
-	exit 1
+        exit 1
     fi   
     if grep -qs "Ubunut" /etc/issue || grep -qs "Debian" /etc/issue; then
         update-rc.d -f shadowsocks remove
-	iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j DROP
-	iptables -I INPUT -m state --state NEW -m udp -p udp --dport 443 -j DROP
+        iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j DROP
+        iptables -I INPUT -m state --state NEW -m udp -p udp --dport 443 -j DROP
     fi
     if grep -qs "CentOS" /etc/issue; then
         chkconfig --del shadowsocks
-	systemctl start firewalld
+        systemctl start firewalld
         firewall-cmd --permanent --zone=public --remove-port=443/tcp
         firewall-cmd --permanent --zone=public --remove-port=443/udp
         firewall-cmd --reloa
     fi
-    rm -f /etc/shadowsocks.json
+    ps -ef | grep -v grep | grep -i "ss-server" > /dev/null 2>&1
+    update-rc.d -f shadowsocks remove
+    rm -fr /etc/shadowsocks-libev
+    rm -f /usr/local/bin/ss-local
+    rm -f /usr/local/bin/ss-tunnel
+    rm -f /usr/local/bin/ss-server
+    rm -f /usr/local/bin/ss-manager
+    rm -f /usr/local/bin/ss-redir
+    rm -f /usr/local/bin/ss-nat
+    rm -f /usr/local/lib/libshadowsocks-libev.a
+    rm -f /usr/local/lib/libshadowsocks-libev.la
+    rm -f /usr/local/include/shadowsocks.h
+    rm -f /usr/local/lib/pkgconfig/shadowsocks-libev.pc
+    rm -f /usr/local/share/man/man1/ss-local.1
+    rm -f /usr/local/share/man/man1/ss-tunnel.1
+    rm -f /usr/local/share/man/man1/ss-server.1
+    rm -f /usr/local/share/man/man1/ss-manager.1
+    rm -f /usr/local/share/man/man1/ss-redir.1
+    rm -f /usr/local/share/man/man1/ss-nat.1
+    rm -f /usr/local/share/man/man8/shadowsocks-libev.8
+    rm -fr /usr/local/share/doc/shadowsocks-libev
     rm -f /etc/init.d/shadowsocks
-    rm -f /var/log/shadowsocks.log
-    rm -rf /usr/local/shadowsocks
     clear
     twist
     echo -e "#[\033[32;1m               Twist Uninstallation Finished\033[0m                    ]#"
     echo "#####################################################################"
-    rm -f twist.sh
-    exit 1
     echo ""
+    exit 1
 }
 
 function twist(){
@@ -72,7 +89,7 @@ function twist(){
 }
 
 function notice(){
-    echo -e "#[\033[32;1m Install ShadowsocksR for Ubuntu, Debian or CentOS By Unbinilium\033[0m ]#"
+    echo -e "#[\033[32;1m         Install Shadowsocks-libev Script By Unbinilium\033[0m          ]#"
     echo -e "#[\033[32;1m             Installation will Start in 5 Seconds\033[0m                ]#"
     echo "#####################################################################"
     sleep 5
@@ -95,9 +112,8 @@ function disableselinux(){
 
 function defaultvalue(){
     BBR="enable"
-    PORT="443"
     ETH="eth0"
-    IPv6="true"
+    SSLOCAL="[\"[::0]\",\"0.0.0.0\"]"
     IPREGEX="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
 }
 
@@ -176,29 +192,29 @@ function getip(){
     fi
     if [ -f /proc/net/if_inet6 ]; then
 	    if [ "$systemtype" = "1" ]; then
-                echo "iface $ETH inet6 dhcp" > /etc/network/interfaces.d/60-default-with-ipv6.cfg
+            echo "iface $ETH inet6 dhcp" > /etc/network/interfaces.d/60-default-with-ipv6.cfg
 	        sudo ifdown eth0 && sudo ifup eth0
 	        dhclient -6
-		PUBLICIPv6=`ifconfig | grep -E '(Link|inet6)' | grep -v "Scope:Global"`
-                if [ -z "$PUBLICIPv6" ]; then
-	            IPv6="false"
-                fi
+            PUBLICIPv6=`ifconfig | grep -E '(Link|inet6)' | grep -v "Scope:Global"`
+            if [ -z "$PUBLICIPv6" ]; then
+	            SSLOCAL="\"0.0.0.0\""
+            fi
 	    else
-	        sed -i "/^\<IPV6INIT=\>/d" /etc/sysconfig/network-scripts/ifcfg-eth0
-		cat >> /etc/sysconfig/network-scripts/ifcfg-eth0 <<EOF
+            sed -i "/^\<IPV6INIT=\>/d" /etc/sysconfig/network-scripts/ifcfg-eth0
+            cat >> /etc/sysconfig/network-scripts/ifcfg-eth0 <<EOF
 IPV6INIT="yes"
 DHCPV6C=yes
 NM_CONTROLLED=no
 EOF
-		echo "NETWORKING_IPV6=yes" >> /etc/sysconfig/network
-                sudo service network restart
-		PUBLICIPv6=`ifconfig | grep -E '(Link|inet6)' | grep -v "Scope:Global"`
-                if [ -z "$PUBLICIPv6" ]; then
-	            IPv6="false"
+            echo "NETWORKING_IPV6=yes" >> /etc/sysconfig/network
+            sudo service network restart
+            PUBLICIPv6=`ifconfig | grep -E '(Link|inet6)' | grep -v "Scope:Global"`
+            if [ -z "$PUBLICIPv6" ]; then
+                SSLOCAL="\"0.0.0.0\""
 	        fi
 	    fi
     else
-        IPv6="false
+        SSLOCAL="\"0.0.0.0\""
     fi
 }
 
@@ -206,12 +222,15 @@ function installlibs(){
     if [ "$systemtype" = "0" ]; then
 	yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         yum -y install wget bind-utils || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        yum -y install gawk grep sed net-tools git greenlet || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-	yum -y install epel-release
+        yum -y install gawk grep sed net-tools greenlet || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        yum -y install epel-release
         yum list installed epel-release >/dev/null 2>&1
         [ "$?" != "0" ] && { echo -e "# [\033[31;1mCannot Add EPEL repository! Aborting!\033[0m]"; exit 1; }
-        yum -y install unzip openssl-devel gcc swig python python-devel python-setuptools autoconf libtool libevent automake make curl curl-devel zlib-devel perl perl-devel cpio expat-devel gettext-devel gevent || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }      
-	yum -y install fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Fail2ban! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        yum -y install swig python python-devel python-setuptools python-pip libevent curl curl-devel zlib-devel gevent || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        yum -y install gcc gettext-devel autoconf automake make zlib-devel libtool xmlto asciidoc udns-devel libev-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        yum -y install pcre pcre-devel perl perl-devel cpio expat-devel openssl-devel mbedtls-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        yum -y install fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Fail2ban! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        pip install -q qrcode
         if grep -qs "release 6" /etc/redhat-release; then
             yum -y install iptables-ipv6
             yum -y remove libevent-devel
@@ -222,11 +241,13 @@ function installlibs(){
     else
         apt-get -yq update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         apt-get -yq install wget dnsutils || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        apt-get -yq install gawk grep sed net-tools git || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-	apt-get -yq install python python-dev python-pip python-setuptools python-m2crypto curl wget unzip gcc swig automake make perl cpio build-essential libevent-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        apt-get -yq install gawk grep sed net-tools || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        apt-get -yq install python python-dev python-pip python-setuptools python-m2crypto curl wget gcc swig make perl cpio build-essential libevent-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }   
+        apt-get -y --no-install-recommends install gettext build-essential autoconf automake libtool openssl libssl-dev zlib1g-dev xmlto asciidoc libpcre3-dev libudns-dev libev-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         apt-get -yq install fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Fail2ban! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         easy_install -q greenlet
         easy_install -q gevent
+        pip install -q qrcode
    fi
 }
 
@@ -276,11 +297,11 @@ function installbbr(){
             elif centosversion 7; then
                 yum --enablerepo=elrepo-kernel install kernel-ml || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
             fi
-	fi
+        fi
     fi
 }
 
-function installssr(){
+function installsslibev(){
    installpath=`pwd`
    cd $installpath
    libsodiumver=`wget -qO- https://download.libsodium.org/libsodium/releases/ | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f1,2,3 | sort -V | tail -1`
@@ -290,40 +311,47 @@ function installssr(){
    tar zxf libsodium-${libsodiumver}.tar.gz
    cd libsodium-${libsodiumver}
    ./configure --prefix=/usr && make && make install || { echo ""; echo －e "# [\033[31;1mLibsodium Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
+   cd $installpath
+   mbedver=`wget -qO- https://tls.mbed.org/download-archive | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f1,2,3 | sort -V | tail -1`
+   wget -t 3 -T 30 -nv -O mbedtls-${mbedver}-gpl.tgz https://tls.mbed.org/download/mbedtls-${mbedver}-gpl.tgz
+   [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download MBED Source. Aborting.\033[0m]"; echo ""; exit 1; }
+   cd $installpath
+   [ -d mbedtls-${mbedver} ] && rm -rf mbedtls-${mbedver}
+   tar xf mbedtls-${mbedver}-gpl.tgz
+   cd mbedtls-${mbedver}
+   make SHARED=1 CFLAGS=-fPIC
+   make DESTDIR=/usr install || { echo ""; echo －e "# [\033[31;1mMBED Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
    ldconfig
    cd $installpath
-   wget -t 3 -T 30 -nv -O manyuser.zip https://github.com/shadowsocksr/shadowsocksr/archive/manyuser.zip
-   [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Shadowsocksr Source. Aborting.\033[0m]"; echo ""; exit 1; }
-   [ -d shadowsocks-manyuser ] && rm -rf shadowsocksr-manyuser
-   unzip -q -o manyuser.zip
-   mv -f shadowsocksr-manyuser/shadowsocks /usr/local/
+   sslibevtag=$(wget -qO- https://api.github.com/repos/shadowsocks/shadowsocks-libev/releases/latest | grep 'tag_name' | cut -d\" -f4)
+   sslibevver="shadowsocks-libev-$(echo ${sslibevtag} | sed -e 's/^[a-zA-Z]//g')"
+   wget -t 3 -T 30 -nv -O mbedtls-${mbedver}-gpl.tgz https://github.com/shadowsocks/shadowsocks-libev/releases/download/${sslibevtag}/${sslibevver}.tar.gz
+   [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Shadowsocks-libev Source. Aborting.\033[0m]"; echo ""; exit 1; }
+   tar zxf ${sslibevver}.tar.gz
+   [ -d ${sslibevver} ] && rm -rf ${sslibevver}
+   cd ${sslibevver}
+   ./configure
+   make || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
+   make install || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
    cd $installpath
-   rm -rf manyuser.zip shadowsocksr-manyuser libsodium-${libsodiumver}.tar.gz libsodium-${libsodiumver}
+   rm -rf ${sslibevver}.tar.gz ${sslibevver} libsodium-${libsodiumver}.tar.gz libsodium-${libsodiumver} mbedtls-${mbedver}-gpl.tgz mbedtls-${mbedver}
 }
 
-function configssr(){
+function configsslibev(){
     date="$(date +%Y-%m-%d-%H:%M:%S)"
-    PASSWORD="$(< /dev/urandom tr -dc 'A-HJ-NPR-Za-km-z2-9' | head -c 32)"
-    PASSWORD64="`echo "$PASSWORD" | base64`"
-    cat > /etc/shadowsocks.json <<EOF
+    PASSWORD="$(< /dev/urandom tr -dc 'A-HJ-NPR-Za-km-z2-9' | head -c 64)"
+    cat > /etc/shadowsocks-libev/config.json<<-EOF
 {
-    "server":"0.0.0.0",
-    "server_ipv6":"::",
+    "server":${SSLOCAL},
     "server_port":443,
     "local_address":"127.0.0.1",
     "local_port":1080,
     "password":"${PASSWORD}",
     "timeout":600,
     "udp_timeout":600,
-    "method":"chacha20-ietf",
-    "protocol":"origin",
-    "protocol_param":"",
-    "obfs":"plain",
-    "obfs_param":"",
-    "redirect":"",
-    "dns_ipv6":${IPv6},
+    "method":"chacha20-ietf-poly1305",
     "fast_open":true,
-    "workers":256
+    "workers":256,
 }
 EOF
     if ! grep -qs "Twist" /etc/sysctl.conf; then
@@ -378,13 +406,18 @@ EOF
 }
 
 function configiptables(){
-    if [ "$systemtype" = "1" ]; then
+    if ! grep -qs "Twist" /etc/sysctl.conf; then
         iptables-save > "/etc/iptables.rules.old-$date"
-        iptables -I FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+        iptables -I INPUT 1 -m conntrack --ctstate INVALID -j DROP
+        iptables -I INPUT 2 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+        iptables -I INPUT 3 -p udp -m multiport --dports 443 -j ACCEPT
+        iptables -I FORWARD 1 -m conntrack --ctstate INVALID -j DROP
+        iptables -I FORWARD 2 -i "$ETH" -o ppp+ -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+        iptables -I FORWARD 3 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j ACCEPT
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport 443 -j ACCEPT
         /bin/cp -f /etc/ip6tables.rules "/etc/ip6tables.rules.old-$date" 2>/dev/null
-        cat > /etc/ip6tables.rules <<EOF
+        [ -f /etc/iptables/rules.v6 ] || cat > /etc/ip6tables.rules <<EOF
 # Twist Configs
 *filter
 :INPUT ACCEPT [0:0]
@@ -402,7 +435,8 @@ EOF
             /bin/cp -f /etc/iptables/rules.v6 "/etc/iptables/rules.v6.old-$date"
             /bin/cp -f /etc/ip6tables.rules /etc/iptables/rules.v6
         fi  
-    else
+    fi
+    if [ "$systemtype" = "0" ]; then
         iptables -I FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j ACCEPT
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport 443 -j ACCEPT
@@ -446,81 +480,107 @@ function startservices(){
         cat >> /etc/init.d/shadowsocks <<EOF
 # chkconfig: 2345 90 10
 # description: A Secured Socks Proxy.
+
+. /etc/rc.d/init.d/functions
+
+[ \${NETWORKING} ="yes" ] || exit 0
 EOF
     fi
-    cat >> /etc/init.d/shadowsocks <<EOF
+        cat >> /etc/init.d/shadowsocks <<EOF
 
 ### BEGIN INIT INFO
-# Provides:          ShadowsocksR
-# Required-Start:    \$network \$syslog
-# Required-Stop:     \$network
+# Provides:          Shadowsocks-libev
+# Required-Start:    \$network \$local_fs $remote_fs
+# Required-Stop:     \$network \$local_fs $remote_fs
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: ShadowsocksR
-# Description:       Start or Stop the ShadowsocksR Server
+# Short-Description: Shadowsocks-libev
+# Description:       Start or stop the Shadowsocks-libev server
 ### END INIT INFO
+
+if [ -f /usr/local/bin/ss-server ]; then
+    SSDIRECTION=/usr/local/bin/ss-server
+elif [ -f /usr/bin/ss-server ]; then
+    SSDIRECTION=/usr/bin/ss-server
+fi
+
+[ -x \$SSDIRECTION ] || exit 0
 
 RETVAL=0
 
-ssr_running(){
-    PID=\`ps -ef | grep -v grep | grep -i /usr/local/shadowsocks/server.py | awk '{print $2}' \`
-    if [ ! -z "\$PID" ]; then
+if [ ! -d /var/run ]; then
+    mkdir -p /var/run
+    if [ \$? -ne 0 ]; then
+        echo -e "# \033[31;1mStarting Shadowsocks-libev Failed...\033[0m"
+        exit 1
+    fi
+fi
+
+if [ ! -f /etc/shadowsocks-libev/config.json ]; then
+    echo -e "# \033[31;1mStarting Shadowsocks-libev Failed...\033[0m"
+    exit 1
+fi
+
+sslibev_running() {
+    if [ -r /var/run/shadowsocks-libev.pid ]; then
+        read PID < /var/run/shadowsocks-libev.pid
+        if [ -d "/proc/\$PID" ]; then
+            return 0
+        else
+            rm -f /var/run/shadowsocks-libev.pid
+            return 1
+        fi
+    else
+        return 2
+    fi
+}
+
+sslibev_status() {
+    sslibev_running
+    case \$? in
+        0)
+        echo -e "# \033[32;1mShadowsocks-libev is Already Running...\033[0m"
+        ;;
+        1|2)
+        echo -e "# \033[34;1mShadowsocks-libev is Stopped...\033[0m"
+        RETVAL=1
+        ;;
+    esac
+}
+
+sslibev_start() {
+    if sslibev_running; then
+        echo -e "# \033[32;1mShadowsocks-libev is Already Running...\033[0m"
         return 0
-    else
-        return 1
     fi
-}
-
-ssr_start(){
-    ssr_running
-    if [ "\$?" -eq "0" ]; then
-        echo -e "# \033[32;1mShadowsocksR is Already Running...\033[0m"
-        exit 0
+    \$SSDIRECTION -u -c /etc/shadowsocks-libev/config.json -f /var/run/shadowsocks-libev.pid
+    if sslibev_running; then
+        echo -e "# \033[32;1mStarting Shadowsocks-libev Success...\033[0m"
     else
-        /usr/local/shadowsocks/server.py -c /etc/shadowsocks.json -d start
-        RETVAL=\$?
-        if [ "\$RETVAL" -eq "0" ]; then
-            echo -e "# \033[32;1mStarting ShadowsocksR Success...\033[0m"
-        else
-            echo -e "# \033[31;1mStarting ShadowsocksR Failed...\033[0m"
-        fi
-    fi
-}
-
-ssr_stop(){
-    ssr_running
-    if [ "\$?" -eq "0" ]; then
-        /usr/local/shadowsocks/server.py -c /etc/shadowsocks.json -d stop
-        RETVAL=\$?
-        if [ "\$RETVAL" -eq "0" ]; then
-            echo -e "# \033[32;1mStopping ShadowsocksR Success...\033[0m"
-        else
-            echo -e "# \033[31;1mStopping ShadowsocksR Failed...\033[0m"
-        fi
-    else
-        echo -e "# \033[34;1mShadowsocksR is Stopped...\033[0m"
+        echo -e "# \033[31;1mStarting Shadowsocks-libev Failed...\033[0m"
         RETVAL=1
     fi
 }
 
-ssr_status(){
-    ssr_running
-    if [ "\$?" -eq "0" ]; then
-        echo -e "# \033[32;1mShadowsocksR is Running...\033[0m"
+sslibev_stop() {
+    if sslibev_running; then
+        kill -9 \$PID
+        rm -f /var/run/shadowsocks-libev.pid
+        echo -e "# \033[32;1mStopping Shadowsocks-libev Success...\033[0m"
     else
-        echo -e "# \033[34;1mShadowsocksR is Stopped...\033[0m"
+        echo -e "# \033[34;1mShadowsocks-libev is Stopped...\033[0m"
         RETVAL=1
     fi
 }
 
-ssr_restart(){
-    ssr_stop
-    ssr_start
+sslibev_restart() {
+    sslibev_stop
+    sslibev_start
 }
 
 case "\$1" in
     start|stop|restart|status)
-    ssr_\$1
+    sslibev_\$1
     ;;
     *)
     echo "Usage: \$0 { start | stop | restart | status }"
@@ -538,8 +598,9 @@ EOF
         chkconfig shadowsocks on
     fi
     cat >> /etc/rc.local <<EOF
-service fail2ban restart
 dhclient -6
+service fail2ban restart
+sysctl -e -q -p 2>/dev/null
 EOF
     sysctl -e -q -p 2>/dev/null
     chmod +x /etc/rc.local
@@ -567,14 +628,12 @@ function twiststatus(){
     clear
     twist
     echo -e "                            [\033[32;1mInstall Complete\033[0m]"
-    echo -e "    There is the Default Login Info of your SSR on IP: ***.***.***.***"
-    echo -e "     Port: ****    PassWord: ***    Encryption: ***    Localhost: ***"
-    echo -e "          Protocol: origin    Obfs: plain    TcpFastOpen: true"
     echo -e "          [\033[32;1mPlease Press Enter to Show Login Infomation and EXIT\033[0m]"
     echo -e "########################################################################"
     read -p ""
-    echo -e "# [\033[32;1mssr://\033[0m\033[34;1m`echo "$PUBLICIP:443:origin:chacha20-ietf:plain:$PASSWORD64" | base64`\033[0m]"
-    echo -e "# [\033[32;1mServer IP:\033[0m \033[34;1m$PUBLICIP\033[0m \033[32;1mPassWord:\033[0m \033[34;1m$PASSWORD\033[0m \033[32;1mEncryption:\033[0m \033[34;1mchacha20-ietf\033[0m \033[32;1mLOCALHOST:\033[0m \033[34;1m127.0.0.1:1080\033[0m]"
+    echo -e "# [\033[32;1mss://\033[0m\033[34;1m`echo -n chacha20-ietf-poly1305:${PASSWORD}@${PUBLICIP}:443 | base64`\033[0m]"
+    echo -n "ss://"`echo -n chacha20-ietf-poly1305:${PASSWORD}@${PUBLICIP}:443 | base64` | qr
+    echo -e "# [\033[32;1mServer IP:\033[0m \033[34;1m$PUBLICIP\033[0m \033[32;1mPassWord:\033[0m \033[34;1m$PASSWORD\033[0m \033[32;1mEncryption:\033[0m \033[34;1mchacha20-ietf-poly1305\033[0m \033[32;1mLOCALHOST:\033[0m \033[34;1m127.0.0.1:1080\033[0m]"
     if [ "$BBR" = "enable" ]; then
         echo -e "\033[34;1mThe Server Requires Restart to Enable Google BBR,Please Press Enter to Reboot!\033[0m"
         read -p ""
