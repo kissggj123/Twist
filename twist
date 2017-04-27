@@ -476,7 +476,6 @@ function startservices(){
     echo "#!/bin/bash" > /etc/init.d/shadowsocks
     if [  "$systemtype" = "0" ]; then
         cat >> /etc/init.d/shadowsocks <<EOF
-
 # chkconfig: 2345 90 10
 # description: A Secured Socks Proxy.
 
@@ -588,6 +587,7 @@ case "\$1" in
 esac
 
 exit \$RETVAL
+
 EOF
     chmod +x /etc/init.d/shadowsocks
     if [ "$systemtype" = "1" ]; then
