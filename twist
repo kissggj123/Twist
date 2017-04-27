@@ -193,8 +193,8 @@ function getip(){
     if [ -f /proc/net/if_inet6 ]; then
 	    if [ "$systemtype" = "1" ]; then
             echo "iface $ETH inet6 dhcp" > /etc/network/interfaces.d/60-default-with-ipv6.cfg
-	        sudo ifdown eth0 && sudo ifup eth0
-	        dhclient -6
+            sudo ifdown $ETH && sudo ifup $ETH
+	    dhclient -6
             PUBLICIPv6=`ifconfig | grep -E '(Link|inet6)' | grep -v "Scope:Global"`
             if [ -z "$PUBLICIPv6" ]; then
 	            SSLOCAL="\"0.0.0.0\""
@@ -242,7 +242,7 @@ function installlibs(){
         apt-get -yq update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         apt-get -yq install wget dnsutils || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         apt-get -yq install gawk grep sed net-tools || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        apt-get -yq install python python-dev python-pip python-setuptools python-m2crypto curl wget gcc swig make perl cpio build-essential libevent-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }   
+        apt-get -yq install python python-dev python-pip python-setuptools python-m2crypto curl gcc swig make perl cpio build-essential libevent-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }   
         apt-get -y --no-install-recommends install gettext build-essential autoconf automake libtool openssl libssl-dev zlib1g-dev xmlto asciidoc libpcre3-dev libudns-dev libev-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         apt-get -yq install fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Fail2ban! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         easy_install -q greenlet
@@ -327,8 +327,8 @@ function installsslibev(){
    sslibevver="shadowsocks-libev-$(echo ${sslibevtag} | sed -e 's/^[a-zA-Z]//g')"
    wget -t 3 -T 30 -nv -O mbedtls-${mbedver}-gpl.tgz https://github.com/shadowsocks/shadowsocks-libev/releases/download/${sslibevtag}/${sslibevver}.tar.gz
    [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Shadowsocks-libev Source. Aborting.\033[0m]"; echo ""; exit 1; }
-   tar zxf ${sslibevver}.tar.gz
    [ -d ${sslibevver} ] && rm -rf ${sslibevver}
+   tar zxf ${sslibevver}.tar.gz
    cd ${sslibevver}
    ./configure
    make || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
@@ -339,7 +339,7 @@ function installsslibev(){
 
 function configsslibev(){
     date="$(date +%Y-%m-%d-%H:%M:%S)"
-    PASSWORD="$(< /dev/urandom tr -dc 'A-HJ-NPR-Za-km-z2-9' | head -c 64)"
+    PASSWORD="$(< /dev/urandom tr -dc 'A-HJ-NPR-Za-km-z2-9' | head -c 32)"
     cat > /etc/shadowsocks-libev/config.json<<-EOF
 {
     "server":${SSLOCAL},
@@ -436,10 +436,8 @@ EOF
             /bin/cp -f /etc/ip6tables.rules /etc/iptables/rules.v6
         fi  
     fi
-    if [ "$systemtype" = "0" ]; then
+    if ! grep -qs "Twist" /etc/sysctl.conf && [ "$systemtype" = "0" ]; then
         iptables -I FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
-        iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j ACCEPT
-        iptables -I INPUT -m state --state NEW -m udp -p udp --dport 443 -j ACCEPT
         systemctl start firewalld
         firewall-cmd --permanent --zone=public --add-port=443/tcp
         firewall-cmd --permanent --zone=public --add-port=443/udp
@@ -478,6 +476,7 @@ function startservices(){
     echo "#!/bin/bash" > /etc/init.d/shadowsocks
     if [  "$systemtype" = "0" ]; then
         cat >> /etc/init.d/shadowsocks <<EOF
+
 # chkconfig: 2345 90 10
 # description: A Secured Socks Proxy.
 
