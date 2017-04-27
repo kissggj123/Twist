@@ -6,6 +6,7 @@
 - **TCP Fast Open** Support
 - Supported **IPv4 & IPv6** Environment and Connections
 - **Optimised Performance** Using Google BBR TCP Controler and Supported UDP Port Transfer
+- **High Security** Supported AEAD Auth & Encryption
 - **Fine Compatibility** and Support Original Shadowsocks Client
 - **One-key Installation** and One-key Setup on your Devices
 - **SS Scheme & QRCode** Login Information Auto Generate 
