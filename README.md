@@ -29,12 +29,12 @@ TCP 443
 ```
 
 ## Custom
-Change the Default Settings from here, Manual is at <a href="https://github.com/shadowsocks/shadowsocks/wiki/Configuration-via-Config-File" target="_blank">Shadowsocks-libev Wiki</a>
+Change the Default Settings from here,Manual is at <a href="https://github.com/shadowsocks/shadowsocks/wiki/Configuration-via-Config-File" target="_blank">Shadowsocks-libev Wiki</a>
 ```shadowsocks-libev-json
 /etc/shadowsocks-libev/config.json
 ```
 
-## Check Shadowsocks-libev Status
+## Check and Change Shadowsocks-libev Status
 - Check If Shadowsocks-libev is Running on Your Server
 ```shell
 /etc/init.d/shadowsocks status
@@ -47,7 +47,7 @@ Change the Default Settings from here, Manual is at <a href="https://github.com/
 ```
 
 ## Setup Shadowsocks-libev for Connect on your Devices
-It is Required a Shadowsocks Client on Your Device for Manually Set up or Use URL-Scheme & QRCode
+It is Required a Shadowsocks Client on Your Device for Manually Set up or Use URL-Scheme & QRCode in Shadowsocks Client Apps
 
 ## Uninstall Twist
 Please **Run Bash Command** to Uninstall Twist While You Once Downloaded it on Your Server
