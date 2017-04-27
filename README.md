@@ -5,7 +5,7 @@
 - **Multithreading** Support
 - **TCP Fast Open** Support
 - Supported **IPv4 & IPv6** Environment and Connections
-- **Optimised Performance** Using Google BBR TCP Controler and Supported UDP Transfer
+- **Optimised Performance** Using Google BBR TCP Controler and Supported UDP Port Transfer
 - **Fine Compatibility** and Support Original Shadowsocks Client
 - **One-key Installation** and One-key Setup on your Devices
 - **SS Scheme & QRCode** Login Information Auto Generate 
@@ -28,8 +28,26 @@ UDP 443
 TCP 443
 ```
 
+## Custom
+Change the Default Settings from here, Manual is at <a href="https://github.com/shadowsocks/shadowsocks/wiki/Configuration-via-Config-File" target="_blank">Shadowsocks-libev Wiki</a>
+```shadowsocks-libev-json
+/etc/shadowsocks-libev/config.json
+```
+
+## Check Shadowsocks-libev Status
+- Check If Shadowsocks-libev is Running on Your Server
+```shell
+/etc/init.d/shadowsocks status
+```
+- Change the Status of Shadowsocks-libev by these Command
+```shell
+/etc/init.d/shadowsocks start  #Start Shadowsocks Service
+/etc/init.d/shadowsocks stop  #Stop Shadowsocks Service
+/etc/init.d/shadowsocks restart  #Restart Shadowsocks Service
+```
+
 ## Setup Shadowsocks-libev for Connect on your Devices
-It is Required a Shadowsocks Client on Your Device for Manually Set up or Use URL-Scheme
+It is Required a Shadowsocks Client on Your Device for Manually Set up or Use URL-Scheme & QRCode
 
 ## Uninstall Twist
 Please **Run Bash Command** to Uninstall Twist While You Once Downloaded it on Your Server
