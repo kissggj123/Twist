@@ -34,7 +34,7 @@ function uninstall_twist(){
         echo -e "#[\033[31;1m             Twist was Not Find on Your Server!\033[0m                 ]#"
         echo ""
         exit 1
-    fi   
+    fi
     if grep -qs "Ubunut" /etc/issue || grep -qs "Debian" /etc/issue; then
         update-rc.d -f shadowsocks remove
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j DROP
@@ -441,7 +441,7 @@ EOF
         if [ -f /etc/iptables/rules.v6 ]; then
             /bin/cp -f /etc/iptables/rules.v6 "/etc/iptables/rules.v6.old-$date"
             /bin/cp -f /etc/ip6tables.rules /etc/iptables/rules.v6
-        fi  
+        fi
     fi
     if ! grep -qs "Twist" /etc/sysctl.conf && [ "$systemtype" = "0" ]; then
         iptables -I FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
