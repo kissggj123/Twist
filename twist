@@ -415,12 +415,19 @@ EOF
 function configiptables(){
     if ! grep -qs "Twist" /etc/sysctl.conf; then
         iptables-save > "/etc/iptables.rules.old-$date"
+        iptables -N SHADOWSOCKS
+        iptables -t filter -m owner --uid-owner shadowsocks  -A SHADOWSOCKS -d 127.0.0.0/8 -j REJECT
+        iptables -t filter -m owner --uid-owner shadowsocks  -A SHADOWSOCKS -d 169.254.0.0/16 -j REJECT
+        iptables -t filter -m owner --uid-owner shadowsocks  -A SHADOWSOCKS -d 172.16.0.0/12 -j REJECT
+        iptables -t filter -m owner --uid-owner shadowsocks  -A SHADOWSOCKS -d 192.168.0.0/16 -j REJECT
+        iptables -t filter -m owner --uid-owner shadowsocks  -A SHADOWSOCKS -d 10.168.0.0/24 -j REJECT
+        iptables -t filter -m owner --uid-owner shadowsocks  -A SHADOWSOCKS -d 0.0.0.0/0 -j ACCEPT
+        iptables -A OUTPUT -j SHADOWSOCKS
         iptables -I INPUT 1 -m conntrack --ctstate INVALID -j DROP
         iptables -I INPUT 2 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
         iptables -I INPUT 3 -p udp -m multiport --dports 443 -j ACCEPT
         iptables -I FORWARD 1 -m conntrack --ctstate INVALID -j DROP
-        iptables -I FORWARD 2 -i "$ETH" -o ppp+ -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-        iptables -I FORWARD 3 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+        iptables -I FORWARD 2 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j ACCEPT
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport 443 -j ACCEPT
         /bin/cp -f /etc/ip6tables.rules "/etc/ip6tables.rules.old-$date" 2>/dev/null
