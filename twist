@@ -339,6 +339,7 @@ function installsslibev(){
 function configsslibev(){
     date="$(date +%Y-%m-%d-%H:%M:%S)"
     PASSWORD="$(< /dev/urandom tr -dc 'A-HJ-NPR-Za-km-z2-9' | head -c 32)"
+    [ ! -d /etc/shadowsocks-libev ] || mkdir -p /etc/shadowsocks-libev
     cat > /etc/shadowsocks-libev/config.json<<EOF
 {
     "server":${SSLOCAL},
