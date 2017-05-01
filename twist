@@ -193,8 +193,7 @@ function getip(){
     if [ -f /proc/net/if_inet6 ]; then
 	    if [ "$systemtype" = "1" ]; then
             echo "iface $ETH inet6 dhcp" > /etc/network/interfaces.d/60-default-with-ipv6.cfg
-            sudo ifdown $ETH && sudo ifup $ETH
-            dhclient -6
+            ifdown $ETH && ifup $ETH
             PUBLICIPv6=`ifconfig | grep -E '(Link|inet6)' | grep -v "Scope:Global"`
             if [ -z "$PUBLICIPv6" ]; then
 	            SSLOCAL="\"0.0.0.0\""
@@ -339,7 +338,7 @@ function installsslibev(){
 function configsslibev(){
     date="$(date +%Y-%m-%d-%H:%M:%S)"
     PASSWORD="$(< /dev/urandom tr -dc 'A-HJ-NPR-Za-km-z2-9' | head -c 32)"
-    [ ! -d /etc/shadowsocks-libev ] || mkdir -p /etc/shadowsocks-libev
+    [ -d /etc/shadowsocks-libev ] || mkdir -p /etc/shadowsocks-libev
     cat > /etc/shadowsocks-libev/config.json<<EOF
 {
     "server":${SSLOCAL},
