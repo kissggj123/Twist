@@ -125,21 +125,21 @@ function getsystem(){
             echo ""
             exit 1
         else
-             systemtype="0"
+            systemtype="0"
         fi
     else
         echo "`cat /etc/issue`" | grep -q "Ubuntu"
-	    if [ $? -eq 0 ]; then
+        if [ $? -eq 0 ]; then
             systemtype="1"
         else
             echo "`cat /etc/issue`" | grep -q "Debian"
-	        if [ $? -eq 0 ]; then
+            if [ $? -eq 0 ]; then
                 systemtype="1"
             else
-	            echo -e "# [\033[31;1mThis Script Must be Run on Ubuntu, Debian or CentOS! Aborating!\033[0m]"
+                echo -e "# [\033[31;1mThis Script Must be Run on Ubuntu, Debian or CentOS! Aborating!\033[0m]"
                 echo ""
                 exit 1
-	        fi
+            fi
         fi
     fi
     ethstatus=$(cat /sys/class/net/$ETH/operstate 2>/dev/null)
@@ -162,7 +162,7 @@ function getsystem(){
                 echo ""
                 echo -e "# Network Interface Check Passed, your VPN Will be Setup Using Interface '$ETH'"
                 echo ""
-             fi
+            fi
         fi
      fi
      if [ -f /proc/user_beancounters ]; then
@@ -191,14 +191,14 @@ function getip(){
         fi
     fi
     if [ -f /proc/net/if_inet6 ]; then
-	    if [ "$systemtype" = "1" ]; then
+        if [ "$systemtype" = "1" ]; then
             echo "iface $ETH inet6 dhcp" > /etc/network/interfaces.d/60-default-with-ipv6.cfg
             ifdown $ETH && ifup $ETH
             PUBLICIPv6=`ifconfig | grep -E '(Link|inet6)' | grep -v "Scope:Global"`
             if [ -z "$PUBLICIPv6" ]; then
-	            SSLOCAL="\"0.0.0.0\""
+                SSLOCAL="\"0.0.0.0\""
             fi
-	    else
+        else
             sed -i "/^\<IPV6INIT=\>/d" /etc/sysconfig/network-scripts/ifcfg-eth0
             cat >> /etc/sysconfig/network-scripts/ifcfg-eth0 <<EOF
 IPV6INIT="yes"
@@ -210,8 +210,8 @@ EOF
             PUBLICIPv6=`ifconfig | grep -E '(Link|inet6)' | grep -v "Scope:Global"`
             if [ -z "$PUBLICIPv6" ]; then
                 SSLOCAL="\"0.0.0.0\""
-	        fi
-	    fi
+            fi
+        fi
     else
         SSLOCAL="\"0.0.0.0\""
     fi
@@ -483,7 +483,7 @@ function startservices(){
 # description: Start or stop the Shadowsocks-libev server
 EOF
     fi
-        cat >> /etc/init.d/shadowsocks <<EOF
+    cat >> /etc/init.d/shadowsocks <<EOF
 
 ### BEGIN INIT INFO
 # Provides:          Shadowsocks-libev
