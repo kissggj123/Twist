@@ -171,8 +171,7 @@ function getsystem(){
 }
 
 function getip(){
-    PUBLICIP=`curl -s checkip.dyndns.com | cut -d' ' -f 6  | cut -d'<' -f 1`
-    [ -z "$PUBLICIP" ] && PUBLICIP=`curl -s ifconfig.me/ip`
+    PUBLICIP=`curl -s diagnostic.opendns.com/myip`
     [ -z "$PUBLICIP" ] && PUBLICIP=$(dig @resolver1.opendns.com -t A -4 myip.opendns.com +short)
     if ! printf %s "$PUBLICIP" | grep -Eq "$IPREGEX"; then
         echo ""
