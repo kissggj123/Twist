@@ -4,7 +4,7 @@
 - **Fast, Secured and Stable Connections**
 - **Multithreading** Support
 - **TCP Fast Open** Support
-- **Simple obfs** Support
+- **Simple Obfs** Support
 - Supported **IPv4 & IPv6** Environment and Connections
 - **Optimised Performance** Using Google BBR TCP Controler and Supported UDP Transfer
 - **High Security** Supported AEAD Auth & Encryption
