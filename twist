@@ -358,7 +358,7 @@ function configsslibev(){
     "udp_timeout":600,
     "method":"chacha20-ietf-poly1305",
     "plugin":"obfs-server",
-    "plugin_opts":"obfs=http;fast-open;obfs-host=icloud.com"
+    "plugin_opts":"obfs=http;fast-open;obfs-host=icloud.com",
     "mode":"tcp_and_udp",
     "fast_open":true,
     "workers":256,
