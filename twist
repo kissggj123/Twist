@@ -301,45 +301,46 @@ function installbbr(){
 }
 
 function installsslibev(){
-   installpath=`pwd`
-   cd $installpath
-   libsodiumver=`wget -qO- https://download.libsodium.org/libsodium/releases/ | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f1,2,3 | sort -V | tail -1`
-   wget -t 3 -T 30 -nv -O libsodium-${libsodiumver}.tar.gz https://github.com/jedisct1/libsodium/releases/download/${libsodiumver}/libsodium-${libsodiumver}.tar.gz
-   [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Libsodium Source. Aborting.\033[0m]"; echo ""; exit 1; }
-   [ -d libsodium-${libsodiumver} ] && rm -rf libsodium-${libsodiumver}
-   tar zxf libsodium-${libsodiumver}.tar.gz
-   cd libsodium-${libsodiumver}
-   ./configure --prefix=/usr && make && make install || { echo ""; echo －e "# [\033[31;1mLibsodium Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
-   cd $installpath
-   mbedver=`wget -qO- https://tls.mbed.org/download-archive | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f1,2,3 | sort -V | tail -1`
-   wget -t 3 -T 30 -nv -O mbedtls-${mbedver}-gpl.tgz https://tls.mbed.org/download/mbedtls-${mbedver}-gpl.tgz
-   [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download MBED Source. Aborting.\033[0m]"; echo ""; exit 1; }
-   [ -d mbedtls-${mbedver} ] && rm -rf mbedtls-${mbedver}
-   tar xf mbedtls-${mbedver}-gpl.tgz
-   cd mbedtls-${mbedver}
-   make SHARED=1 CFLAGS=-fPIC
-   make DESTDIR=/usr install || { echo ""; echo －e "# [\033[31;1mMBED Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
-   ldconfig
-   cd $installpath
-   sslibevtag=$(wget -qO- https://api.github.com/repos/shadowsocks/shadowsocks-libev/releases/latest | grep 'tag_name' | cut -d\" -f4)
-   sslibevver="shadowsocks-libev-$(echo ${sslibevtag} | sed -e 's/^[a-zA-Z]//g')"
-   wget -t 3 -T 30 -nv -O ${sslibevver}.tar.gz https://github.com/shadowsocks/shadowsocks-libev/releases/download/${sslibevtag}/${sslibevver}.tar.gz
-   [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Shadowsocks-libev Source. Aborting.\033[0m]"; echo ""; exit 1; }
-   [ -d ${sslibevver} ] && rm -rf ${sslibevver}
-   tar zxf ${sslibevver}.tar.gz
-   cd ${sslibevver}
-   ./configure
-   make || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
-   make install || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
-   cd $installpath
-   git clone https://github.com/shadowsocks/simple-obfs.git
-   cd simple-obfs
-   git submodule update --init --recursive
-   ./autogen.sh
-   ./configure && make
-   make install
-   cd $installpath
-   rm -rf ${sslibevver}.tar.gz ${sslibevver} libsodium-${libsodiumver}.tar.gz libsodium-${libsodiumver} mbedtls-${mbedver}-gpl.tgz mbedtls-${mbedver} simple-obfs
+    installpath=`pwd`
+    cd $installpath
+    libsodiumver=`wget -qO- https://download.libsodium.org/libsodium/releases/ | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f1,2,3 | sort -V | tail -1`
+    wget -t 3 -T 30 -nv -O libsodium-${libsodiumver}.tar.gz https://github.com/jedisct1/libsodium/releases/download/${libsodiumver}/libsodium-${libsodiumver}.tar.gz
+    [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Libsodium Source. Aborting.\033[0m]"; echo ""; exit 1; }
+    [ -d libsodium-${libsodiumver} ] && rm -rf libsodium-${libsodiumver}
+    tar zxf libsodium-${libsodiumver}.tar.gz
+    cd libsodium-${libsodiumver}
+    ./configure --prefix=/usr && make && make install || { echo ""; echo －e "# [\033[31;1mLibsodium Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
+    cd $installpath
+    mbedver=`wget -qO- https://tls.mbed.org/download-archive | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f1,2,3 | sort -V | tail -1`
+    wget -t 3 -T 30 -nv -O mbedtls-${mbedver}-gpl.tgz https://tls.mbed.org/download/mbedtls-${mbedver}-gpl.tgz
+    [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download MBED Source. Aborting.\033[0m]"; echo ""; exit 1; }
+    [ -d mbedtls-${mbedver} ] && rm -rf mbedtls-${mbedver}
+    tar xf mbedtls-${mbedver}-gpl.tgz
+    cd mbedtls-${mbedver}
+    make SHARED=1 CFLAGS=-fPIC
+    make DESTDIR=/usr install || { echo ""; echo －e "# [\033[31;1mMBED Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
+    ldconfig
+    cd $installpath
+    sslibevtag=$(wget -qO- https://api.github.com/repos/shadowsocks/shadowsocks-libev/releases/latest | grep 'tag_name' | cut -d\" -f4)
+    sslibevver="shadowsocks-libev-$(echo ${sslibevtag} | sed -e 's/^[a-zA-Z]//g')"
+    wget -t 3 -T 30 -nv -O ${sslibevver}.tar.gz https://github.com/shadowsocks/shadowsocks-libev/releases/download/${sslibevtag}/${sslibevver}.tar.gz
+    [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Shadowsocks-libev Source. Aborting.\033[0m]"; echo ""; exit 1; }
+    [ -d ${sslibevver} ] && rm -rf ${sslibevver}
+    tar zxf ${sslibevver}.tar.gz
+    cd ${sslibevver}
+    ./configure
+    make || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
+    make install || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
+    cd $installpath
+    git clone https://github.com/shadowsocks/simple-obfs.git
+    cd simple-obfs
+    git submodule update --init --recursive
+    ./autogen.sh
+    ./configure
+    make || { echo ""; echo －e "# [\033[31;1mShadowsocks-Simple-obfs Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
+    make install || { echo ""; echo －e "# [\033[31;1mShadowsocks-Simple-obfs Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
+    cd $installpath
+    rm -rf ${sslibevver}.tar.gz ${sslibevver} libsodium-${libsodiumver}.tar.gz libsodium-${libsodiumver} mbedtls-${mbedver}-gpl.tgz mbedtls-${mbedver} simple-obfs
 }
 
 function configsslibev(){
