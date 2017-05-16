@@ -227,7 +227,7 @@ function installlibs(){
         [ "$?" != "0" ] && { echo -e "# [\033[31;1mCannot Add EPEL repository! Aborting!\033[0m]"; exit 1; }
         yum -y install swig python python-devel python-setuptools python-pip libevent curl curl-devel zlib-devel gevent || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         yum -y install gcc gettext-devel autoconf automake make zlib-devel libtool xmlto asciidoc udns-devel libev-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        yum -y install pcre pcre-devel perl perl-devel cpio expat-devel openssl-devel mbedtls-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        yum -y install pcre pcre-devel perl perl-devel cpio expat-devel openssl-devel mbedtls-devel git || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         yum -y install fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Fail2ban! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         pip install -q qrcode
         if grep -qs "release 6" /etc/redhat-release; then
@@ -239,7 +239,7 @@ function installlibs(){
         fi
     else
         apt-get -yq update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        apt-get -yq install wget dnsutils || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        apt-get -yq install wget dnsutils git || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         apt-get -yq install gawk grep sed net-tools || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         apt-get -yq install python python-dev python-pip python-setuptools python-m2crypto curl gcc swig make perl cpio build-essential libevent-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }   
         apt-get -y --no-install-recommends install gettext build-essential autoconf automake libtool openssl libssl-dev zlib1g-dev xmlto asciidoc libpcre3-dev libudns-dev libev-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
@@ -332,7 +332,14 @@ function installsslibev(){
    make || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
    make install || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
    cd $installpath
-   rm -rf ${sslibevver}.tar.gz ${sslibevver} libsodium-${libsodiumver}.tar.gz libsodium-${libsodiumver} mbedtls-${mbedver}-gpl.tgz mbedtls-${mbedver}
+   git clone https://github.com/shadowsocks/simple-obfs.git
+   cd simple-obfs
+   git submodule update --init --recursive
+   ./autogen.sh
+   ./configure && make
+   make install
+   cd $installpath
+   rm -rf ${sslibevver}.tar.gz ${sslibevver} libsodium-${libsodiumver}.tar.gz libsodium-${libsodiumver} mbedtls-${mbedver}-gpl.tgz mbedtls-${mbedver} simple-obfs
 }
 
 function configsslibev(){
