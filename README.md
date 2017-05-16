@@ -4,8 +4,9 @@
 - **Fast, Secured and Stable Connections**
 - **Multithreading** Support
 - **TCP Fast Open** Support
+- **Simple obfs** Support
 - Supported **IPv4 & IPv6** Environment and Connections
-- **Optimised Performance** Using Google BBR TCP Controler and Supported UDP Port Transfer
+- **Optimised Performance** Using Google BBR TCP Controler and Supported UDP Transfer
 - **High Security** Supported AEAD Auth & Encryption
 - **Fine Compatibility** and Support Original Shadowsocks Client
 - **One-key Installation** and One-key Setup on your Devices
@@ -30,9 +31,16 @@ TCP 443
 ```
 
 ## Custom
-Change the Default Settings from here,Manual is at <a href="https://github.com/shadowsocks/shadowsocks/wiki/Configuration-via-Config-File" target="_blank">Shadowsocks-libev Wiki</a>
+Change the Default Settings from here, Manual is at <a href="https://github.com/shadowsocks/shadowsocks/wiki/Configuration-via-Config-File" target="_blank">Shadowsocks-libev Wiki</a>
 ```shadowsocks-libev-json
 /etc/shadowsocks-libev/config.json
+```
+
+## Simple Obfs
+Here is the Deafult Configurations of Simple Obfs, Simple Obfs will not be Running without Configure it on Your Clients Manually. And You Can also Use Shadowsocks without Set Up Simple Obfs on Your Clients. If You Use Schemes or QR Code Configurations on Your Clients, Simple Obfs will not be Configured.
+```Simple Obfs
+obfs=tls
+obfs-host=icloud.com
 ```
 
 ## Check and Change Shadowsocks-libev Status
