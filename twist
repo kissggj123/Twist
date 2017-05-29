@@ -142,7 +142,7 @@ function getsystem(){
             fi
         fi
     fi
-    ethstatus=$(cat /sys/class/net/$ETH/operstate 2>/dev/null)
+    ethstatus="$(cat /sys/class/net/$ETH/operstate 2>/dev/null)"
     if [ -z "$ethstatus" ] || [ "$ethstatus" = "down" ]; then
         echo -e "# [\033[31;1mNetwork Interface '$ETH' is Not Available. Please try Another Network Interface Listed Below.\033[0m]" 1>&2
         echo ""
@@ -151,7 +151,7 @@ function getsystem(){
         echo -e "Please Enter [\033[32;1mNetwork Interface Name\033[0m]:"
         read -p "Input Devices Name (Default:${ETH}):" eth
      	if [ ! "$eth" = "" ]; then
-            ethstatus=$(cat /sys/class/net/$eth/operstate 2>/dev/null)
+            ethstatus="$(cat /sys/class/net/$eth/operstate 2>/dev/null)"
             if [ -z "$ethstatus" ] || [ "$ethstatus" = "down" ]; then
                 echo ""
                 echo -e "# [\033[31;1mNetwork Interface Your Entered is Not Available! Aborting!\033[0m]" 1>&2
@@ -171,8 +171,8 @@ function getsystem(){
 }
 
 function getip(){
-    PUBLICIP=`curl -s diagnostic.opendns.com/myip`
-    [ -z "$PUBLICIP" ] && PUBLICIP=$(dig @resolver1.opendns.com -t A -4 myip.opendns.com +short)
+    PUBLICIP="$(curl -s diagnostic.opendns.com/myip)"
+    [ -z "$PUBLICIP" ] && PUBLICIP="$(dig @resolver1.opendns.com -t A -4 myip.opendns.com +short)"
     if ! printf %s "$PUBLICIP" | grep -Eq "$IPREGEX"; then
         echo ""
         echo -e "# [\033[31;1mCannot find Valid Public IP. Please Fill Your IP Address Below!\033[0m]"
@@ -193,7 +193,7 @@ function getip(){
         if [ "$systemtype" = "1" ]; then
             echo "iface $ETH inet6 dhcp" > /etc/network/interfaces.d/60-default-with-ipv6.cfg
             ifdown $ETH && ifup $ETH
-            PUBLICIPv6=`ifconfig | grep -E '(Link|inet6)' | grep -v "Scope:Global"`
+            PUBLICIPv6="$(ifconfig | grep -E '(Link|inet6)' | grep -v "Scope:Global")"
             if [ -z "$PUBLICIPv6" ]; then
                 SSLOCAL="\"0.0.0.0\""
             fi
@@ -206,7 +206,7 @@ NM_CONTROLLED=no
 EOF
             echo "NETWORKING_IPV6=yes" >> /etc/sysconfig/network
             sudo service network restart
-            PUBLICIPv6=`ifconfig | grep -E '(Link|inet6)' | grep -v "Scope:Global"`
+            PUBLICIPv6="$(ifconfig | grep -E '(Link|inet6)' | grep -v "Scope:Global")"
             if [ -z "$PUBLICIPv6" ]; then
                 SSLOCAL="\"0.0.0.0\""
             fi
@@ -250,11 +250,11 @@ function installlibs(){
 }
 
 function installbbr(){
-    [ "$BBR" = "enable" ] && KERNELVER=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/ | awk -F'\"v' '/v[4-9]./{print $2}' | cut -d/ -f1 | grep -v -  | sort -V | tail -1)
+    [ "$BBR" = "enable" ] && KERNELVER="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/ | awk -F'\"v' '/v[4-9]./{print $2}' | cut -d/ -f1 | grep -v -  | sort -V | tail -1)"
     [ "$BBR" = "enable" ] && [ -z "$KERNELVER" ] && BBR="disable" && echo -e "# [\033[31;1mCannot Check Linux KERNEL Verison. BBR will NOT Working!\033[0m]"
-    if [ "$BBR" = "enable" ] && [ "`echo "$KERNELVER" | cut -d'.' -f1,2`">="`uname -a | grep -oE '[0-9]+\.[0-9]+' | cut -d'.' -f1,2`" ]; then
+    if [ "$BBR" = "enable" ] && [ "$(echo "$KERNELVER" | cut -d'.' -f1,2)">="$(uname -a | grep -oE '[0-9]+\.[0-9]+' | cut -d'.' -f1,2)" ]; then
         if [ "$systemtype" = "1" ]; then
-            SYSTYPE="`dpkg --print-architecture`"
+            SYSTYPE="$(dpkg --print-architecture)"
             if [ "$SYSTYPE" = "amd64" ]; then
                 KERNEL=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/amd64.deb/{print $2}' | cut -d'<' -f1 | head -1)
             else
@@ -302,7 +302,7 @@ function installbbr(){
 function installsslibev(){
     installpath=`pwd`
     cd $installpath
-    libsodiumver=`wget -qO- https://download.libsodium.org/libsodium/releases/ | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f1,2,3 | sort -V | tail -1`
+    libsodiumver="$(wget -qO- https://download.libsodium.org/libsodium/releases/ | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f1,2,3 | sort -V | tail -1)"
     wget -t 3 -T 30 -nv -O libsodium-${libsodiumver}.tar.gz https://github.com/jedisct1/libsodium/releases/download/${libsodiumver}/libsodium-${libsodiumver}.tar.gz
     [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Libsodium Source. Aborting.\033[0m]"; echo ""; exit 1; }
     [ -d libsodium-${libsodiumver} ] && rm -rf libsodium-${libsodiumver}
@@ -310,7 +310,7 @@ function installsslibev(){
     cd libsodium-${libsodiumver}
     ./configure --prefix=/usr && make && make install || { echo ""; echo －e "# [\033[31;1mLibsodium Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
     cd $installpath
-    mbedver=`wget -qO- https://tls.mbed.org/download-archive | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f1,2,3 | sort -V | tail -1`
+    mbedver="$(wget -qO- https://tls.mbed.org/download-archive | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f1,2,3 | sort -V | tail -1)"
     wget -t 3 -T 30 -nv -O mbedtls-${mbedver}-gpl.tgz https://tls.mbed.org/download/mbedtls-${mbedver}-gpl.tgz
     [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download MBED Source. Aborting.\033[0m]"; echo ""; exit 1; }
     [ -d mbedtls-${mbedver} ] && rm -rf mbedtls-${mbedver}
@@ -320,7 +320,7 @@ function installsslibev(){
     make DESTDIR=/usr install || { echo ""; echo －e "# [\033[31;1mMBED Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
     ldconfig
     cd $installpath
-    sslibevtag=$(wget -qO- https://api.github.com/repos/shadowsocks/shadowsocks-libev/releases/latest | grep 'tag_name' | cut -d\" -f4)
+    sslibevtag="$(wget -qO- https://api.github.com/repos/shadowsocks/shadowsocks-libev/releases/latest | grep 'tag_name' | cut -d\" -f4)"
     sslibevver="shadowsocks-libev-$(echo ${sslibevtag} | sed -e 's/^[a-zA-Z]//g')"
     wget -t 3 -T 30 -nv -O ${sslibevver}.tar.gz https://github.com/shadowsocks/shadowsocks-libev/releases/download/${sslibevtag}/${sslibevver}.tar.gz
     [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Shadowsocks-libev Source. Aborting.\033[0m]"; echo ""; exit 1; }
@@ -331,6 +331,7 @@ function installsslibev(){
     make || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
     make install || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
     cd $installpath
+    [ -d simple-obfs ] && rm -rf simple-obfs
     git clone https://github.com/shadowsocks/simple-obfs.git
     cd simple-obfs
     git submodule update --init --recursive
@@ -601,7 +602,7 @@ EOF
     cat >> /etc/rc.local <<EOF
 dhclient -6
 service fail2ban restart
-sysctl -e -q -p 2>/dev/null
+sysctl -e -p
 EOF
     sysctl -e -q -p 2>/dev/null
     chmod +x /etc/rc.local
