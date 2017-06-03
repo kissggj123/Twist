@@ -118,6 +118,7 @@ function defaultvalue(){
 }
 
 function getsystem(){
+    systemtype="0"
     echo "$(cat /etc/issue)" | grep -q "CentOS"
     if [ $? -eq 0 ]; then
         if [ ! -f /etc/redhat-release ] || ! grep -qs -e "release 6" -e "release 7" /etc/redhat-release; then
