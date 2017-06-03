@@ -20,7 +20,7 @@
 ## Set Up your Shadowsocks-libev Server
 Please **Run Bash Command** Below on Your Server to **Install Twist**
 ```bash
-sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh
+sudo wget https://raw.githubusercontent.com/kissggj123/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh
 ```
 
 ## Attention
