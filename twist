@@ -131,11 +131,11 @@ systemtype="0"
     else
         echo "$(cat /etc/issue)" | grep -q "Ubuntu"
         if [ $? -eq 0 ]; then
-            systemtype="1"
+            systemtype="0"
         else
             echo "$(cat /etc/issue)" | grep -q "Debian"
             if [ $? -eq 0 ]; then
-                systemtype="1"
+                systemtype="0"
             else
                 echo -e "# [\033[31;1mThis Script Must be Run on Ubuntu, Debian or CentOS! Aborating!\033[0m]"
                 echo ""
