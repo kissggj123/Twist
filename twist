@@ -118,7 +118,7 @@ function defaultvalue(){
 }
 
 function getsystem(){
-    echo "`cat /etc/issue`" | grep -q "CentOS"
+    echo "$(cat /etc/issue)" | grep -q "CentOS"
     if [ $? -eq 0 ]; then
         if [ ! -f /etc/redhat-release ] || ! grep -qs -e "release 6" -e "release 7" /etc/redhat-release; then
             echo -e "# [\033[31;1mPlease Make Sure the Server OS Verison is CentOS/RHEL 6 or 7! Aborting!\033[0m]"
@@ -128,11 +128,11 @@ function getsystem(){
             systemtype="0"
         fi
     else
-        echo "`cat /etc/issue`" | grep -q "Ubuntu"
+        echo "$(cat /etc/issue)" | grep -q "Ubuntu"
         if [ $? -eq 0 ]; then
             systemtype="1"
         else
-            echo "`cat /etc/issue`" | grep -q "Debian"
+            echo "$(cat /etc/issue)" | grep -q "Debian"
             if [ $? -eq 0 ]; then
                 systemtype="1"
             else
@@ -256,22 +256,22 @@ function installbbr(){
         if [ "$systemtype" = "1" ]; then
             SYSTYPE="$(dpkg --print-architecture)"
             if [ "$SYSTYPE" = "amd64" ]; then
-                KERNEL=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/amd64.deb/{print $2}' | cut -d'<' -f1 | head -1)
+                KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/amd64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
             else
                 if [ "$SYSTYPE" = "i386" ]; then
-                    KERNEL=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/i386.deb/{print $2}' | cut -d'<' -f1 | head -1)
+                    KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/i386.deb/{print $2}' | cut -d'<' -f1 | head -1)"
                 else
                     if [ "$SYSTYPE" = "armhf" ]; then
-                        KERNEL=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/armhf.deb/{print $2}' | cut -d'<' -f1 | head -1)
+                        KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/armhf.deb/{print $2}' | cut -d'<' -f1 | head -1)"
                     else
                         if [ "$SYSTYPE" = "arm64" ]; then
-                            KERNEL=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/arm64.deb/{print $2}' | cut -d'<' -f1 | head -1)
+                            KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/arm64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
                         else
                             if [ "$SYSTYPE" = "ppc64el" ]; then
-                                KERNEL=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/ppc64el.deb/{print $2}' | cut -d'<' -f1 | head -1)
+                                KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/ppc64el.deb/{print $2}' | cut -d'<' -f1 | head -1)"
                             else
                                 if [ "$SYSTYPE" = "s390x" ]; then
-                                    KERNEL=$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/s390x.deb/{print $2}' | cut -d'<' -f1 | head -1)
+                                    KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/s390x.deb/{print $2}' | cut -d'<' -f1 | head -1)"
                                 else
                                     echo ""
                                     echo -e "# \033[31;1mUnable to Find New KERNEL! Aborting!\033[0m"
@@ -300,7 +300,7 @@ function installbbr(){
 }
 
 function installsslibev(){
-    installpath=`pwd`
+    installpath="$(pwd)"
     cd $installpath
     libsodiumver="$(wget -qO- https://download.libsodium.org/libsodium/releases/ | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f1,2,3 | sort -V | tail -1)"
     wget -t 3 -T 30 -nv -O libsodium-${libsodiumver}.tar.gz https://github.com/jedisct1/libsodium/releases/download/${libsodiumver}/libsodium-${libsodiumver}.tar.gz
@@ -633,8 +633,8 @@ function twiststatus(){
     echo -e "          [\033[32;1mPlease Press Enter to Show Login Infomation and EXIT\033[0m]"
     echo -e "########################################################################"
     read -p ""
-    echo -e "# [\033[32;1mss://\033[0m\033[34;1m`echo -n chacha20-ietf-poly1305:${PASSWORD}@${PUBLICIP}:443 | base64`\033[0m]"
-    echo -n "ss://"`echo -n chacha20-ietf-poly1305:${PASSWORD}@${PUBLICIP}:443 | base64` | qr
+    echo -e "# [\033[32;1mss://\033[0m\033[34;1m$(echo -n chacha20-ietf-poly1305:${PASSWORD}@${PUBLICIP}:443 | base64)\033[0m]"
+    echo -n "ss://"$(echo -n chacha20-ietf-poly1305:${PASSWORD}@${PUBLICIP}:443 | base64) | qr
     echo -e "# [\033[32;1mServer IP:\033[0m \033[34;1m${PUBLICIP}\033[0m \033[32;1mPassWord:\033[0m \033[34;1m${PASSWORD}\033[0m \033[32;1mEncryption:\033[0m \033[34;1mchacha20-ietf-poly1305\033[0m \033[32;1mOBFS:\033[0m \033[34;1mtls\033[0m \033[32;1mOBFS-HOST:\033[0m \033[34;1micloud.com\033[0m \033[32;1mLOCALHOST:\033[0m \033[34;1m127.0.0.1:1080\033[0m]"
     if [ "$BBR" = "enable" ]; then
         echo -e "\033[34;1mThe Server Requires Restart to Enable Google BBR,Please Press Enter to Reboot!\033[0m"
