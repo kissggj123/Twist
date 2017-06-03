@@ -142,25 +142,25 @@ function getsystem(){
             fi
         fi
     fi
-    ethstatus="$(cat /sys/class/net/$ETH/operstate 2>/dev/null)"
+    ethstatus="$(cat /sys/class/net/${ETH}/operstate 2>/dev/null)"
     if [ -z "$ethstatus" ] || [ "$ethstatus" = "down" ]; then
-        echo -e "# [\033[31;1mNetwork Interface '$ETH' is Not Available. Please try Another Network Interface Listed Below.\033[0m]" 1>&2
+        echo -e "# [\033[31;1mNetwork Interface '${ETH}' is Not Available. Please try Another Network Interface Listed Below.\033[0m]" 1>&2
         echo ""
         ip link
         echo ""
         echo -e "Please Enter [\033[32;1mNetwork Interface Name\033[0m]:"
         read -p "Input Devices Name (Default:${ETH}):" eth
      	if [ ! "$eth" = "" ]; then
-            ethstatus="$(cat /sys/class/net/$eth/operstate 2>/dev/null)"
+            ethstatus="$(cat /sys/class/net/${eth}/operstate 2>/dev/null)"
             if [ -z "$ethstatus" ] || [ "$ethstatus" = "down" ]; then
                 echo ""
                 echo -e "# [\033[31;1mNetwork Interface Your Entered is Not Available! Aborting!\033[0m]" 1>&2
                 echo ""
                 exit 1
             else
-                ETH=$eth
+                ETH="$eth"
                 echo ""
-                echo -e "# Network Interface Check Passed, your VPN Will be Setup Using Interface '$ETH'"
+                echo -e "# Network Interface Check Passed, your VPN Will be Setup Using Interface '${ETH}'"
                 echo ""
             fi
         fi
@@ -179,13 +179,13 @@ function getip(){
         read -p "Input Your Public IP:" publicip
         if ! printf %s "$publicip" | grep -Eq "$IPREGEX"; then
             echo ""
-            echo -e "# [\033[31;1mThe IP:$publicip You Entered is Out of Range! Aborting!\033[0m]"
+            echo -e "# [\033[31;1mThe IP:${publicip} You Entered is Out of Range! Aborting!\033[0m]"
             echo ""
             exit 1
         else
             PUBLICIP="$publicip"
             echo ""
-            echo -e "# [\033[32;1mYour Public IP:$PUBLICIP, Server will Detect Connection Automaticly.\033[0m]"
+            echo -e "# [\033[32;1mYour Public IP:${PUBLICIP}, Server will Detect Connection Automaticly.\033[0m]"
             echo ""
         fi
     fi
@@ -326,7 +326,7 @@ function installsslibev(){
     [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Shadowsocks-libev Source. Aborting.\033[0m]"; echo ""; exit 1; }
     [ -d ${sslibevver} ] && rm -rf ${sslibevver}
     tar zxf ${sslibevver}.tar.gz
-    cd ${sslibevver}
+    cd $sslibevver
     ./configure
     make || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
     make install || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
@@ -340,7 +340,7 @@ function installsslibev(){
     make || { echo ""; echo －e "# [\033[31;1mShadowsocks-Simple-obfs Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
     make install || { echo ""; echo －e "# [\033[31;1mShadowsocks-Simple-obfs Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
     cd $installpath
-    rm -rf ${sslibevver}.tar.gz ${sslibevver} libsodium-${libsodiumver}.tar.gz libsodium-${libsodiumver} mbedtls-${mbedver}-gpl.tgz mbedtls-${mbedver} simple-obfs
+    rm -rf libsodium-${libsodiumver}.tar.gz libsodium-${libsodiumver} mbedtls-${mbedver}-gpl.tgz mbedtls-${mbedver} ${sslibevver}.tar.gz $sslibevver simple-obfs
 }
 
 function configsslibev(){
@@ -365,7 +365,7 @@ function configsslibev(){
 }
 EOF
     if ! grep -qs "Twist" /etc/sysctl.conf; then
-        /bin/cp -f /etc/sysctl.conf "/etc/sysctl.conf.old-$date" 2>/dev/null
+        /bin/cp -f /etc/sysctl.conf "/etc/sysctl.conf.old-${date}" 2>/dev/null
         cat >> /etc/sysctl.conf <<EOF
 # Twist Configs
 fs.file-max = 1024000
@@ -395,7 +395,7 @@ net.ipv6.conf.all.accept_source_route = 1
 net.ipv6.conf.all.accept_redirects = 0
 net.ipv6.conf.all.autoconf = 1
 net.ipv6.conf.all.forwarding = 1
-net.ipv6.conf.$ETH.accept_ra = 2
+net.ipv6.conf.${ETH}.accept_ra = 2
 EOF
         if [ "$BBR" = "enable" ]; then
             echo "net.core.default_qdisc = fq" >> /etc/sysctl.conf
@@ -414,7 +414,7 @@ EOF
 
 function configiptables(){
     if ! grep -qs "Twist" /etc/sysctl.conf; then
-        iptables-save > "/etc/iptables.rules.old-$date"
+        iptables-save > "/etc/iptables.rules.old-${date}"
         iptables -I INPUT 1 -m conntrack --ctstate INVALID -j DROP
         iptables -I INPUT 2 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
         iptables -I INPUT 3 -p udp -m multiport --dports 443 -j ACCEPT
@@ -422,7 +422,7 @@ function configiptables(){
         iptables -I FORWARD 2 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j ACCEPT
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport 443 -j ACCEPT
-        /bin/cp -f /etc/ip6tables.rules "/etc/ip6tables.rules.old-$date" 2>/dev/null
+        /bin/cp -f /etc/ip6tables.rules "/etc/ip6tables.rules.old-${date}" 2>/dev/null
         [ -f /etc/iptables/rules.v6 ] || cat > /etc/ip6tables.rules <<EOF
 # Twist Configs
 *filter
@@ -438,7 +438,7 @@ function configiptables(){
 COMMIT
 EOF
         if [ -f /etc/iptables/rules.v6 ]; then
-            /bin/cp -f /etc/iptables/rules.v6 "/etc/iptables/rules.v6.old-$date"
+            /bin/cp -f /etc/iptables/rules.v6 "/etc/iptables/rules.v6.old-${date}"
             /bin/cp -f /etc/ip6tables.rules /etc/iptables/rules.v6
         fi
     fi
@@ -524,7 +524,7 @@ fi
 sslibev_running() {
     if [ -r /var/run/shadowsocks-libev.pid ]; then
         read PID < /var/run/shadowsocks-libev.pid
-        if [ -d "/proc/\$PID" ]; then
+        if [ -d "/proc/\${PID}" ]; then
             return 0
         else
             rm -f /var/run/shadowsocks-libev.pid
@@ -580,7 +580,7 @@ sslibev_restart() {
 
 case "\$1" in
     start|stop|restart|status)
-    sslibev_\$1
+    sslibev_\${1}
     ;;
     *)
     echo "Usage: \$0 { start | stop | restart | status }"
@@ -635,7 +635,7 @@ function twiststatus(){
     read -p ""
     echo -e "# [\033[32;1mss://\033[0m\033[34;1m`echo -n chacha20-ietf-poly1305:${PASSWORD}@${PUBLICIP}:443 | base64`\033[0m]"
     echo -n "ss://"`echo -n chacha20-ietf-poly1305:${PASSWORD}@${PUBLICIP}:443 | base64` | qr
-    echo -e "# [\033[32;1mServer IP:\033[0m \033[34;1m$PUBLICIP\033[0m \033[32;1mPassWord:\033[0m \033[34;1m$PASSWORD\033[0m \033[32;1mEncryption:\033[0m \033[34;1mchacha20-ietf-poly1305\033[0m \033[32;1mOBFS:\033[0m \033[34;1mtls\033[0m \033[32;1mOBFS-HOST:\033[0m \033[34;1micloud.com\033[0m \033[32;1mLOCALHOST:\033[0m \033[34;1m127.0.0.1:1080\033[0m]"
+    echo -e "# [\033[32;1mServer IP:\033[0m \033[34;1m${PUBLICIP}\033[0m \033[32;1mPassWord:\033[0m \033[34;1m${PASSWORD}\033[0m \033[32;1mEncryption:\033[0m \033[34;1mchacha20-ietf-poly1305\033[0m \033[32;1mOBFS:\033[0m \033[34;1mtls\033[0m \033[32;1mOBFS-HOST:\033[0m \033[34;1micloud.com\033[0m \033[32;1mLOCALHOST:\033[0m \033[34;1m127.0.0.1:1080\033[0m]"
     if [ "$BBR" = "enable" ]; then
         echo -e "\033[34;1mThe Server Requires Restart to Enable Google BBR,Please Press Enter to Reboot!\033[0m"
         read -p ""
