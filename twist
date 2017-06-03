@@ -118,9 +118,6 @@ function defaultvalue(){
 }
 
 function getsystem(){	    
-            fi
-        fi
-    fi
     ethstatus="$(cat /sys/class/net/${ETH}/operstate 2>/dev/null)"
     if [ -z "$ethstatus" ] || [ "$ethstatus" = "down" ]; then
         echo -e "# [\033[31;1mNetwork Interface '${ETH}' is Not Available. Please try Another Network Interface Listed Below.\033[0m]" 1>&2
