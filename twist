@@ -117,26 +117,7 @@ function defaultvalue(){
     IPREGEX="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
 }
 
-function getsystem(){
-    echo "$(cat /etc/issue)" | grep -q "CentOS"
-    if [ $? -eq 0 ]; then
-        if [ ! -f /etc/redhat-release ] || ! grep -qs -e "release 6" -e "release 7" /etc/redhat-release; then
-            echo -e "# [\033[31;1mPlease Make Sure the Server OS Verison is CentOS/RHEL 6 or 7! Aborting!\033[0m]"
-            echo ""
-            exit 1
-        else
-            systemtype="0"
-        fi
-    else
-        echo "$(cat /etc/issue)" | grep -q "Ubuntu"
-        if [ $? -eq 0 ]; then
-            systemtype="1"
-        else
-            echo "$(cat /etc/issue)" | grep -q "Debian"
-            if [ $? -eq 0 ]; then
-                systemtype="1"
-            else
-	    
+function getsystem(){	    
             fi
         fi
     fi
