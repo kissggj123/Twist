@@ -188,7 +188,6 @@ function detectsystem(){
         if [ "$systemtype" = "1" ]; then
             echo "iface ${ETH} inet6 dhcp" > /etc/network/interfaces.d/60-default-with-ipv6.cfg
             ifdown $ETH && ifup $ETH
-            PUBLICIPv6="$(ifconfig | grep -E '(Link|inet6)' | grep -v "Scope:Global")"
         else
             sed -i "/^\<IPV6INIT=\>/d" /etc/sysconfig/network-scripts/ifcfg-${ETH}
             cat >> /etc/sysconfig/network-scripts/ifcfg-${ETH} <<EOF
@@ -198,14 +197,11 @@ NM_CONTROLLED=no
 EOF
             echo "NETWORKING_IPV6=yes" >> /etc/sysconfig/network
             sudo service network restart
-            PUBLICIPv6="$(ifconfig | grep -E '(Link|inet6)' | grep -v "Scope:Global")"
         fi
     else
         SSLOCAL="\"0.0.0.0\""
     fi
-    if [ -z "$PUBLICIPv6" ]; then
-        SSLOCAL="\"0.0.0.0\""
-    fi
+    [ -z "$(ip -6 addr show ${ETH})" ] && SSLOCAL="\"0.0.0.0\""
 }
 
 function installlibs(){
