@@ -37,7 +37,7 @@ Change the Default Settings from here, Manual is at <a href="https://github.com/
 ```
 
 ## Simple Obfs
-Here is the Deafult Configurations of Simple Obfs, Simple Obfs will not be Running without Configure it on Your Clients Manually. And You Can also Use Shadowsocks without Set Up Simple Obfs on Your Clients. If You Use Schemes or QR Code Configurations on Your Clients, Simple Obfs will not be Configured.
+Here is the Deafult Configuration of Simple Obfs, Simple Obfs will not be Running without Configure it on Your Clients Manually. And You Can also Use Shadowsocks without Set Up Simple Obfs on Your Clients. If You Use Schemes or QR Code Configurations on Your Clients, Simple Obfs will not be Configured.
 ```Simple-Obfs
 obfs=tls
 obfs-host=icloud.com
