@@ -564,7 +564,7 @@ EOF
         fi
     else
     iptables-restore < /etc/sysconfig/iptables
-	systemctl --now mask firewalld 2>/dev/null
+    systemctl --now mask firewalld 2>/dev/null
     systemctl enable iptables fail2ban 2>/dev/null
     fi
     service fail2ban restart
