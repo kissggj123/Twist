@@ -226,7 +226,7 @@ function installlibs(){
 function installbbr(){
     [ "$BBR" = "enable" ] && KERNELVER="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/ | awk -F'\"v' '/v[4-9]./{print $2}' | cut -d/ -f1 | grep -v -  | sort -V | tail -1)"
     [ "$BBR" = "enable" ] && [ -z "$KERNELVER" ] && BBR="disable" && echo -e "# [\033[31;1mCannot Check Linux KERNEL Verison. BBR will NOT Working!\033[0m]"
-    if [ "$BBR" = "enable" ] && [ "$(echo "$KERNELVER" | cut -d'.' -f1,2)">="$(uname -a | grep -oE '[0-9]+\.[0-9]+' | cut -d'.' -f1,2)" ]; then
+    if [ "$BBR" = "enable" ] && [ "$(echo "$KERNELVER" | cut -d'.' -f1,2,3)">"$(uname -a | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f1,2,3)" ]; then
         if [ "$systemtype" = "1" ]; then
             SYSTYPE="$(dpkg --print-architecture)"
             if [ "$SYSTYPE" = "amd64" ]; then
@@ -266,50 +266,49 @@ function installbbr(){
         else
             yum --enablerepo=elrepo-kernel install kernel-ml || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
         fi
+        rm -f $(uname -a | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f1,2,3)
     fi
 }
 
 function installsslibev(){
-    installpath="$(pwd)"
-    cd $installpath
     libsodiumver="$(wget -qO- https://download.libsodium.org/libsodium/releases/ | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f1,2,3 | sort -V | tail -1)"
     wget -t 3 -T 30 -nv -O libsodium-${libsodiumver}.tar.gz https://github.com/jedisct1/libsodium/releases/download/${libsodiumver}/libsodium-${libsodiumver}.tar.gz
     [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Libsodium Source. Aborting.\033[0m]"; echo ""; exit 1; }
     [ -d libsodium-${libsodiumver} ] && rm -rf libsodium-${libsodiumver}
     tar zxf libsodium-${libsodiumver}.tar.gz
-    cd libsodium-${libsodiumver}
+    pushd libsodium-${libsodiumver}
     ./configure --prefix=/usr && make && make install || { echo ""; echo －e "# [\033[31;1mLibsodium Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
-    cd $installpath
+    popd
     mbedver="$(wget -qO- https://tls.mbed.org/download-archive | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f1,2,3 | sort -V | tail -1)"
     wget -t 3 -T 30 -nv -O mbedtls-${mbedver}-gpl.tgz https://tls.mbed.org/download/mbedtls-${mbedver}-gpl.tgz
     [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download MBED Source. Aborting.\033[0m]"; echo ""; exit 1; }
     [ -d mbedtls-${mbedver} ] && rm -rf mbedtls-${mbedver}
     tar xf mbedtls-${mbedver}-gpl.tgz
-    cd mbedtls-${mbedver}
+    pushd mbedtls-${mbedver}
     make SHARED=1 CFLAGS=-fPIC
     make DESTDIR=/usr install || { echo ""; echo －e "# [\033[31;1mMBED Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
     ldconfig
-    cd $installpath
+    popd
     sslibevtag="$(wget -qO- https://api.github.com/repos/shadowsocks/shadowsocks-libev/releases/latest | grep 'tag_name' | cut -d\" -f4)"
     sslibevver="shadowsocks-libev-$(echo ${sslibevtag} | sed -e 's/^[a-zA-Z]//g')"
     wget -t 3 -T 30 -nv -O ${sslibevver}.tar.gz https://github.com/shadowsocks/shadowsocks-libev/releases/download/${sslibevtag}/${sslibevver}.tar.gz
     [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Shadowsocks-libev Source. Aborting.\033[0m]"; echo ""; exit 1; }
     [ -d ${sslibevver} ] && rm -rf ${sslibevver}
     tar zxf ${sslibevver}.tar.gz
-    cd $sslibevver
+    pushd $sslibevver
     ./configure
     make || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
     make install || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
-    cd $installpath
+    popd
     [ -d simple-obfs ] && rm -rf simple-obfs
     git clone https://github.com/shadowsocks/simple-obfs.git
-    cd simple-obfs
+    pushd simple-obfs
     git submodule update --init --recursive
     ./autogen.sh
     ./configure
     make || { echo ""; echo －e "# [\033[31;1mShadowsocks-Simple-obfs Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
     make install || { echo ""; echo －e "# [\033[31;1mShadowsocks-Simple-obfs Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
-    cd $installpath
+    popd
     rm -rf libsodium-${libsodiumver}.tar.gz libsodium-${libsodiumver} mbedtls-${mbedver}-gpl.tgz mbedtls-${mbedver} ${sslibevver}.tar.gz $sslibevver simple-obfs
 }
 
