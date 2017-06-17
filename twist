@@ -428,7 +428,7 @@ function startservices(){
     if [  "$systemtype" = "0" ]; then
         cat >> /etc/init.d/shadowsocks <<EOF
 # chkconfig: 2345 90 10
-# description: Start or stop the Shadowsocks-libev server
+# description: Start or Stop Shadowsocks-libev Server
 EOF
     fi
     cat >> /etc/init.d/shadowsocks <<EOF
@@ -440,7 +440,7 @@ EOF
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Shadowsocks-libev
-# Description:       Start or stop the Shadowsocks-libev server
+# Description:       Start or Stop Shadowsocks-libev Server
 ### END INIT INFO
 
 if [ -f /usr/local/bin/ss-server ]; then
@@ -564,7 +564,7 @@ EOF
         fi
     else
     iptables-restore < /etc/sysconfig/iptables
-    systemctl --now mask firewalld 2>/dev/null
+	systemctl --now mask firewalld 2>/dev/null
     systemctl enable iptables fail2ban 2>/dev/null
     fi
     service fail2ban restart
