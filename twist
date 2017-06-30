@@ -38,6 +38,57 @@ function install_twist(){
     twiststatus
 }
 
+function update_twist(){
+    clear
+    twist
+    echo -e "#[\033[32;1m                Update Twist Shadowsocks-libev                  \033[0m]#"
+    echo -e "#[\033[32;1m                Update will Start in 5 Seconds\033[0m                  ]#"
+    echo "#####################################################################"
+    sleep 5
+    rootness
+    defaultvalue
+    if [ -e /etc/init.d/shadowsocks ]; then
+        /etc/init.d/shadowsocks stop
+    else
+        echo -e "#[\033[31;1m             Twist was Not Find on Your Server!\033[0m                 ]#"
+        echo ""
+        exit 1
+    fi
+    rm -f /usr/local/bin/ss-local
+    rm -f /usr/local/bin/ss-tunnel
+    rm -f /usr/local/bin/ss-server
+    rm -f /usr/local/bin/ss-manager
+    rm -f /usr/local/bin/ss-redir
+    rm -f /usr/local/bin/ss-nat
+    rm -f /usr/local/lib/libshadowsocks-libev.a
+    rm -f /usr/local/lib/libshadowsocks-libev.la
+    rm -f /usr/local/include/shadowsocks.h
+    rm -f /usr/local/lib/pkgconfig/shadowsocks-libev.pc
+    rm -f /usr/local/share/man/man1/ss-local.1
+    rm -f /usr/local/share/man/man1/ss-tunnel.1
+    rm -f /usr/local/share/man/man1/ss-server.1
+    rm -f /usr/local/share/man/man1/ss-manager.1
+    rm -f /usr/local/share/man/man1/ss-redir.1
+    rm -f /usr/local/share/man/man1/ss-nat.1
+    rm -f /usr/local/share/man/man8/shadowsocks-libev.8
+    rm -fr /usr/local/share/doc/shadowsocks-libev
+    disableselinux
+    detectsystem
+    installlibs
+    installsslibev
+    ldconfig
+    dhclient -6
+    service fail2ban restart
+    sysctl -e -p
+    /etc/init.d/shadowsocks start
+    clear
+    twist
+    echo -e "#[\033[32;1m                    Twist Update Finished\033[0m                       ]#"
+    echo "######################################################################"
+    echo ""
+    exit 1
+}
+
 function uninstall_twist(){
     clear
     twist
@@ -59,7 +110,7 @@ function uninstall_twist(){
         systemctl start firewalld
         firewall-cmd --permanent --zone=public --remove-port=${PORT}/tcp
         firewall-cmd --permanent --zone=public --remove-port=${PORT}/udp
-        firewall-cmd --reloa
+        firewall-cmd --reload
     fi
     if grep -Eqi "Ubuntu|Debian" /etc/issue || grep -Eq "Ubuntu|Debian" /etc/*-release || grep -Eq "Ubuntu|Debian" /proc/version; then
         update-rc.d -f shadowsocks remove
@@ -582,9 +633,9 @@ EOF
             systemctl enable iptables fail2ban 2>/dev/null
         fi
     else
-    iptables-restore < /etc/sysconfig/iptables
-	systemctl --now mask firewalld 2>/dev/null
-    systemctl enable iptables fail2ban 2>/dev/null
+        iptables-restore < /etc/sysconfig/iptables
+        systemctl --now mask firewalld 2>/dev/null
+        systemctl enable iptables fail2ban 2>/dev/null
     fi
     service fail2ban restart
     /etc/init.d/shadowsocks start
@@ -613,10 +664,10 @@ function twiststatus(){
 action=$1
 [ -z $1 ] && action=install
 case "$action" in
-    install|uninstall)
+    install|update|uninstall)
         ${action}_twist
         ;;
     *)
-        echo "Usage: $0 { install | uninstall }"
+        echo "Usage: $0 { install | update | uninstall }"
         ;;
 esac
