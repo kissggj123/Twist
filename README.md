@@ -24,7 +24,7 @@ sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twi
 ```
 
 ## Attention
-Please make sure that Your Server was able to **Connect to the Internet And Opened these Ports** below,It required by Shadowsocks-libev Services
+Please make sure that Your Server was able to **Connect to the Internet And Opened these Inboard Ports** below,It required by Shadowsocks-libev Services. It will be Automatically Configured on Your Server but not on the Server Management Console.
 ```port
 UDP 443
 TCP 443
@@ -37,18 +37,18 @@ sudo nano twist.sh  #Edit the value below on 'function defaultvalue'
 ```
 Edit Values in Value="**HERE**", Save and Run Twist after You have Confirmed it is Correct
 ```Defaultvalue
- PORT="443"  #Server port
- LOACL="127.0.0.1"  #The address your local listens
- LOCALPORT="1080"  #Local port
- PASSWORD=""  #Password used for encryption, auto generate if left free 
- TIMEOUT="600"  #Drop connections if it not using in seconds
+ PORT="443"                       #Server port
+ LOACL="127.0.0.1"                #The address your local listens
+ LOCALPORT="1080"                 #Local port
+ PASSWORD=""                      #Password used for encryption, auto generate if left free 
+ TIMEOUT="600"                    #Drop connections if it not using in seconds
  METHOD="chacha20-ietf-poly1305"  #Encryption, AEAD better
- OBFS="tls"  #Obfs method
- OBFSHOST="icloud.com"  #Obfs host
- WORKERS="1024"  #Workers using, larger provides faster speed but less memory
- PUBLICIP=""  #Your Public IP, auto detect if left free
- PUBLICIPv6=""  #Your Public IPv6, auto detect if left free
- BBR="enable"  #Google BBR for low delay network to get faster speed
+ OBFS="tls"                       #Obfs method
+ OBFSHOST="icloud.com"            #Obfs host
+ WORKERS="1024"                   #Workers using, larger provides faster speed but less memory
+ PUBLICIP=""                      #Your Public IP, auto detect if left free
+ PUBLICIPv6=""                    #Your Public IPv6, auto detect if left free
+ BBR="enable"                     #Google BBR for low delay network to get faster speed
 ```
 
 ## Simple Obfs
@@ -65,8 +65,8 @@ OBFSHOST="icloud.com"
 ```
 - Change the Status of Shadowsocks-libev by these Command
 ```shell
-/etc/init.d/shadowsocks start  #Start Shadowsocks Service
-/etc/init.d/shadowsocks stop  #Stop Shadowsocks Service
+/etc/init.d/shadowsocks start    #Start Shadowsocks Service
+/etc/init.d/shadowsocks stop     #Stop Shadowsocks Service
 /etc/init.d/shadowsocks restart  #Restart Shadowsocks Service
 ```
 
