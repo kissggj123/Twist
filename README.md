@@ -24,7 +24,7 @@ sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twi
 ```
 
 ## Attention
-Please make sure that Your Server was able to **Connect to the Internet And Opened these Inboard Ports** below,It required by Shadowsocks-libev Services. It will be Automatically Configured on Your Server but not on the Server Management Console.
+Please make sure that Your Server was able to **Connect to the Internet And Opened these Inboard Ports** below,It required by Shadowsocks-libev Services. It will be Automatically Configured on Your Server but not on the Server Management Console
 ```port
 UDP 443
 TCP 443
@@ -52,7 +52,7 @@ Edit Values in Value="**HERE**", Save and Run Twist after You have Confirmed it 
 ```
 
 ## Simple Obfs
-Here is the Deafult Configuration of Simple Obfs, Simple Obfs will not be Running without Configure it on Your Clients Manually. And You Can also Use Shadowsocks without Set Up Simple Obfs on Your Clients. If You Use Schemes or QR Code Configurations on Your Clients, Simple Obfs will not be Configured.
+Here is the Deafult Configuration of Simple Obfs, Simple Obfs will not be Running without Configure it on Your Clients Manually. And You Can also Use Shadowsocks without Set Up Simple Obfs on Your Clients. If You Use Schemes or QR Code Configurations on Your Clients, Simple Obfs will not be Configured
 ```Simple-Obfs
 OBFS="tls"
 OBFSHOST="icloud.com"
