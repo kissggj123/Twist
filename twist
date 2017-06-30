@@ -293,25 +293,27 @@ function installlibs(){
 }
 
 function installbbr(){
-    [ "$BBR" = "enable" ] && KERNELVER="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/ | awk -F'\"v' '/v[4-9]./{print $2}' | cut -d/ -f1 | grep -v -  | sort -V | tail -1)"
-    [ "$BBR" = "enable" ] && [ -z "$KERNELVER" ] && BBR="disable" && echo -e "# [\033[31;1mCannot Check Linux KERNEL Verison. BBR will NOT Working!\033[0m]"
-    if [ "$BBR" = "enable" ] && [ "$systemtype" = "1" ]; then
-        SYSTYPE="$(dpkg --print-architecture)"
-        [ "$SYSTYPE" = "amd64" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/amd64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-        [ "$SYSTYPE" = "i386" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/i386.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-        [ "$SYSTYPE" = "armhf" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/armhf.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-        [ "$SYSTYPE" = "arm64" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/arm64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-        [ "$SYSTYPE" = "ppc64el" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/ppc64el.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-        [ "$SYSTYPE" = "s390x" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/s390x.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-        [ -z "$KERNEL" ] && { echo ""; echo -e "[# \033[31;1mUnable to Find New KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
-        [ "$BBR" = "enable" ] && wget -t 3 -T 30 -nv -O "$KERNEL" "http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/${KERNEL}"
-        [ "$?" != "0" ] && [ "$BBR" = "enable" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Linux KERNEL! Please Check Your Network! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
-        [ "$BBR" = "enable" ] && dpkg -i $KERNEL || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
-        [ "$BBR" = "enable" ] && dpkg -l | grep linux-image
-        [ "$BBR" = "enable" ] && rm -f $KERNEL
-        [ "$BBR" = "enable" ] && update-grub
-    else
-        [ "$BBR" = "enable" ] && yum --enablerepo=elrepo-kernel install kernel-ml || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+    if [ "$BBR" = "enable" ]; then
+        KERNELVER="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/ | awk -F'\"v' '/v[4-9]./{print $2}' | cut -d/ -f1 | grep -v -  | sort -V | tail -1)"
+        [ -z "$KERNELVER" ] && BBR="disable" && echo -e "# [\033[31;1mCannot Check Linux KERNEL Verison. BBR will NOT Working!\033[0m]"
+        if [ "$systemtype" = "1" ]; then
+            SYSTYPE="$(dpkg --print-architecture)"
+            [ "$SYSTYPE" = "amd64" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/amd64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+            [ "$SYSTYPE" = "i386" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/i386.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+            [ "$SYSTYPE" = "armhf" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/armhf.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+            [ "$SYSTYPE" = "arm64" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/arm64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+            [ "$SYSTYPE" = "ppc64el" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/ppc64el.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+            [ "$SYSTYPE" = "s390x" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/s390x.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+            [ -z "$KERNEL" ] && { echo ""; echo -e "[# \033[31;1mUnable to Find New KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            wget -t 3 -T 30 -nv -O "$KERNEL" "http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/${KERNEL}"
+            [ "$?" != "0" ] && [ "$BBR" = "enable" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Linux KERNEL! Please Check Your Network! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            dpkg -i $KERNEL || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            dpkg -l | grep linux-image
+            rm -f $KERNEL
+            update-grub
+        else
+            yum --enablerepo=elrepo-kernel install kernel-ml || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+        fi
     fi
 }
 
