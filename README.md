@@ -31,16 +31,31 @@ TCP 443
 ```
 
 ## Custom
-Change the Default Settings from here, Manual is at <a href="https://github.com/shadowsocks/shadowsocks/wiki/Configuration-via-Config-File" target="_blank">Shadowsocks-libev Wiki</a>
-```shadowsocks-libev-json
-/etc/shadowsocks-libev/config.json
+Change the Default Settings by Editing Twish before install, Manual of Shadowsocks-libev Configuration is at <a href="https://github.com/shadowsocks/shadowsocks/wiki/Configuration-via-Config-File" target="_blank">Shadowsocks-libev Wiki</a>
+```TWIST
+sudo nano twist.sh  #Edit the value below on 'function defaultvalue'
+```
+Edit Values in Value="**HERE**", Save and Run Twist after You have Confirmed it is Correct
+```Defaultvalue
+ PORT="443"  #Server port
+ LOACL="127.0.0.1"  #The address your local listens
+ LOCALPORT="1080"  #Local port
+ PASSWORD=""  #Password used for encryption, auto generate if left free 
+ TIMEOUT="600"  #Drop connections if it not using in seconds
+ METHOD="chacha20-ietf-poly1305"  #Encryption, AEAD better
+ OBFS="tls"  #Obfs method
+ OBFSHOST="icloud.com"  #Obfs host
+ WORKERS="1024"  #Workers using, larger provides faster speed but less memory
+ PUBLICIP=""  #Your Public IP, auto detect if left free
+ PUBLICIPv6=""  #Your Public IPv6, auto detect if left free
+ BBR="enable"  #Google BBR for low delay network to get faster speed
 ```
 
 ## Simple Obfs
 Here is the Deafult Configuration of Simple Obfs, Simple Obfs will not be Running without Configure it on Your Clients Manually. And You Can also Use Shadowsocks without Set Up Simple Obfs on Your Clients. If You Use Schemes or QR Code Configurations on Your Clients, Simple Obfs will not be Configured.
 ```Simple-Obfs
-obfs=tls
-obfs-host=icloud.com
+OBFS="tls"
+OBFSHOST="icloud.com"
 ```
 
 ## Check and Change Shadowsocks-libev Status
@@ -57,6 +72,16 @@ obfs-host=icloud.com
 
 ## Setup Shadowsocks-libev for Connect on your Devices
 It is Required a Shadowsocks Client on Your Device for Manually Set up or Use URL-Scheme & QRCode in Shadowsocks Client Apps
+
+## Update Twist
+Please **Run Bash Command** to Update Twist While You Once Downloaded it on Your Server
+```bash
+sudo twist.sh update
+```
+or Update by Download the Install Script Again
+```bash
+sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh update
+```
 
 ## Uninstall Twist
 Please **Run Bash Command** to Uninstall Twist While You Once Downloaded it on Your Server
