@@ -457,34 +457,32 @@ EOF
             firewall-cmd --permanent --zone=public --add-port=${PORT}/tcp
             firewall-cmd --permanent --zone=public --add-port=${PORT}/udp
             firewall-cmd --reload
-        fi
-    fi
-    if [ "$systemtype" = "1" ]; then
-        cat > /etc/network/if-pre-up.d/iptablesload <<EOF
+            cat > /etc/network/if-pre-up.d/iptablesload <<EOF
 #!/bin/sh
 iptables-restore < /etc/iptables.rules
 exit 0
 EOF
-        cat > /etc/network/if-pre-up.d/ip6tablesload <<EOF
-#!/bin/sh
-ip6tables-restore < /etc/ip6tables.rules
-exit 0
-EOF
-    else
-        cat > /etc/network/if-pre-up.d/iptablesload <<EOF
-#!/bin/sh
-iptables-restore < /etc/iptables.rules
-exit 0
-EOF
-    fi
-    if [ "$systemtype" = "0" ] && [ ! -f /etc/fail2ban/jail.local ] ; then
-        cat > /etc/fail2ban/jail.local <<'EOF'
+            if [ ! -f /etc/fail2ban/jail.local ]; then
+                cat > /etc/fail2ban/jail.local <<'EOF'
 [ssh-iptables]
 enabled  = true
 filter   = sshd
 action   = iptables[name=SSH, port=ssh, protocol=tcp]
 logpath  = /var/log/secure
 EOF
+            fi
+        else
+            cat > /etc/network/if-pre-up.d/iptablesload <<EOF
+#!/bin/sh
+iptables-restore < /etc/iptables.rules
+exit 0
+EOF
+            cat > /etc/network/if-pre-up.d/ip6tablesload <<EOF
+#!/bin/sh
+ip6tables-restore < /etc/ip6tables.rules
+exit 0
+EOF
+        fi
     fi
 }
 
