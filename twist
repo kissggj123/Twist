@@ -248,7 +248,7 @@ EOF
     else
         SSLOCAL="\"0.0.0.0\"" && AddrV6="false"
     fi
-    [ -z "$(ip -6 addr show ${ETH})" ] && SSLOCAL="\"0.0.0.0\"" && && AddrV6="false"
+    [ -z "$(ip -6 addr show ${ETH})" ] && SSLOCAL="\"0.0.0.0\"" && AddrV6="false"
     [ -z "$PUBLICIP" ] && PUBLICIPv6="$(curl -s diagnostic.opendns.com/myip)"
     if ! printf %s "$PUBLICIPv6" | grep -Eq "$IPREGEX"; then
         [ -z "$PUBLICIPv6" ] && AddrV6="false"
