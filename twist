@@ -640,8 +640,8 @@ function twiststatus(){
     read -p ""
     echo -e "# [\033[32;1mss://\033[0m\033[34;1m$(echo -n ${METHOD}:${PASSWORD}@${PUBLICIP}:${PORT} | base64)\033[0m]"
     echo -n "ss://"$(echo -n ${METHOD}:${PASSWORD}@${PUBLICIP}:${PORT} | base64) | qr
-    echo -e "# [\033[32;1mServer IP:\033[0m \033[34;1m${PUBLICIP}\033[0m/c"
-    [ "$AddrV6" = "true" ] && echo -e "(\033[34;1m${PUBLICIPv6}\033[0m)/c"
+    echo -e "# [\033[32;1mServer IP:\033[0m \033[34;1m${PUBLICIP}\033[0m\c"
+    [ "$AddrV6" = "true" ] && echo -e "(\033[34;1m${PUBLICIPv6}\033[0m)\c"
     echo -e " \033[32;1mPassWord:\033[0m \033[34;1m${PASSWORD}\033[0m \033[32;1mEncryption:\033[0m \033[34;1m${METHOD}\033[0m \033[32;1mOBFS:\033[0m \033[34;1m${OBFS}\033[0m \033[32;1mOBFS-HOST:\033[0m \033[34;1m${OBFSHOST}\033[0m \033[32;1mLOCALHOST:\033[0m \033[34;1m${LOACL}:${LOCALPORT}\033[0m]"
     if [ "$BBR" = "enable" ]; then
         echo -e "\033[34;1mThe Server Requires Restart to Enable Google BBR,Please Press Enter to Reboot!\033[0m"
