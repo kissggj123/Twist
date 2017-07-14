@@ -44,7 +44,7 @@ Edit Values in Value="**HERE**", Save and Run Twist after You have Confirmed it 
  TIMEOUT="600"                    #Drop connections if it not using in seconds
  METHOD="chacha20-ietf-poly1305"  #Encryption, AEAD better
  OBFS="tls"                       #Obfs method
- OBFSHOST="icloud.com"            #Obfs host
+ OBFSHOST="github.com"            #Obfs host
  WORKERS="1024"                   #Workers using, larger provides faster speed but less memory
  PUBLICIP=""                      #Your Public IP, auto detect if left free
  PUBLICIPv6=""                    #Your Public IPv6, auto detect if left free
@@ -55,7 +55,7 @@ Edit Values in Value="**HERE**", Save and Run Twist after You have Confirmed it 
 Here is the Deafult Configuration of Simple Obfs, Simple Obfs will not be Running without Configure it on Your Clients Manually. And You Can also Use Shadowsocks without Set Up Simple Obfs on Your Clients. If You Use Schemes or QR Code Configurations on Your Clients, Simple Obfs will not be Configured
 ```Simple-Obfs
 OBFS="tls"
-OBFSHOST="icloud.com"
+OBFSHOST="github.com"
 ```
 
 ## Check and Change Shadowsocks-libev Status
