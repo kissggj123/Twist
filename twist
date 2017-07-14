@@ -10,7 +10,7 @@ function defaultvalue(){
     TIMEOUT="600"
     METHOD="chacha20-ietf-poly1305"
     OBFS="tls"
-    OBFSHOST="icloud.com"
+    OBFSHOST="github.com"
     WORKERS="1024"
     ETH="eth0"
     PUBLICIP=""
@@ -41,8 +41,8 @@ function install_twist(){
 function update_twist(){
     clear
     twist
-    echo -e "#[\033[32;1m                Update Twist Shadowsocks-libev                  \033[0m]#"
-    echo -e "#[\033[32;1m                Update will Start in 5 Seconds\033[0m                  ]#"
+    echo -e "#[\033[32;1m                Update Twist Shadowsocks-libev                   \033[0m]#"
+    echo -e "#[\033[32;1m                Update will Start in 5 Seconds\033[0m                   ]#"
     echo "#####################################################################"
     sleep 5
     rootness
@@ -50,7 +50,7 @@ function update_twist(){
     if [ -e /etc/init.d/shadowsocks ]; then
         /etc/init.d/shadowsocks stop
     else
-        echo -e "#[\033[31;1m             Twist was Not Find on Your Server!\033[0m                 ]#"
+        echo -e "#[\033[31;1m             Twist was Not Find on Your Server!\033[0m                  ]#"
         echo ""
         exit 1
     fi
@@ -81,7 +81,7 @@ function update_twist(){
     /etc/init.d/shadowsocks start
     clear
     twist
-    echo -e "#[\033[32;1m                    Twist Update Finished\033[0m                       ]#"
+    echo -e "#[\033[32;1m                     Twist Update Finished\033[0m                       ]#"
     echo "######################################################################"
     echo ""
     exit 1
@@ -90,8 +90,8 @@ function update_twist(){
 function uninstall_twist(){
     clear
     twist
-    echo -e "#[\033[31;1m              Uninstall Twist Shadowsocks-libev                 \033[0m]#"
-    echo -e "#[\033[31;1m              Uninstall will Start in 5 Seconds\033[0m                 ]#"
+    echo -e "#[\033[31;1m              Uninstall Twist Shadowsocks-libev                  \033[0m]#"
+    echo -e "#[\033[31;1m              Uninstall will Start in 5 Seconds\033[0m                  ]#"
     echo "#####################################################################"
     sleep 5
     rootness
@@ -99,7 +99,7 @@ function uninstall_twist(){
     if [ -e /etc/init.d/shadowsocks ]; then
         /etc/init.d/shadowsocks stop
     else
-        echo -e "#[\033[31;1m             Twist was Not Find on Your Server!\033[0m                 ]#"
+        echo -e "#[\033[31;1m             Twist was Not Find on Your Server!\033[0m                  ]#"
         echo ""
         exit 1
     fi
@@ -139,7 +139,7 @@ function uninstall_twist(){
     rm -f /etc/init.d/shadowsocks
     clear
     twist
-    echo -e "#[\033[32;1m               Twist Uninstallation Finished\033[0m                    ]#"
+    echo -e "#[\033[32;1m               Twist Uninstallation Finished\033[0m                     ]#"
     echo "######################################################################"
     echo ""
     exit 1
@@ -157,8 +157,8 @@ function twist(){
 }
 
 function notice(){
-    echo -e "#[\033[32;1m         Install Shadowsocks-libev Script By Unbinilium\033[0m          ]#"
-    echo -e "#[\033[32;1m             Installation will Start in 5 Seconds\033[0m                ]#"
+    echo -e "#[\033[32;1m         Install Shadowsocks-libev Script By Unbinilium\033[0m           ]#"
+    echo -e "#[\033[32;1m             Installation will Start in 5 Seconds\033[0m                 ]#"
     echo "######################################################################"
     sleep 5
 }
@@ -314,7 +314,7 @@ function installbbr(){
 
 function installsslibev(){
     libsodiumver="$(wget -qO- https://download.libsodium.org/libsodium/releases/ | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f1,2,3 | sort -V | tail -1)"
-    wget -t 3 -T 30 -nv -O libsodium-${libsodiumver}.tar.gz https://github.com/jedisct1/libsodium/releases/download/${libsodiumver}/libsodium-${libsodiumver}.tar.gz
+    wget -t 3 -T 30 -nv -O libsodium-${libsodiumver}.tar.gz https://download.libsodium.org/libsodium/releases/libsodium-${libsodiumver}.tar.gz
     [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Libsodium Source. Aborting.\033[0m]"; echo ""; exit 1; }
     [ -d libsodium-${libsodiumver} ] && rm -rf libsodium-${libsodiumver}
     tar zxf libsodium-${libsodiumver}.tar.gz
