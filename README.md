@@ -11,6 +11,7 @@
 - **Fine Compatibility** and Support Original Shadowsocks Client
 - **One-key Installation** and One-key Setup on your Devices
 - **SS Scheme & QRCode** Login Information Auto Generate 
+- **Highly Concealed** Fake as a WebServer using Apache and Enabled Fail2ban to Ban Force Crackers
 
 ## Server Requirements
 - Ubuntu 17.04(Zesty), 16.10(Yakkety), 16.04(Xenial)
@@ -31,24 +32,24 @@ TCP 443
 ```
 
 ## Custom
-Change the Default Settings by Editing Twish before install, Manual of Shadowsocks-libev Configuration is at <a href="https://github.com/shadowsocks/shadowsocks/wiki/Configuration-via-Config-File" target="_blank">Shadowsocks-libev Wiki</a>
+Change the Default Settings by Editing Twish before install, Manual of Shadowsocks-libev Configurations is at <a href="https://github.com/shadowsocks/shadowsocks/wiki/Configuration-via-Config-File" target="_blank">Shadowsocks-libev Wiki</a>
 ```TWIST
-sudo nano twist.sh  #Edit the value below on 'function defaultvalue'
+sudo nano twist.sh  #Edit the value below on 'function *config'
 ```
 Edit Values in Value="**HERE**", Save and Run Twist after You have Confirmed it is Correct
-```Defaultvalue
+```shadowsocksconfig
  PORT="443"                       #Server port
  LOACL="127.0.0.1"                #The address your local listens
  LOCALPORT="1080"                 #Local port
  PASSWORD=""                      #Password used for encryption, auto generate if left free 
  TIMEOUT="600"                    #Drop connections if it not using in seconds
- METHOD="chacha20-ietf-poly1305"  #Encryption, AEAD better
+ METHOD="chacha20-ietf-poly1305"  #Encryption, AEAD is better than OTA
  OBFS="tls"                       #Obfs method
  OBFSHOST="github.com"            #Obfs host
  WORKERS="1024"                   #Workers using, larger provides faster speed but less memory
- PUBLICIP=""                      #Your Public IP, auto detect if left free
- PUBLICIPv6=""                    #Your Public IPv6, auto detect if left free
  BBR="enable"                     #Google BBR for low delay network to get faster speed
+ FWS="enable"                     #Fake as a apache web server for concealing
+ ABB="enable"                     #Uses Fail2ban to ban force crackers
 ```
 
 ## Simple Obfs
