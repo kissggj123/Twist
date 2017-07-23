@@ -48,7 +48,7 @@ Edit Values in Value="**HERE**", Save and Run Twist after You have Confirmed it 
  OBFSHOST="github.com"            #Obfs host
  WORKERS="1024"                   #Workers using, larger provides faster speed but less memory
  BBR="enable"                     #Google BBR for low delay network to get faster speed
- FWS="enable"                     #Fake as a apache web server for concealing(Turn off it if running a Web service on your server)
+ FWS="enable"                     #Fake as a apache web server for concealing
  ABB="enable"                     #Uses Fail2ban to ban force crackers
 ```
 
