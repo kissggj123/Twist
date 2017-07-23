@@ -49,6 +49,7 @@ function update_twist(){
     echo -e "#[\033[32;1m                Update Twist Shadowsocks-libev                   \033[0m]#"
     echo -e "#[\033[32;1m                Update will Start in 5 Seconds\033[0m                   ]#"
     echo "#####################################################################"
+    echo ""
     sleep 5
     rootness
     systemconfig
@@ -98,6 +99,7 @@ function uninstall_twist(){
     echo -e "#[\033[31;1m              Uninstall Twist Shadowsocks-libev                  \033[0m]#"
     echo -e "#[\033[31;1m              Uninstall will Start in 5 Seconds\033[0m                  ]#"
     echo "#####################################################################"
+    echo ""
     sleep 5
     rootness
     systemconfig
@@ -165,6 +167,7 @@ function notice(){
     echo -e "#[\033[32;1m         Install Shadowsocks-libev Script By Unbinilium\033[0m           ]#"
     echo -e "#[\033[32;1m             Installation will Start in 5 Seconds\033[0m                 ]#"
     echo "######################################################################"
+    echo ""
     sleep 5
 }
 
@@ -211,7 +214,7 @@ function detectsystem(){
             else
                 ETH="$eth"
                 echo ""
-                echo -e "# [\033[32;1mNetwork Interface Check Passed, your VPN Will be Setup Using Interface '${ETH}'\033[0m]"
+                echo -e "# [\033[33;1mNetwork Interface Check Passed, your VPN Will be Setup Using Interface\033[0m \033[32;1m${ETH}\033[0m]"
                 echo ""
             fi
         fi
