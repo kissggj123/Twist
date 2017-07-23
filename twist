@@ -350,7 +350,9 @@ function installsslibev(){
 
 function configsslibev(){
     date="$(date +%Y-%m-%d-%H:%M:%S)"
+    OBFSLOCAL="obfs-host"
     [ -z "$PASSWORD" ] && PASSWORD="$(< /dev/urandom tr -dc 'A-HJ-NPR-Za-km-z2-9' | head -c 32)"
+    [ "$FWS" = "enable" ] && OBFSLOCAL="failover"
     [ -d /etc/shadowsocks-libev ] || mkdir -p /etc/shadowsocks-libev
     cat > /etc/shadowsocks-libev/config.json<<EOF
 {
@@ -363,7 +365,7 @@ function configsslibev(){
     "udp_timeout":${TIMEOUT},
     "method":"${METHOD}",
     "plugin":"obfs-server",
-    "plugin_opts":"obfs=${OBFS};fast-open;obfs-host=${OBFSHOST}",
+    "plugin_opts":"obfs=${OBFS};fast-open;${OBFSLOCAL}=${OBFSHOST}",
     "mode":"tcp_and_udp",
     "fast_open":true,
     "workers":${WORKERS},
@@ -657,6 +659,7 @@ EOF
 sysctl -e -q -p
 dhclient -6
 service fail2ban restart
+rngd -r /dev/urandom
 EOF
     sysctl -e -q -p
     chmod +x /etc/init.d/shadowsocks
@@ -681,6 +684,7 @@ EOF
         systemctl --now mask firewalld
         systemctl enable iptables fail2ban
     fi
+    rngd -r /dev/urandom
     [ "$FWS" = "enable" ] && { a2enmod ssl; systemctl restart apache2; }
     systemctl enable fail2ban
     service fail2ban restart
