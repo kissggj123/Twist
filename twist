@@ -205,13 +205,13 @@ function detectsystem(){
             ethstatus="$(cat /sys/class/net/${eth}/operstate 2>/dev/null)"
             if [ -z "$ethstatus" ] || [ "$ethstatus" = "down" ]; then
                 echo ""
-                echo -e "# [\033[31;1mNetwork Interface Your Entered is Not Available! Aborting!\033[0m]" 1>&2
+                echo -e "# [\033[31;1mNetwork Interface Your Entered is Not Available! Aborting!\033[0m]"
                 echo ""
                 exit 1
             else
                 ETH="$eth"
                 echo ""
-                echo -e "# Network Interface Check Passed, your VPN Will be Setup Using Interface '${ETH}'"
+                echo -e "# [\033[32;1mNetwork Interface Check Passed, your VPN Will be Setup Using Interface '${ETH}'\033[0m]"
                 echo ""
             fi
         fi
@@ -266,37 +266,22 @@ function installlibs(){
     if [ "$systemtype" = "0" ]; then
         yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         yum -y upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        yum -y install wget bind-utils || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        yum -y install gawk grep sed net-tools greenlet || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        yum -y install epel-release
-        yum list installed epel-release >/dev/null 2>&1
-        [ "$?" != "0" ] && { echo -e "# [\033[31;1mCannot Add EPEL repository! Aborting!\033[0m]"; exit 1; }
+        yum -y install wget bind-utils gawk grep sed net-tools greenlet rng-tools fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        yum -y install epel-release || { echo -e "# [\033[31;1mCannot Add EPEL repository! Aborting!\033[0m]"; exit 1; }
         yum -y install swig python python-devel python-setuptools python-pip libevent curl curl-devel zlib-devel gevent || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         yum -y install gcc gettext-devel autoconf automake make zlib-devel libtool xmlto asciidoc udns-devel libev-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         yum -y install pcre pcre-devel perl perl-devel cpio expat-devel openssl-devel mbedtls-devel git || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        yum -y install fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Fail2ban! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         [ "$FWS" = "enable" ] && { yum -y install httpd || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as FakeWebServer! Please Check Your Network!\033[0m]"; echo ""; exit 1; }; }
-        pip install -q qrcode
-        if grep -qs "release 6" /etc/redhat-release; then
-            yum -y install iptables-ipv6
-            yum -y remove libevent-devel
-            yum -y install libevent2-devel
-        elif grep -qs "release 7" /etc/redhat-release; then
-            yum -y install libevent-devel
-        fi
     else
         apt-get -yq update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         apt-get -yq upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        apt-get -yq install wget dnsutils git || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        apt-get -yq install gawk grep sed net-tools || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        apt-get -yq install wget dnsutils git gawk grep sed net-tools rng-tools fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         apt-get -yq install python python-dev python-pip python-setuptools python-m2crypto curl gcc swig make perl cpio build-essential libevent-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }   
         apt-get -y --no-install-recommends install gettext build-essential autoconf automake libtool openssl libssl-dev zlib1g-dev xmlto asciidoc libpcre3-dev libudns-dev libev-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        apt-get -yq install fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Fail2ban! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         [ "$FWS" = "enable" ] && { apt-get -yq install apache2 || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as FakeWebServer! Please Check Your Network!\033[0m]"; echo ""; exit 1; }; }
-        easy_install -q greenlet
-        easy_install -q gevent
-        pip install -q qrcode
+        easy_install -q greenlet gevent
    fi
+   pip install -q qrcode || { echo ""; echo -e "# [\033[31;1mCannot Install QRCode! You are Unable to Configure Clients by Using QRCode!\033[0m]"; echo ""; sleep 3; }
 }
 
 function updatebbrkernel(){
