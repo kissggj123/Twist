@@ -87,7 +87,7 @@ function update_twist(){
     /etc/init.d/shadowsocks start
     clear
     twist
-    echo -e "#[\033[32;1m                     Twist Update Finished\033[0m                       ]#"
+    echo -e "#[\033[32;1m                      Twist Update Finished\033[0m                       ]#"
     echo "######################################################################"
     echo ""
     exit 1
@@ -146,7 +146,7 @@ function uninstall_twist(){
     rm -f /etc/init.d/shadowsocks
     clear
     twist
-    echo -e "#[\033[32;1m               Twist Uninstallation Finished\033[0m                     ]#"
+    echo -e "#[\033[32;1m                Twist Uninstallation Finished\033[0m                     ]#"
     echo "######################################################################"
     echo ""
     exit 1
