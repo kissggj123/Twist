@@ -461,24 +461,26 @@ EOF
         [ -f /etc/iptables/rules.v6 ] && /bin/cp -f /etc/iptables/rules.v6 "/etc/iptables/rules.v6.old-${date}"
         [ -f /etc/iptables/rules.v6 ] && /bin/cp -f /etc/ip6tables.rules /etc/iptables/rules.v6  
         if [ "$systemtype" = "0" ]; then
-            iptables -I FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
             systemctl start firewalld
             firewall-cmd --permanent --zone=public --add-port=${PORT}/tcp
             firewall-cmd --permanent --zone=public --add-port=${PORT}/udp
             firewall-cmd --reload
             cat > /etc/network/if-pre-up.d/iptablesload <<EOF
 #!/bin/sh
+
 iptables-restore < /etc/iptables.rules
 exit 0
 EOF
         else
             cat > /etc/network/if-pre-up.d/iptablesload <<EOF
 #!/bin/sh
+
 iptables-restore < /etc/iptables.rules
 exit 0
 EOF
             cat > /etc/network/if-pre-up.d/ip6tablesload <<EOF
 #!/bin/sh
+
 ip6tables-restore < /etc/ip6tables.rules
 exit 0
 EOF
@@ -522,7 +524,7 @@ filter   = selinux-ssh
 action   = iptables[name=SELINUX-SSH, port=ssh, protocol=tcp]
 logpath  = /var/log/audit/audit.log
 EOF
-        [ "$FWS" = "enable" ] && cat >> /etc/fail2ban/jail.local <<EOF
+        [ "$ABB" = "enable" ] && [ "$FWS" = "enable" ] && cat >> /etc/fail2ban/jail.local <<EOF
 
 [apache-tcpwrapper]
 enabled  = true
@@ -659,6 +661,7 @@ exit \$RETVAL
 
 EOF
     cat >> /etc/rc.local <<EOF
+
 sysctl -e -q -p
 dhclient -6
 service fail2ban restart
@@ -673,23 +676,17 @@ EOF
         update-rc.d -f shadowsocks defaults
         ldconfig
         ip6tables-restore < /etc/ip6tables.rules
-        if grep -qs "release 6" /etc/redhat-release; then
-            chkconfig iptables on
-            chkconfig fail2ban on
-        else
-            systemctl --now mask firewalld
-            systemctl enable iptables fail2ban
-        fi
+        systemctl enable fail2ban
     else
         chkconfig --add shadowsocks
         chkconfig shadowsocks on
+	ldconfig
         iptables-restore < /etc/sysconfig/iptables
         systemctl --now mask firewalld
         systemctl enable iptables fail2ban
     fi
     rngd -r /dev/urandom
     [ "$FWS" = "enable" ] && { a2enmod ssl; systemctl restart apache2; }
-    systemctl enable fail2ban
     service fail2ban restart
     /etc/init.d/shadowsocks start
 }
