@@ -239,28 +239,10 @@ function detectsystem(){
             echo ""
         fi
     fi
-    if [ -f /proc/net/if_inet6 ]; then
-        if [ "$systemtype" = "1" ]; then
-            echo "iface ${ETH} inet6 dhcp" > /etc/network/interfaces.d/60-default-with-ipv6.cfg
-        else
-            sed -i "/^\<IPV6INIT=\>/d" /etc/sysconfig/network-scripts/ifcfg-${ETH}
-            cat >> /etc/sysconfig/network-scripts/ifcfg-${ETH} <<EOF
-IPV6INIT="yes"
-DHCPV6C=yes
-NM_CONTROLLED=no
-EOF
-            echo "NETWORKING_IPV6=yes" >> /etc/sysconfig/network
-        fi
-    else
-        SSLOCAL="\"0.0.0.0\"" && AddrV6="false"
-    fi
-    [ -z "$(ip -6 addr show ${ETH})" ] && SSLOCAL="\"0.0.0.0\"" && AddrV6="false"
-    [ -z "$PUBLICIP" ] && PUBLICIPv6="$(curl -s diagnostic.opendns.com/myip)"
-    if ! printf %s "$PUBLICIPv6" | grep -Eq "$IPREGEX"; then
-        [ -z "$PUBLICIPv6" ] && AddrV6="false"
-    else
-        [ "$PUBLICIPv6" = "$PUBLICIP" ] && AddrV6="false"
-    fi
+    [ -z "$(ip -6 addr show ${ETH})" ] && { SSLOCAL="\"0.0.0.0\""; AddrV6="false"; }
+    [ -z "$PUBLICIPv6" ] && PUBLICIPv6="$(curl -s diagnostic.opendns.com/myip)"
+    [ -z "$PUBLICIPv6" ] && AddrV6="false"
+    [ "$PUBLICIPv6" = "$PUBLICIP" ] && AddrV6="false"
 }
 
 function installlibs(){
