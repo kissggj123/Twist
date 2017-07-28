@@ -242,7 +242,6 @@ function detectsystem(){
     if [ -f /proc/net/if_inet6 ]; then
         if [ "$systemtype" = "1" ]; then
             echo "iface ${ETH} inet6 dhcp" > /etc/network/interfaces.d/60-default-with-ipv6.cfg
-            ifdown $ETH && ifup $ETH
         else
             sed -i "/^\<IPV6INIT=\>/d" /etc/sysconfig/network-scripts/ifcfg-${ETH}
             cat >> /etc/sysconfig/network-scripts/ifcfg-${ETH} <<EOF
@@ -251,7 +250,6 @@ DHCPV6C=yes
 NM_CONTROLLED=no
 EOF
             echo "NETWORKING_IPV6=yes" >> /etc/sysconfig/network
-            sudo service network restart
         fi
     else
         SSLOCAL="\"0.0.0.0\"" && AddrV6="false"
