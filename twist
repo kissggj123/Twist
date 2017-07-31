@@ -469,60 +469,60 @@ EOF
         [ "$ABB" = "enable" ] && cat >> /etc/fail2ban/jail.local <<EOF
 
 [ssh-iptables]
-enabled  = true
-filter   = sshd
-action   = iptables[name=SSH, port=ssh, protocol=tcp]
-logpath  = /var/log/secure
+enabled = true
+filter  = sshd
+action  = iptables[name=SSH, port=ssh, protocol=tcp]
+logpath = /var/log/auth.log
 
 [ssh-ddos]
 enabled = true
 filter  = sshd-ddos
 action  = iptables[name=ssh-ddos, port=ssh,sftp protocol=tcp,udp]
-logpath  = /var/log/messages
+logpath = /var/log/messages
 
 [osx-ssh-ipfw]
-enabled  = true
-filter   = sshd
-action   = osx-ipfw
-logpath  = /var/log/secure.log
+enabled = true
+filter  = sshd
+action  = osx-ipfw
+logpath = /var/log/auth.log
 
 [ssh-apf]
 enabled = true
 filter  = sshd
 action  = apf[name=SSH]
-logpath = /var/log/secure
+logpath = /var/log/auth.log
 
 [osx-ssh-afctl]
-enabled  = true
-filter   = sshd
-action   = osx-afctl
-logpath  = /var/log/secure.log
+enabled = true
+filter  = sshd
+action  = osx-afctl
+logpath = /var/log/auth.log
 
 [selinux-ssh]
-enabled  = true
-filter   = selinux-ssh
-action   = iptables[name=SELINUX-SSH, port=ssh, protocol=tcp]
-logpath  = /var/log/audit/audit.log
+enabled = true
+filter  = selinux-ssh
+action  = iptables[name=SELINUX-SSH, port=ssh, protocol=tcp]
+logpath = /var/log/audit/audit.log
 EOF
         [ "$ABB" = "enable" ] && [ "$FWS" = "enable" ] && cat >> /etc/fail2ban/jail.local <<EOF
 
 [apache-tcpwrapper]
-enabled  = true
-filter   = apache-auth
-action   = hostsdeny
-logpath  = /var/log/httpd/error_log
+enabled = true
+filter  = apache-auth
+action  = hostsdeny
+logpath = /var/log/httpd/error_log
 
 [apache-badbots]
-enabled  = true
-filter   = apache-badbots
-action   = iptables-multiport[name=BadBots, port="http,https"]
-logpath  = /var/log/httpd/access_log
+enabled = true
+filter  = apache-badbots
+action  = iptables-multiport[name=BadBots, port="http,https"]
+logpath = /var/log/httpd/access_log
 
 [apache-shorewall]
-enabled  = true
-filter   = apache-noscript
-action   = shorewall
-logpath  = /var/log/httpd/error_log
+enabled = true
+filter  = apache-noscript
+action  = shorewall
+logpath = /var/log/httpd/error_log
 EOF
     fi
 }
