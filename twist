@@ -189,7 +189,7 @@ function disableselinux(){
 function detectsystem(){
     if grep -Eqi "CentOS|Red Hat|Redhat" /etc/issue || grep -Eq "CentOS|Red Hat|Redhat" /etc/*-release || grep -Eq "CentOS|Red Hat|Redhat" /proc/version; then
         systemtype="0"
-    elif  grep -Eqi "Ubuntu|Debian" /etc/issue || grep -Eq "Ubuntu|Debian" /etc/*-release || grep -Eq "Ubuntu|Debian" /proc/version; then
+    elif grep -Eqi "Ubuntu|Debian" /etc/issue || grep -Eq "Ubuntu|Debian" /etc/*-release || grep -Eq "Ubuntu|Debian" /proc/version; then
         systemtype="1"
     else
         echo -e "# [\033[31;1mThis Script Must be Run on Ubuntu, Debian or CentOS! Aborating!\033[0m]"
