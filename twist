@@ -102,7 +102,7 @@ function uninstall_twist(){
     echo ""
     sleep 5
     rootness
-    systemconfig
+    sed -i "/# Twist/d" /etc/sysctl.conf
     if [ -e /etc/init.d/shadowsocks ]; then
         /etc/init.d/shadowsocks stop
     else
@@ -122,7 +122,7 @@ function uninstall_twist(){
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j DROP
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j DROP
     fi
-    ps -ef | grep -v grep | grep -i "ss-server" > /dev/null 2>&1
+    ps -ef | grep -v grep | grep -i "ss-server"
     update-rc.d -f shadowsocks remove
     rm -fr /etc/shadowsocks-libev
     rm -f /usr/local/bin/ss-local
@@ -357,7 +357,7 @@ EOF
     if ! grep -qs "Twist" /etc/sysctl.conf; then
         /bin/cp -f /etc/sysctl.conf "/etc/sysctl.conf.old-${date}" 2>/dev/null
         cat >> /etc/sysctl.conf <<EOF
-# Twist Configs
+# Twist
 fs.file-max = 1024000
 kernel.msgmnb = 65536
 kernel.msgmax = 65536
@@ -402,11 +402,9 @@ EOF
             echo "net.core.default_qdisc = fq" >> /etc/sysctl.conf
             echo "net.ipv4.tcp_congestion_control = bbr" >> /etc/sysctl.conf
         fi
-	sed -i "/# End of file/d" /etc/security/limits.conf
 	echo "*                soft    nofile           512000" >> /etc/security/limits.conf
 	echo "*                hard    nofile          1024000" >> /etc/security/limits.conf
 	echo "" >> /etc/security/limits.conf
-	echo "# End of file" >> /etc/security/limits.conf
 	if [ "$systemtype" = "0" ] && ! grep -qs "pam_limits.so" /etc/pam.d/login; then
             echo "session    required     pam_limits.so" >> /etc/pam.d/login
 	fi
@@ -425,7 +423,6 @@ function configiptables(){
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j ACCEPT
         /bin/cp -f /etc/ip6tables.rules "/etc/ip6tables.rules.old-${date}" 2>/dev/null
         [ -f /etc/iptables/rules.v6 ] || cat > /etc/ip6tables.rules <<EOF
-# Twist Configs
 *filter
 :INPUT ACCEPT [0:0]
 :FORWARD DROP [0:0]
@@ -642,7 +639,7 @@ exit \$RETVAL
 EOF
     cat >> /etc/rc.local <<EOF
 
-sysctl -e -q -p
+sysctl -p
 dhclient -6
 service fail2ban restart
 rngd -r /dev/urandom
