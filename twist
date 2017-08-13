@@ -117,7 +117,7 @@ function uninstall_twist(){
         firewall-cmd --permanent --zone=public --remove-port=${PORT}/udp
         firewall-cmd --reload
     fi
-    if grep -Eqi "Ubuntu|Debian|Raspbian" /etc/*-release || grep -Eqi "Ubuntu|Debian" /proc/version; then
+    if grep -Eqi "Ubuntu|Debian|Raspbian" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian" /proc/version; then
         update-rc.d -f shadowsocks remove
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j DROP
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j DROP
@@ -189,7 +189,7 @@ function disableselinux(){
 function detectsystem(){
     if grep -Eqi "CentOS|Red Hat|Redhat" /etc/*-release || grep -Eqi "CentOS|Red Hat|Redhat" /proc/version; then
         systemtype="0"
-    elif grep -Eqi "Ubuntu|Debian|Raspbian" /etc/*-release || grep -Eqi "Ubuntu|Debian" /proc/version; then
+    elif grep -Eqi "Ubuntu|Debian|Raspbian" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian" /proc/version; then
         systemtype="1"
     else
         echo -e "# [\033[31;1mThis Script Must be Run on Ubuntu, Debian or CentOS! Aborating!\033[0m]"
