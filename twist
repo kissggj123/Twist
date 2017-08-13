@@ -117,7 +117,7 @@ function uninstall_twist(){
         firewall-cmd --permanent --zone=public --remove-port=${PORT}/udp
         firewall-cmd --reload
     fi
-    if grep -Eqi "Ubuntu|Debian" /etc/*-release || grep -Eqi "Ubuntu|Debian" /proc/version; then
+    if grep -Eqi "Ubuntu|Debian|Raspbian" /etc/*-release || grep -Eqi "Ubuntu|Debian" /proc/version; then
         update-rc.d -f shadowsocks remove
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j DROP
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j DROP
@@ -189,14 +189,19 @@ function disableselinux(){
 function detectsystem(){
     if grep -Eqi "CentOS|Red Hat|Redhat" /etc/*-release || grep -Eqi "CentOS|Red Hat|Redhat" /proc/version; then
         systemtype="0"
-    elif grep -Eqi "Ubuntu|Debian" /etc/*-release || grep -Eqi "Ubuntu|Debian" /proc/version; then
+    elif grep -Eqi "Ubuntu|Debian|Raspbian" /etc/*-release || grep -Eqi "Ubuntu|Debian" /proc/version; then
         systemtype="1"
     else
         echo -e "# [\033[31;1mThis Script Must be Run on Ubuntu, Debian or CentOS! Aborating!\033[0m]"
         echo ""
         exit 1
     fi
-    ethstatus="$(cat /sys/class/net/${ETH}/operstate 2>/dev/null)"
+    ethstatus="$(cat /sys/class/net/${ETH}/operstate)"
+    if [ -z "$ethstatus" ] || [ "$ethstatus" = "down" ]; then
+        ETH="$(route 2>/dev/null | grep '^default' | grep -o '[^ ]*$')"
+        [ -z "$ETH" ] && ETH="$(ip -4 route list 0/0 | grep -Po '(?<=dev )(\S+)')"
+    fi
+    ethstatus="$(cat /sys/class/net/${ETH}/operstate)"
     if [ -z "$ethstatus" ] || [ "$ethstatus" = "down" ]; then
         echo -e "# [\033[31;1mNetwork Interface '${ETH}' is Not Available. Please try Another Network Interface Listed Below.\033[0m]" 1>&2
         echo ""
@@ -681,7 +686,7 @@ function twiststatus(){
     [ ! "$AddrV6" = "false" ] && echo -e "(\033[34;1m${PUBLICIPv6}\033[0m)\c"
     echo -e " \033[32;1mPassWord:\033[0m \033[34;1m${PASSWORD}\033[0m \033[32;1mEncryption:\033[0m \033[34;1m${METHOD}\033[0m \033[32;1mOBFS:\033[0m \033[34;1m${OBFS}\033[0m \033[32;1mOBFS-HOST:\033[0m \033[34;1m${OBFSHOST}\033[0m \033[32;1mLOCALHOST:\033[0m \033[34;1m${LOACL}:${LOCALPORT}\033[0m]"
     if [ "$BBR" = "enable" ]; then
-        echo -e "\033[34;1mThe Server Requires Restart to Enable Google BBR,Please Press Enter to Reboot!\033[0m"
+        echo -e "# [\033[34;1mThe Server Requires Restart to Enable Google BBR,Please Press Enter to Reboot!\033[0m]"
         read -p ""
         sleep 3
 	reboot
