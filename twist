@@ -110,14 +110,14 @@ function uninstall_twist(){
         echo ""
         exit 1
     fi
-    if grep -Eqi "CentOS|Red Hat|Redhat" /etc/*-release || grep -Eqi "CentOS|Red Hat|Redhat" /proc/version; then
+    if grep -Eqi "CentOS|Red Hat|Fedora" /etc/*-release || grep -Eqi "CentOS|Red Hat|Fedora" /proc/version; then
         chkconfig --del shadowsocks
         systemctl start firewalld
         firewall-cmd --permanent --zone=public --remove-port=${PORT}/tcp
         firewall-cmd --permanent --zone=public --remove-port=${PORT}/udp
         firewall-cmd --reload
     fi
-    if grep -Eqi "Ubuntu|Debian|Raspbian" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian" /proc/version; then
+    if grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /proc/version; then
         update-rc.d -f shadowsocks remove
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j DROP
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j DROP
@@ -187,12 +187,23 @@ function disableselinux(){
 }
 
 function detectsystem(){
-    if grep -Eqi "CentOS|Red Hat|Redhat" /etc/*-release || grep -Eqi "CentOS|Red Hat|Redhat" /proc/version; then
+    if grep -Eqi "CentOS|Red Hat|Fedora" /etc/*-release || grep -Eqi "CentOS|Red Hat|Fedora" /proc/version; then
         systemtype="0"
-    elif grep -Eqi "Ubuntu|Debian|Raspbian" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian" /proc/version; then
+    elif grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /proc/version; then
         systemtype="1"
     else
-        echo -e "# [\033[31;1mThis Script Must be Run on Ubuntu, Debian or CentOS! Aborating!\033[0m]"
+        echo -e "# [\033[31;1mThis Script Must be Run on CentOS, Red Hat, Fedora, Ubuntu, Debian or Arch Linux! Aborating!\033[0m]"
+        echo ""
+        exit 1
+    fi
+    if [[ ! -z "$(which yum)" ]]; then
+        packagemanagertype="0"
+    elif [[ ! -z "$(which apt-get)" ]]; then
+        packagemanagertype="1"
+    elif [[ ! -z "$(which pacman)" ]]; then
+        packagemanagertype="2"
+    else
+        echo -e "# [\033[31;1mThis Script Must be Run on CentOS,Red Hat, Ubuntu, Debian or Arch Linux! Aborating!\033[0m]"
         echo ""
         exit 1
     fi
@@ -226,6 +237,11 @@ function detectsystem(){
     fi
     if [ -f /proc/user_beancounters ]; then
         BBR="disable"
+        if [ "$packagemanagertype" = "2" ]; then
+            systemtype="1"
+        else
+            systemtype="$packagemanagertype"
+        fi
     fi
     [ -z "$PUBLICIP" ] && PUBLICIP="$(dig @resolver1.opendns.com -t A -4 myip.opendns.com +short)"
     if ! printf %s "$PUBLICIP" | grep -Eq "$IPREGEX"; then
@@ -251,7 +267,7 @@ function detectsystem(){
 }
 
 function installlibs(){
-    if [ "$systemtype" = "0" ]; then
+    if [ "$packagemanagertype" = "0" ]; then
         yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         yum -y upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         yum -y install wget bind-utils gawk grep sed net-tools greenlet rng-tools fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
@@ -260,7 +276,7 @@ function installlibs(){
         yum -y install gcc gettext-devel autoconf automake make zlib-devel libtool xmlto asciidoc udns-devel libev-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         yum -y install pcre pcre-devel perl perl-devel cpio expat-devel openssl-devel mbedtls-devel git || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         [ "$FWS" = "enable" ] && { yum -y install httpd || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as FakeWebServer! Please Check Your Network!\033[0m]"; echo ""; exit 1; }; }
-    else
+    elif [ "$packagemanagertype" = "1" ]; then
         apt-get -yq update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         apt-get -yq upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         apt-get -yq install wget dnsutils git gawk grep sed net-tools rng-tools fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
@@ -268,28 +284,40 @@ function installlibs(){
         apt-get -y --no-install-recommends install gettext build-essential autoconf automake libtool openssl libssl-dev zlib1g-dev xmlto asciidoc libpcre3-dev libudns-dev libev-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         [ "$FWS" = "enable" ] && { apt-get -yq install apache2 || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as FakeWebServer! Please Check Your Network!\033[0m]"; echo ""; exit 1; }; }
         easy_install -q greenlet gevent
-   fi
-   pip install -q qrcode || { echo ""; echo -e "# [\033[31;1mCannot Install QRCode! You are Unable to Configure Clients by Using QRCode!\033[0m]"; echo ""; sleep 3; }
+    else
+        pacman -Syu --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        pacman -S --noconfirm wget git gawk grep sed net-tools rng-tools fail2ban python-greenlet python-gevent || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        pacman -S --noconfirm python python-pip python-setuptools python2-m2crypto curl perl cpio openssl || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        pacman -S --noconfirm gettext gcc autoconf libtool autoconf automake make asciidoc xmlto udns libev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        [ "$FWS" = "enable" ] && { pacman -S --noconfirm apache || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as FakeWebServer! Please Check Your Network!\033[0m]"; echo ""; exit 1; }; }
+    fi
+    pip install -q qrcode || { echo ""; echo -e "# [\033[31;1mCannot Install QRCode! You are Unable to Configure Clients by Using QRCode!\033[0m]"; echo ""; sleep 3; }
 }
 
 function updatebbrkernel(){
     if [ "$BBR" = "enable" ]; then
-        KERNELVER="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/ | awk -F'\"v' '/v[4-9]./{print $2}' | cut -d/ -f1 | grep -v -  | sort -V | tail -1)"
-        [ -z "$KERNELVER" ] && BBR="disable" && echo -e "# [\033[31;1mCannot Check Linux KERNEL Verison. BBR will NOT Working!\033[0m]"
-        if [ "$systemtype" = "1" ]; then
-            SYSTYPE="$(dpkg --print-architecture)"
-            [ "$SYSTYPE" = "amd64" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/amd64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-            [ "$SYSTYPE" = "i386" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/i386.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-            [ "$SYSTYPE" = "armhf" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/armhf.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-            [ "$SYSTYPE" = "arm64" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/arm64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-            [ "$SYSTYPE" = "ppc64el" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/ppc64el.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-            [ "$SYSTYPE" = "s390x" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/s390x.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-            [ -z "$KERNEL" ] && { echo ""; echo -e "[# \033[31;1mUnable to Find New KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
-            [ "$BBR" = "enable" ] && wget -t 3 -T 30 -nv -O "$KERNEL" "http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/${KERNEL}" || { echo ""; echo -e "# [\033[31;1mCannot Download Linux KERNEL! Please Check Your Network! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
-            [ "$BBR" = "enable" ] && { dpkg -i $KERNEL || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }; }
-            [ "$BBR" = "enable" ] && { dpkg -l | grep linux-image; rm -f $KERNEL; update-grub; }
-        else
+        if grep -Eqi "Ubuntu" /etc/*-release || grep -Eqi "Ubuntu" /proc/version; then
+            KERNELVER="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/ | awk -F'\"v' '/v[4-9]./{print $2}' | cut -d/ -f1 | grep -v -  | sort -V | tail -1)"
+            [ -z "$KERNELVER" ] && BBR="disable" && echo -e "# [\033[31;1mCannot Check Linux KERNEL Verison. BBR will NOT Working!\033[0m]"
+            if [ "$BBR" = "enable" ]; then
+                SYSTYPE="$(dpkg --print-architecture)"
+                [ "$SYSTYPE" = "amd64" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/amd64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+                [ "$SYSTYPE" = "i386" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/i386.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+                [ "$SYSTYPE" = "armhf" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/armhf.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+                [ "$SYSTYPE" = "arm64" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/arm64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+                [ "$SYSTYPE" = "ppc64el" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/ppc64el.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+                [ "$SYSTYPE" = "s390x" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/s390x.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+                [ -z "$KERNEL" ] && { echo ""; echo -e "[# \033[31;1mUnable to Find New KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+                [ "$BBR" = "enable" ] && wget -t 3 -T 30 -nv -O "$KERNEL" "http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/${KERNEL}" || { echo ""; echo -e "# [\033[31;1mCannot Download Linux KERNEL! Please Check Your Network! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+                [ "$BBR" = "enable" ] && { dpkg -i $KERNEL || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }; }
+                [ "$BBR" = "enable" ] && { dpkg -l | grep linux-image; rm -f $KERNEL; update-grub; }
+            fi
+        elif [ "$packagemanagertype" = "0" ]; then
             yum --enablerepo=elrepo-kernel install kernel-ml || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+        else
+            echo -e "# [\033[33;1mPlease make sure that the Linux KERNEL is Up to Date! If not BBR may NOT Working!\033[0m]"
+            echo ""
+            sleep 3
         fi
     fi
 }
