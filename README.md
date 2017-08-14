@@ -42,13 +42,14 @@ sudo nano twist.sh  #Edit the value below on 'function *config'
 Edit Values in Value="**HERE**", Save and Run Twist after You have Confirmed it is Correct
 ```shadowsocksconfig
  PORT="443"                       #Server port
- LOACL="127.0.0.1"                #The address your local listens
- LOCALPORT="1080"                 #Local port
+ LOACL="127.0.0.1"                #The address that server listens
+ LOCALPORT="1080"                 #Local port of loacl address that server listens
  PASSWORD=""                      #Password used for encryption, auto generate if left free 
+ DNS="8.8.8.8"                    #Default DNS server address of Google Public DNS
  TIMEOUT="600"                    #Drop connections if it not using in seconds
  METHOD="chacha20-ietf-poly1305"  #Encryption, AEAD is better than OTA
- OBFS="tls"                       #Obfs method
- OBFSHOST="github.com"            #Obfs host
+ OBFS="tls"                       #Obfs method using tls or http
+ OBFSHOST="github.com"            #Obfs host address
  WORKERS="1024"                   #Workers using, larger provides faster speed but less memory
  BBR="enable"                     #Google BBR for low delay network to get faster speed
  FWS="enable"                     #Fake as a apache web server for concealing
