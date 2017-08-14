@@ -330,13 +330,12 @@ function updatekernel(){
             [ "$BBR" = "enable" ] && { dpkg -l | grep linux-image; rm -f $KERNEL; update-grub; }
         fi
     elif [ "$packagemanagertype" = "y" ]; then
-        rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org || { echo ""; echo -e "# [\033[31;1mCannot Download ELrepo KEY! Please Check Your Network! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+        [ "$BBR" = "enable" ] && { yum --enablerepo=elrepo-kernel install kernel-ml kernel-ml-devel; echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
         if grep -qs "release 7" /etc/*-release; then
-            [ "$BBR" = "enable" ] && rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm || { echo ""; echo -e "# [\033[31;1mCannot Install ELrepo! Please Check Your Network! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            [ "$BBR" = "enable" ] && grub2-set-default 0
         elif grep -qs "release 6" /etc/*-release; then
-            [ "$BBR" = "enable" ] && rpm -Uvh http://www.elrepo.org/elrepo-release-6-8.el6.elrepo.noarch.rpm || { echo ""; echo -e "# [\033[31;1mCannot Install ELrepo! Please Check Your Network! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            [ "$BBR" = "enable" ] && sed -i 's/^default=.*/default=0/g' /boot/grub/grub.conf
         fi
-        [ "$BBR" = "enable" ] && yum --enablerepo=elrepo-kernel install kernel-ml kernel-ml-devel || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
     fi
     serverrestart="true"
     configbbr
