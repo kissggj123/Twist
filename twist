@@ -196,11 +196,11 @@ function detectsystem(){
         echo ""
         exit 1
     fi
-    if [[ ! -z "$(which yum)" ]]; then
+    if [ ! -z "$(which yum)" ]; then
         packagemanagertype="0"
-    elif [[ ! -z "$(which apt-get)" ]]; then
+    elif [ ! -z "$(which apt-get)" ]; then
         packagemanagertype="1"
-    elif [[ ! -z "$(which pacman)" ]]; then
+    elif [ ! -z "$(which pacman)" ]; then
         packagemanagertype="2"
     else
         echo -e "# [\033[31;1mThis Script Must be Run on CentOS,Red Hat, Ubuntu, Debian or Arch Linux! Aborating!\033[0m]"
