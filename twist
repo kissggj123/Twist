@@ -207,6 +207,14 @@ function detectsystem(){
         echo ""
         exit 1
     fi
+    if [ -f /proc/user_beancounters ]; then
+        BBR="disable"
+        if [ "$packagemanagertype" = "2" ]; then
+            systemtype="1"
+        else
+            systemtype="$packagemanagertype"
+        fi
+    fi
     if [ -z "$ETH" ]; then
         ETH="$(route 2>/dev/null | grep '^default' | grep -o '[^ ]*$')"
         [ -z "$ETH" ] && ETH="$(ip -4 route list 0/0 | grep -Po '(?<=dev )(\S+)')"
