@@ -15,8 +15,11 @@
 
 ## Server Requirements
 - Ubuntu 17.04(Zesty), 16.10(Yakkety), 16.04(Xenial)
-- Debian 9(Stretch) and Debian 8(Jessie) 
-- CentOS 6 and 7
+- Debian 9(Stretch) &  8(Jessie) 
+- Cent OS 7 & 6
+- Red Hat 7 & 6
+- Fedora 26 & 25
+- Arch Linux
 
 ## Set Up your Shadowsocks-libev Server
 Please **Run Bash Command** Below on Your Server to **Install Twist**
