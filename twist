@@ -599,8 +599,7 @@ EOF
 # Description:       Start or Stop Shadowsocks-libev Server
 ### END INIT INFO
 
-. /etc/rc.d/init.d/functions
-sysctl -p
+sysctl -q -p
 rngd -r /dev/urandom
 
 RETVAL=0
