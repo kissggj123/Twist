@@ -35,7 +35,7 @@ function install_twist(){
     systemconfig
     detectsystem
     installlibs
-    updatebbrkernel
+    configbbr
     installsslibev
     configsslibev
     configiptables
@@ -82,7 +82,7 @@ function update_twist(){
     detectsystem
     installlibs
     installsslibev
-    sysctl -e -p
+    sysctl -p
     service fail2ban restart
     /etc/init.d/shadowsocks start
     clear
@@ -110,17 +110,17 @@ function uninstall_twist(){
         echo ""
         exit 1
     fi
+    if grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/issue || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /proc/version; then
+        update-rc.d -f shadowsocks remove
+        iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j DROP
+        iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j DROP
+    fi
     if grep -Eqi "CentOS|Red Hat|Fedora" /etc/issue || grep -Eqi "CentOS|Red Hat|Fedora" /etc/*-release || grep -Eqi "CentOS|Red Hat|Fedora" /proc/version; then
         chkconfig --del shadowsocks
         systemctl start firewalld
         firewall-cmd --permanent --zone=public --remove-port=${PORT}/tcp
         firewall-cmd --permanent --zone=public --remove-port=${PORT}/udp
         firewall-cmd --reload
-    fi
-    if grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/issue || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /proc/version; then
-        update-rc.d -f shadowsocks remove
-        iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j DROP
-        iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j DROP
     fi
     ps -ef | grep -v grep | grep -i "ss-server"
     update-rc.d -f shadowsocks remove
@@ -187,21 +187,21 @@ function disableselinux(){
 }
 
 function detectsystem(){
-    if grep -Eqi "CentOS|Red Hat|Fedora" /etc/issue || grep -Eqi "CentOS|Red Hat|Fedora" /etc/*-release || grep -Eqi "CentOS|Red Hat|Fedora" /proc/version; then
-        systemtype="0"
-    elif grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/issue || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /proc/version; then
+    if grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/issue || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /proc/version; then
         systemtype="1"
+    elif grep -Eqi "CentOS|Red Hat|Fedora" /etc/issue || grep -Eqi "CentOS|Red Hat|Fedora" /etc/*-release || grep -Eqi "CentOS|Red Hat|Fedora" /proc/version; then
+        systemtype="0"
     else
         echo -e "# [\033[31;1mThis Script Must be Run on CentOS, Red Hat, Fedora, Ubuntu, Debian or Arch Linux! Aborating!\033[0m]"
         echo ""
         exit 1
     fi
-    if [ ! -z "$(which yum)" ]; then
-        packagemanagertype="0"
-    elif [ ! -z "$(which apt-get)" ]; then
-        packagemanagertype="1"
+    if [ ! -z "$(which apt)" ]; then
+        packagemanagertype="a"
+    elif [ ! -z "$(which yum)" ]; then
+        packagemanagertype="y"
     elif [ ! -z "$(which pacman)" ]; then
-        packagemanagertype="2"
+        packagemanagertype="p"
     else
         echo -e "# [\033[31;1mThis Script Must be Run on CentOS,Red Hat, Ubuntu, Debian or Arch Linux! Aborating!\033[0m]"
         echo ""
@@ -209,10 +209,12 @@ function detectsystem(){
     fi
     if [ -f /proc/user_beancounters ]; then
         BBR="disable"
-        if [ "$packagemanagertype" = "2" ]; then
+        if [ "$packagemanagertype" = "a" ]; then
             systemtype="1"
-        else
-            systemtype="$packagemanagertype"
+        elif [ "$packagemanagertype" = "y" ]; then
+            systemtype="0"
+        elif [ "$packagemanagertype" = "p" ]; then
+            systemtype="1"
         fi
     fi
     if [ -z "$ETH" ]; then
@@ -266,7 +268,16 @@ function detectsystem(){
 }
 
 function installlibs(){
-    if [ "$packagemanagertype" = "0" ]; then
+	
+    if [ "$packagemanagertype" = "a" ]; then
+        apt-get -yq update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        apt-get -yq upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        apt-get -yq install wget dnsutils git gawk grep sed net-tools rng-tools fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        apt-get -yq install python python-dev python-pip python-setuptools python-m2crypto curl gcc swig make perl cpio build-essential libevent-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }   
+        apt-get -y --no-install-recommends install gettext build-essential autoconf automake libtool openssl libssl-dev zlib1g-dev xmlto asciidoc libpcre3-dev libudns-dev libev-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        [ "$FWS" = "enable" ] && { apt-get -yq install apache2 || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as FakeWebServer! Please Check Your Network!\033[0m]"; echo ""; exit 1; }; }
+        easy_install -q greenlet gevent
+    elif [ "$packagemanagertype" = "y" ]; then
         yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         yum -y upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         yum -y install wget bind-utils gawk grep sed net-tools greenlet rng-tools fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
@@ -275,14 +286,6 @@ function installlibs(){
         yum -y install gcc gettext-devel autoconf automake make zlib-devel libtool xmlto asciidoc udns-devel libev-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         yum -y install pcre pcre-devel perl perl-devel cpio expat-devel openssl-devel mbedtls-devel git || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         [ "$FWS" = "enable" ] && { yum -y install httpd || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as FakeWebServer! Please Check Your Network!\033[0m]"; echo ""; exit 1; }; }
-    elif [ "$packagemanagertype" = "1" ]; then
-        apt-get -yq update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        apt-get -yq upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        apt-get -yq install wget dnsutils git gawk grep sed net-tools rng-tools fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        apt-get -yq install python python-dev python-pip python-setuptools python-m2crypto curl gcc swig make perl cpio build-essential libevent-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }   
-        apt-get -y --no-install-recommends install gettext build-essential autoconf automake libtool openssl libssl-dev zlib1g-dev xmlto asciidoc libpcre3-dev libudns-dev libev-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        [ "$FWS" = "enable" ] && { apt-get -yq install apache2 || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as FakeWebServer! Please Check Your Network!\033[0m]"; echo ""; exit 1; }; }
-        easy_install -q greenlet gevent
     else
         pacman -Syu --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         pacman -S --noconfirm wget git gawk grep sed net-tools rng-tools fail2ban python-greenlet python-gevent || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
@@ -293,32 +296,50 @@ function installlibs(){
     pip install -q qrcode || { echo ""; echo -e "# [\033[31;1mCannot Install QRCode! You are Unable to Configure Clients by Using QRCode!\033[0m]"; echo ""; sleep 3; }
 }
 
-function updatebbrkernel(){
+function configbbr(){
     if [ "$BBR" = "enable" ]; then
-        if grep -Eqi "Ubuntu" /etc/*-release || grep -Eqi "Ubuntu" /proc/version; then
-            KERNELVER="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/ | awk -F'\"v' '/v[4-9]./{print $2}' | cut -d/ -f1 | grep -v -  | sort -V | tail -1)"
-            [ -z "$KERNELVER" ] && BBR="disable" && echo -e "# [\033[31;1mCannot Check Linux KERNEL Verison. BBR will NOT Working!\033[0m]"
-            if [ "$BBR" = "enable" ]; then
-                SYSTYPE="$(dpkg --print-architecture)"
-                [ "$SYSTYPE" = "amd64" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/amd64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-                [ "$SYSTYPE" = "i386" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/i386.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-                [ "$SYSTYPE" = "armhf" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/armhf.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-                [ "$SYSTYPE" = "arm64" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/arm64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-                [ "$SYSTYPE" = "ppc64el" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/ppc64el.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-                [ "$SYSTYPE" = "s390x" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/s390x.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-                [ -z "$KERNEL" ] && { echo ""; echo -e "[# \033[31;1mUnable to Find New KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
-                [ "$BBR" = "enable" ] && wget -t 3 -T 30 -nv -O "$KERNEL" "http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/${KERNEL}" || { echo ""; echo -e "# [\033[31;1mCannot Download Linux KERNEL! Please Check Your Network! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
-                [ "$BBR" = "enable" ] && { dpkg -i $KERNEL || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }; }
-                [ "$BBR" = "enable" ] && { dpkg -l | grep linux-image; rm -f $KERNEL; update-grub; }
+        if uname -r | grep -Eqi "4.10."; then
+            if [ ! "$(sysctl net.ipv4.tcp_available_congestion_control | awk '{print $3}')" = "bbr" ]; then
+                sed -i '/net.core.default_qdisc/d' /etc/sysctl.conf
+                sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.conf
+                echo "net.ipv4.tcp_congestion_control = bbr" >> /etc/sysctl.conf
             fi
-        elif [ "$packagemanagertype" = "0" ]; then
-            yum --enablerepo=elrepo-kernel install kernel-ml || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
         else
-            echo -e "# [\033[33;1mPlease make sure that the Linux KERNEL is Up to Date! If not BBR may NOT Working!\033[0m]"
-            echo ""
-            sleep 3
+            updatekernel
         fi
+    else
+        serverrestart="false"
     fi
+}
+
+function updatekernel(){
+    if [ "$packagemanagertype" = "a" ]; then
+        KERNELVER="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/ | awk -F'\"v' '/v[4-9]./{print $2}' | cut -d/ -f1 | grep -v -  | sort -V | tail -1)"
+        [ -z "$KERNELVER" ] && { BBR="disable"; echo -e "# [\033[31;1mCannot Check Linux KERNEL Verison. BBR will NOT Working!\033[0m]"; }
+        if [ "$BBR" = "enable" ]; then
+            SYSTYPE="$(dpkg --print-architecture)"
+            [ "$SYSTYPE" = "amd64" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/amd64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+            [ "$SYSTYPE" = "i386" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/i386.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+            [ "$SYSTYPE" = "armhf" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/armhf.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+            [ "$SYSTYPE" = "arm64" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/arm64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+            [ "$SYSTYPE" = "ppc64el" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/ppc64el.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+            [ "$SYSTYPE" = "s390x" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/s390x.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+            [ -z "$KERNEL" ] && { echo ""; echo -e "[# \033[31;1mUnable to Find New KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            [ "$BBR" = "enable" ] && wget -t 3 -T 30 -nv -O "$KERNEL" "http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/${KERNEL}" || { echo ""; echo -e "# [\033[31;1mCannot Download Linux KERNEL! Please Check Your Network! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            [ "$BBR" = "enable" ] && { dpkg -i $KERNEL || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }; }
+            [ "$BBR" = "enable" ] && { dpkg -l | grep linux-image; rm -f $KERNEL; update-grub; }
+        fi
+    elif [ "$packagemanagertype" = "y" ]; then
+        rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org || { echo ""; echo -e "# [\033[31;1mCannot Download ELrepo KEY! Please Check Your Network! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+        if grep -qs "release 7" /etc/*-release; then
+            [ "$BBR" = "enable" ] && rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm || { echo ""; echo -e "# [\033[31;1mCannot Install ELrepo! Please Check Your Network! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+        elif grep -qs "release 6" /etc/*-release; then
+            [ "$BBR" = "enable" ] && rpm -Uvh http://www.elrepo.org/elrepo-release-6-8.el6.elrepo.noarch.rpm || { echo ""; echo -e "# [\033[31;1mCannot Install ELrepo! Please Check Your Network! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+        fi
+        [ "$BBR" = "enable" ] && yum --enablerepo=elrepo-kernel install kernel-ml kernel-ml-devel || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+    fi
+    serverrestart="true"
+    configbbr
 }
 
 function installsslibev(){
@@ -400,6 +421,7 @@ kernel.shmall = 4294967296
 kernel.shmmax = 68719476736
 net.core.rmem_max = 12582912
 net.core.wmem_max = 12582912
+net.core.default_qdisc = fq
 net.ipv4.ip_forward = 1
 net.ipv4.tcp_rmem = 10240 87380 12582912
 net.ipv4.tcp_wmem = 10240 87380 12582912
@@ -433,16 +455,12 @@ net.ipv6.conf.all.autoconf = 1
 net.ipv6.conf.all.accept_ra = 2
 net.ipv6.conf.${ETH}.accept_ra = 2
 EOF
-        if [ "$BBR" = "enable" ]; then
-            echo "net.core.default_qdisc = fq" >> /etc/sysctl.conf
-            echo "net.ipv4.tcp_congestion_control = bbr" >> /etc/sysctl.conf
-        fi
-	echo "*                soft    nofile           512000" >> /etc/security/limits.conf
-	echo "*                hard    nofile          1024000" >> /etc/security/limits.conf
-	echo "" >> /etc/security/limits.conf
-	if [ "$systemtype" = "0" ] && ! grep -qs "pam_limits.so" /etc/pam.d/login; then
+        echo "*                soft    nofile           512000" >> /etc/security/limits.conf
+        echo "*                hard    nofile          1024000" >> /etc/security/limits.conf
+        echo "" >> /etc/security/limits.conf
+        if [ "$systemtype" = "0" ] && ! grep -qs "pam_limits.so" /etc/pam.d/login; then
             echo "session    required     pam_limits.so" >> /etc/pam.d/login
-	fi
+        fi
     fi
 }
 
@@ -579,15 +597,17 @@ EOF
 # Description:       Start or Stop Shadowsocks-libev Server
 ### END INIT INFO
 
+. /etc/rc.d/init.d/functions
+sysctl -p
+rngd -r /dev/urandom
+
+RETVAL=0
+
 if [ -f /usr/local/bin/ss-server ]; then
     SSDIRECTION=/usr/local/bin/ss-server
 elif [ -f /usr/bin/ss-server ]; then
     SSDIRECTION=/usr/bin/ss-server
 fi
-
-[ -x \$SSDIRECTION ] || exit 0
-
-RETVAL=0
 
 if [ ! -d /var/run ]; then
     mkdir -p /var/run
@@ -672,31 +692,22 @@ esac
 exit \$RETVAL
 
 EOF
-    cat >> /etc/rc.local <<EOF
-
-sysctl -p
-dhclient -6
-service fail2ban restart
-rngd -r /dev/urandom
-EOF
-    sysctl -e -q -p
+    sysctl -p
     chmod +x /etc/init.d/shadowsocks
-    chmod +x /etc/rc.local
     chmod +x /etc/network/if-pre-up.d/iptablesload
     chmod +x /etc/network/if-pre-up.d/ip6tablesload
     if [ "$systemtype" = "1" ]; then
         update-rc.d -f shadowsocks defaults
-        ldconfig
         ip6tables-restore < /etc/ip6tables.rules
         systemctl enable fail2ban
     else
         chkconfig --add shadowsocks
         chkconfig shadowsocks on
-	ldconfig
         iptables-restore < /etc/sysconfig/iptables
         systemctl --now mask firewalld
         systemctl enable iptables fail2ban
     fi
+    ldconfig
     rngd -r /dev/urandom
     [ "$FWS" = "enable" ] && { a2enmod ssl; systemctl restart apache2; }
     service fail2ban restart
@@ -715,7 +726,7 @@ function twiststatus(){
     echo -e "# [\033[32;1mServer IP:\033[0m \033[34;1m${PUBLICIP}\033[0m\c"
     [ ! "$AddrV6" = "false" ] && echo -e "(\033[34;1m${PUBLICIPv6}\033[0m)\c"
     echo -e " \033[32;1mPassWord:\033[0m \033[34;1m${PASSWORD}\033[0m \033[32;1mEncryption:\033[0m \033[34;1m${METHOD}\033[0m \033[32;1mOBFS:\033[0m \033[34;1m${OBFS}\033[0m \033[32;1mOBFS-HOST:\033[0m \033[34;1m${OBFSHOST}\033[0m \033[32;1mLOCALHOST:\033[0m \033[34;1m${LOACL}:${LOCALPORT}\033[0m]"
-    if [ "$BBR" = "enable" ]; then
+    if [ "$serverrestart" = "true" ]; then
         echo -e "# [\033[34;1mThe Server Requires Restart to Enable Google BBR,Please Press Enter to Reboot!\033[0m]"
         read -p ""
         sleep 3
