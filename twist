@@ -8,6 +8,7 @@ function shadowsocksconfig(){
     LOACL="127.0.0.1"
     LOCALPORT="1080"
     PASSWORD=""
+    DNS="8.8.8.8"
     TIMEOUT="600"
     METHOD="chacha20-ietf-poly1305"
     OBFS="tls"
@@ -110,12 +111,12 @@ function uninstall_twist(){
         echo ""
         exit 1
     fi
-    if grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/issue || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /proc/version; then
+    if grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /proc/version; then
         update-rc.d -f shadowsocks remove
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j DROP
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j DROP
     fi
-    if grep -Eqi "CentOS|Red Hat|Fedora" /etc/issue || grep -Eqi "CentOS|Red Hat|Fedora" /etc/*-release || grep -Eqi "CentOS|Red Hat|Fedora" /proc/version; then
+    if grep -Eqi "CentOS|Red Hat|Fedora" /etc/*-release || grep -Eqi "CentOS|Red Hat|Fedora" /proc/version; then
         chkconfig --del shadowsocks
         systemctl start firewalld
         firewall-cmd --permanent --zone=public --remove-port=${PORT}/tcp
@@ -187,9 +188,9 @@ function disableselinux(){
 }
 
 function detectsystem(){
-    if grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/issue || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /proc/version; then
+    if grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /proc/version; then
         systemtype="1"
-    elif grep -Eqi "CentOS|Red Hat|Fedora" /etc/issue || grep -Eqi "CentOS|Red Hat|Fedora" /etc/*-release || grep -Eqi "CentOS|Red Hat|Fedora" /proc/version; then
+    elif grep -Eqi "CentOS|Red Hat|Fedora" /etc/*-release || grep -Eqi "CentOS|Red Hat|Fedora" /proc/version; then
         systemtype="0"
     else
         echo -e "# [\033[31;1mThis Script Must be Run on CentOS, Red Hat, Fedora, Ubuntu, Debian or Arch Linux! Aborating!\033[0m]"
@@ -216,6 +217,9 @@ function detectsystem(){
         elif [ "$packagemanagertype" = "p" ]; then
             systemtype="1"
         fi
+    fi
+    if ! uname -r | grep -Eqi "4.10."; then
+        [ "$BBR" = "enable" ] && serverrestart="true"
     fi
     if [ -z "$ETH" ]; then
         ETH="$(route 2>/dev/null | grep '^default' | grep -o '[^ ]*$')"
@@ -268,7 +272,6 @@ function detectsystem(){
 }
 
 function installlibs(){
-	
     if [ "$packagemanagertype" = "a" ]; then
         apt-get -yq update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
         apt-get -yq upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
@@ -398,6 +401,7 @@ function configsslibev(){
     "local_address":"${LOACL}",
     "local_port":${LOCALPORT},
     "password":"${PASSWORD}",
+    "nameserver":"${DNS}",
     "timeout":${TIMEOUT},
     "udp_timeout":${TIMEOUT},
     "method":"${METHOD}",
