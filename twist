@@ -20,7 +20,7 @@ function shadowsocksconfig(){
 
 function systemconfig(){
     IPREGEX="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
-    ETH="eth0"
+    ETH=""
     PUBLICIP=""
     PUBLICIPv6=""
 }
@@ -110,14 +110,14 @@ function uninstall_twist(){
         echo ""
         exit 1
     fi
-    if grep -Eqi "CentOS|Red Hat|Fedora" /etc/*-release || grep -Eqi "CentOS|Red Hat|Fedora" /proc/version; then
+    if grep -Eqi "CentOS|Red Hat|Fedora" /etc/issue || grep -Eqi "CentOS|Red Hat|Fedora" /etc/*-release || grep -Eqi "CentOS|Red Hat|Fedora" /proc/version; then
         chkconfig --del shadowsocks
         systemctl start firewalld
         firewall-cmd --permanent --zone=public --remove-port=${PORT}/tcp
         firewall-cmd --permanent --zone=public --remove-port=${PORT}/udp
         firewall-cmd --reload
     fi
-    if grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /proc/version; then
+    if grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/issue || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /proc/version; then
         update-rc.d -f shadowsocks remove
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j DROP
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j DROP
@@ -187,9 +187,9 @@ function disableselinux(){
 }
 
 function detectsystem(){
-    if grep -Eqi "CentOS|Red Hat|Fedora" /etc/*-release || grep -Eqi "CentOS|Red Hat|Fedora" /proc/version; then
+    if grep -Eqi "CentOS|Red Hat|Fedora" /etc/issue || grep -Eqi "CentOS|Red Hat|Fedora" /etc/*-release || grep -Eqi "CentOS|Red Hat|Fedora" /proc/version; then
         systemtype="0"
-    elif grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /proc/version; then
+    elif grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/issue || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /proc/version; then
         systemtype="1"
     else
         echo -e "# [\033[31;1mThis Script Must be Run on CentOS, Red Hat, Fedora, Ubuntu, Debian or Arch Linux! Aborating!\033[0m]"
@@ -207,8 +207,7 @@ function detectsystem(){
         echo ""
         exit 1
     fi
-    ethstatus="$(cat /sys/class/net/${ETH}/operstate)"
-    if [ -z "$ethstatus" ] || [ "$ethstatus" = "down" ]; then
+    if [ -z "$ETH" ]; then
         ETH="$(route 2>/dev/null | grep '^default' | grep -o '[^ ]*$')"
         [ -z "$ETH" ] && ETH="$(ip -4 route list 0/0 | grep -Po '(?<=dev )(\S+)')"
     fi
@@ -233,14 +232,6 @@ function detectsystem(){
                 echo -e "# [\033[33;1mNetwork Interface Check Passed, your VPN Will be Setup Using Interface\033[0m \033[32;1m${ETH}\033[0m]"
                 echo ""
             fi
-        fi
-    fi
-    if [ -f /proc/user_beancounters ]; then
-        BBR="disable"
-        if [ "$packagemanagertype" = "2" ]; then
-            systemtype="1"
-        else
-            systemtype="$packagemanagertype"
         fi
     fi
     [ -z "$PUBLICIP" ] && PUBLICIP="$(dig @resolver1.opendns.com -t A -4 myip.opendns.com +short)"
