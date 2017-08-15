@@ -99,4 +99,4 @@ sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twi
 ```
 
 ## Author
-<a href="https://github.com/Unbinilium" target="_blank">Unbinilium</a> --  This Project is Using OpenSource Software <a href="https://github.com/shadowsocks/shadowsocks-libev" target="_blank">Shadowsocks-libev</a> and <a href="https://github.com/jedisct1/libsodium" target="_blank">Libsodium</a>.
+<a href="https://github.com/Unbinilium" target="_blank">Unbinilium</a> --  This Script is Using OpenSource Software <a href="https://github.com/shadowsocks/shadowsocks-libev" target="_blank">Shadowsocks-libev</a>
