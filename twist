@@ -243,7 +243,7 @@ function detectsystem(){
             else
                 ETH="$eth"
                 echo ""
-                echo -e "# [\033[33;1mNetwork Interface Check Passed, your VPN Will be Setup Using Interface\033[0m \033[32;1m${ETH}\033[0m]"
+                echo -e "# [\033[33;1mNetwork Interface Check Passed and Using Interface\033[0m \033[32;1m${ETH}\033[0m]"
                 echo ""
             fi
         fi
@@ -251,11 +251,11 @@ function detectsystem(){
     [ -z "$PUBLICIP" ] && PUBLICIP="$(dig @resolver1.opendns.com -t A -4 myip.opendns.com +short)"
     if ! printf %s "$PUBLICIP" | grep -Eq "$IPREGEX"; then
         echo ""
-        echo -e "# [\033[31;1mCannot find Valid Public IP. Please Fill Your IP Address Below!\033[0m]"
+        echo -e "# [\033[31;1mCannot Detect Valid Public IP. Please Fill Your IP Address Below!\033[0m]"
         read -p "Input Your Public IP:" publicip
         if ! printf %s "$publicip" | grep -Eq "$IPREGEX"; then
             echo ""
-            echo -e "# [\033[31;1mThe IP:${publicip} You Entered is Out of Range! Aborting!\033[0m]"
+            echo -e "# [\033[31;1mThe IP:${publicip} The IP Address You Entered is Out of Range! Aborting!\033[0m]"
             echo ""
             exit 1
         else
@@ -273,27 +273,27 @@ function detectsystem(){
 
 function installlibs(){
     if [ "$packagemanagertype" = "a" ]; then
-        apt-get -yq update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        apt-get -yq upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        apt-get -yq install wget dnsutils git gawk grep sed net-tools rng-tools curl gcc swig make perl cpio || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        apt-get -yq install gettext autoconf automake libtool openssl libssl-dev zlib1g-dev xmlto asciidoc libpcre3-dev libudns-dev libev-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        apt-get -yq install python-dev python-pip python-setuptools python-m2crypto build-essential libevent-dev fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        apt-get -yq update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
+        apt-get -yq upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
+        apt-get -yq install wget dnsutils git gawk grep sed net-tools rng-tools curl gcc swig make perl cpio || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
+        apt-get -yq install gettext autoconf automake libtool openssl libssl-dev zlib1g-dev xmlto asciidoc libpcre3-dev libudns-dev libev-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
+        apt-get -yq install python-dev python-pip python-setuptools python-m2crypto build-essential libevent-dev fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
         easy_install -q greenlet gevent
-        [ "$FWS" = "enable" ] && { apt-get -yq install apache2 || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as FakeWebServer! Please Check Your Network!\033[0m]"; echo ""; exit 1; }; }
+        [ "$FWS" = "enable" ] && { apt-get -yq install apache2 || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }; }
     elif [ "$packagemanagertype" = "y" ]; then
-        yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        yum -y upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
+        yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
+        yum -y upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
         yum -y install epel-release || { echo -e "# [\033[31;1mCannot Add EPEL repository! Aborting!\033[0m]"; exit 1; }
-        yum -y install yum-utils bind-utils wget gawk grep cpio swig sed net-tools greenlet rng-tools pcre-devel perl-devel expat-devel openssl-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        yum -y install gcc gettext-devel autoconf automake make zlib-devel libtool xmlto asciidoc git udns-devel libev-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        yum -y install python-devel python-setuptools python-pip libevent curl curl-devel zlib-devel gevent fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        [ "$FWS" = "enable" ] && { yum -y install httpd || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as FakeWebServer! Please Check Your Network!\033[0m]"; echo ""; exit 1; }; }
+        yum -y install yum-utils bind-utils wget gawk grep cpio swig sed net-tools greenlet rng-tools pcre-devel perl-devel expat-devel openssl-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
+        yum -y install gcc gettext-devel autoconf automake make zlib-devel libtool xmlto asciidoc git udns-devel libev-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
+        yum -y install python-devel python-setuptools python-pip libevent curl curl-devel zlib-devel gevent fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
+        [ "$FWS" = "enable" ] && { yum -y install httpd || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }; }
     else
-        pacman -Syu --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        pacman -S --noconfirm wget git gawk grep sed net-tools rng-tools curl perl cpio || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        pacman -S --noconfirm gettext gcc autoconf libtool autoconf automake make asciidoc xmlto udns libev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        pacman -S --noconfirm python python-pip python-setuptools python2-m2crypto python-greenlet python-gevent openssl fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        [ "$FWS" = "enable" ] && { pacman -S --noconfirm apache || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as FakeWebServer! Please Check Your Network!\033[0m]"; echo ""; exit 1; }; }
+        pacman -Syu --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
+        pacman -S --noconfirm wget git gawk grep sed net-tools rng-tools curl perl cpio || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
+        pacman -S --noconfirm gettext gcc autoconf libtool autoconf automake make asciidoc xmlto udns libev || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
+        pacman -S --noconfirm python python-pip python-setuptools python2-m2crypto python-greenlet python-gevent openssl fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
+        [ "$FWS" = "enable" ] && { pacman -S --noconfirm apache || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }; }
     fi
     pip install -q qrcode || { echo ""; echo -e "# [\033[31;1mCannot Install QRCode! You are Unable to Configure Clients by Using QRCode!\033[0m]"; echo ""; sleep 3; }
 }
@@ -317,7 +317,7 @@ function configbbr(){
 function updatekernel(){
     if [ "$packagemanagertype" = "a" ]; then
         KERNELVER="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/ | awk -F'\"v' '/v[4-9]./{print $2}' | cut -d/ -f1 | grep -v -  | sort -V | tail -1)"
-        [ -z "$KERNELVER" ] && { BBR="disable"; echo -e "# [\033[31;1mCannot Check Linux KERNEL Verison. BBR will NOT Working!\033[0m]"; }
+        [ -z "$KERNELVER" ] && { BBR="disable"; echo -e "# [\033[31;1mCannot Get Newest Linux KERNEL Verison. BBR will NOT Enabled!\033[0m]"; }
         if [ "$BBR" = "enable" ]; then
             SYSTYPE="$(dpkg --print-architecture)"
             [ "$SYSTYPE" = "amd64" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/amd64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
@@ -326,13 +326,13 @@ function updatekernel(){
             [ "$SYSTYPE" = "arm64" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/arm64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
             [ "$SYSTYPE" = "ppc64el" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/ppc64el.deb/{print $2}' | cut -d'<' -f1 | head -1)"
             [ "$SYSTYPE" = "s390x" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/s390x.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-            [ -z "$KERNEL" ] && { echo ""; echo -e "[# \033[31;1mUnable to Find New KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
-            [ "$BBR" = "enable" ] && wget -t 3 -T 30 -nv -O "$KERNEL" "http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/${KERNEL}" || { echo ""; echo -e "# [\033[31;1mCannot Download Linux KERNEL! Please Check Your Network! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
-            [ "$BBR" = "enable" ] && { dpkg -i $KERNEL || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }; }
+            [ -z "$KERNEL" ] && { echo ""; echo -e "[# \033[31;1mUnable to Get New KERNEL! BBR will NOT Enabled on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            [ "$BBR" = "enable" ] && wget -t 3 -T 30 -nv -O "$KERNEL" "http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/${KERNEL}" || { echo ""; echo -e "# [\033[31;1mCannot Download Linux KERNEL! Please Check Your Network or Errors Noticed! BBR will NOT Enabled on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            [ "$BBR" = "enable" ] && { dpkg -i $KERNEL || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will NOT Enabled on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }; }
             [ "$BBR" = "enable" ] && { dpkg -l | grep linux-image; rm -f $KERNEL; update-grub; }
         fi
     elif [ "$packagemanagertype" = "y" ]; then
-        yum --enablerepo=elrepo-kernel install kernel-ml kernel-ml-devel || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+        yum --enablerepo=elrepo-kernel install kernel-ml kernel-ml-devel || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will NOT Enabled on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
         if grep -qs "release 7" /etc/*-release; then
             [ "$BBR" = "enable" ] && grub2-set-default 0
         elif grep -qs "release 6" /etc/*-release; then
@@ -728,7 +728,7 @@ function twiststatus(){
     [ ! "$AddrV6" = "false" ] && echo -e "(\033[34;1m${PUBLICIPv6}\033[0m)\c"
     echo -e " \033[32;1mPassWord:\033[0m \033[34;1m${PASSWORD}\033[0m \033[32;1mEncryption:\033[0m \033[34;1m${METHOD}\033[0m \033[32;1mOBFS:\033[0m \033[34;1m${OBFS}\033[0m \033[32;1mOBFS-HOST:\033[0m \033[34;1m${OBFSHOST}\033[0m \033[32;1mLOCALHOST:\033[0m \033[34;1m${LOACL}:${LOCALPORT}\033[0m]"
     if [ "$serverrestart" = "true" ]; then
-        echo -e "# [\033[34;1mThe Server Requires Restart to Enable Google BBR,Please Press Enter to Reboot!\033[0m]"
+        echo -e "# [\033[34;1mThe Server Requires Restart to Enable Google BBR, Please Press Enter to Reboot!\033[0m]"
         read -p ""
         sleep 3
 	reboot
