@@ -747,7 +747,7 @@ function twiststatus(){
         echo -e "# [\033[34;1mThe Server Requires Restart to Enable Google BBR, Please Press Enter to Reboot!\033[0m]"
         read -p ""
         sleep 3
-	reboot
+        reboot
     fi
 }
 
