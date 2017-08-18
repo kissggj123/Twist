@@ -83,9 +83,7 @@ function update_twist(){
     detectsystem
     installlibs
     installsslibev
-    sysctl -p
-    service fail2ban restart
-    /etc/init.d/shadowsocks start
+    startservices
     clear
     twist
     echo -e "#[\033[32;1m                      Twist Update Finished\033[0m                       ]#"
@@ -379,7 +377,7 @@ function installsslibev(){
     sslibevver="shadowsocks-libev-$(echo ${sslibevtag} | sed -e 's/^[a-zA-Z]//g')"
     wget -t 3 -T 30 -nv -O ${sslibevver}.tar.gz https://github.com/shadowsocks/shadowsocks-libev/releases/download/${sslibevtag}/${sslibevver}.tar.gz
     [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Shadowsocks-libev Source. Aborting.\033[0m]"; echo ""; exit 1; }
-    [ -d ${sslibevver} ] && rm -rf ${sslibevver}
+    [ -d ${sslibevver} ] && rm -rf $sslibevver
     tar zxf ${sslibevver}.tar.gz
     pushd $sslibevver
     ./configure
@@ -592,6 +590,19 @@ EOF
 }
 
 function startservices(){
+    if [ -f /usr/local/bin/ss-server ]; then
+        ssserverpath="/usr/local/bin/ss-server"
+    elif [ -f /usr/bin/ss-server ]; then
+        ssserverpath="/usr/bin/ss-server"
+    elif [ ! -z "$(which ss-server)" ]; then
+        ssserverpath="ss-server"
+    else
+        echo ""
+        echo －e "# [\033[31;1mCannot Find Shadowsocks-libev Install Path. Aborting.\033[0m]"
+        echo ""
+        exit 1 
+    fi
+    [ -d /etc/init.d/shadowsocks ] && rm -rf /etc/init.d/shadowsocks
     echo "#!/bin/bash" > /etc/init.d/shadowsocks
     if [  "$systemtype" = "0" ]; then
         cat >> /etc/init.d/shadowsocks <<EOF
@@ -613,14 +624,7 @@ EOF
 
 sysctl -q -p
 rngd -r /dev/urandom
-
-RETVAL=0
-
-if [ -f /usr/local/bin/ss-server ]; then
-    SSDIRECTION=/usr/local/bin/ss-server
-elif [ -f /usr/bin/ss-server ]; then
-    SSDIRECTION=/usr/bin/ss-server
-fi
+exitstatus=0
 
 if [ ! -d /var/run ]; then
     mkdir -p /var/run
@@ -657,7 +661,7 @@ sslibev_status() {
         ;;
         1|2)
         echo -e "# \033[34;1mShadowsocks-libev is Stopped...\033[0m"
-        RETVAL=1
+        exitstatus=1
         ;;
     esac
 }
@@ -667,12 +671,12 @@ sslibev_start() {
         echo -e "# \033[32;1mShadowsocks-libev is Already Running...\033[0m"
         return 0
     fi
-    \$SSDIRECTION -u -c /etc/shadowsocks-libev/config.json -f /var/run/shadowsocks-libev.pid
+    ${ssserverpath} -u -c /etc/shadowsocks-libev/config.json -f /var/run/shadowsocks-libev.pid
     if sslibev_running; then
         echo -e "# \033[32;1mStarting Shadowsocks-libev Success...\033[0m"
     else
         echo -e "# \033[31;1mStarting Shadowsocks-libev Failed...\033[0m"
-        RETVAL=1
+        exitstatus=1
     fi
 }
 
@@ -683,7 +687,7 @@ sslibev_stop() {
         echo -e "# \033[32;1mStopping Shadowsocks-libev Success...\033[0m"
     else
         echo -e "# \033[34;1mShadowsocks-libev is Stopped...\033[0m"
-        RETVAL=1
+        exitstatus=1
     fi
 }
 
@@ -698,11 +702,11 @@ case "\$1" in
     ;;
     *)
     echo "Usage: \$0 { start | stop | restart | status }"
-    RETVAL=1
+    exitstatus=1
     ;;
 esac
 
-exit \$RETVAL
+exit \$exitstatus
 
 EOF
     sysctl -p
