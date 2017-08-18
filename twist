@@ -338,6 +338,19 @@ function updatekernel(){
         elif grep -qs "release 6" /etc/*-release; then
             [ "$BBR" = "enable" ] && sed -i 's/^default=.*/default=0/g' /boot/grub/grub.conf
         fi
+    elif [ "$packagemanagertype" = "p" ]; then
+        if grep -Eqi "IgnorePkg|IgnoreGroup" /etc/pacman.conf; then
+            sed -i "/IgnorePkg/d" /etc/pacman.conf
+            sed -i "/IgnoreGroup/d" /etc/pacman.conf
+        fi
+        pacman -Syu --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source with KERNEL! BBR will NOT Enabled on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+        if ! uname -r | grep -Eqi "4.10."; then
+            echo ""
+            echo -e "# [\033[31;1mCannot Update to Newest KERNEL! BBR will NOT Enabled on Your Server!\033[0m]"
+            echo ""
+            sleep 3
+            BBR="disable"
+        fi	
     fi
     serverrestart="true"
     configbbr
