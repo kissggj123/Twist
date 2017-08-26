@@ -216,7 +216,8 @@ function detectsystem(){
             systemtype="1"
         fi
     fi
-    if ! uname -r | grep -Eqi "4.10."; then
+    kernelverheader="$(uname -r | grep -oE '[0-9]+\.[0-9]+')"
+    if [ $(echo ${kernelverheader} | awk -v ver=4.10 '{print($1>ver)? "1":"0"}') -eq "0" ]; then
         [ "$BBR" = "enable" ] && serverrestart="true"
     fi
     if [ -z "$ETH" ]; then
@@ -298,17 +299,15 @@ function installlibs(){
 
 function configbbr(){
     if [ "$BBR" = "enable" ]; then
-        if uname -r | grep -Eqi "4.10."; then
+        if [ $(echo ${kernelverheader} | awk -v ver=4.10 '{print($1>ver)? "1":"0"}') -eq "1" ] || [ "$kernelupdated" = "true" ]; then
             if [ ! "$(sysctl net.ipv4.tcp_available_congestion_control | awk '{print $3}')" = "bbr" ]; then
-                sed -i '/net.core.default_qdisc/d' /etc/sysctl.conf
                 sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.conf
                 echo "net.ipv4.tcp_congestion_control = bbr" >> /etc/sysctl.conf
             fi
         else
+            echo "net.ipv4.tcp_congestion_control = hybla" >> /etc/sysctl.conf
             updatekernel
         fi
-    else
-        serverrestart="false"
     fi
 }
 
@@ -341,15 +340,9 @@ function updatekernel(){
             sed -i "/IgnorePkg/d;/IgnoreGroup/d" /etc/pacman.conf
         fi
         pacman -Syu --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source with KERNEL! BBR will NOT Enabled on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
-        if ! uname -r | grep -Eqi "4.10."; then
-            echo ""
-            echo -e "# [\033[31;1mCannot Update to Newest KERNEL! BBR will NOT Enabled on Your Server!\033[0m]"
-            echo ""
-            sleep 3
-            BBR="disable"
-        fi	
     fi
-    serverrestart="true"
+    [ "$BBR" = "enable" ] && { kernelupdated="true"; serverrestart="true"; }
+    kernelverheader="$(uname -r | grep -oE '[0-9]+\.[0-9]+')"
     configbbr
 }
 
