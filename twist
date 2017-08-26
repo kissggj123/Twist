@@ -282,8 +282,9 @@ function installlibs(){
     elif [ "$packagemanagertype" = "y" ]; then
         yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
         yum -y upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
-        yum -y install epel-release || { echo -e "# [\033[31;1mCannot Add EPEL repository! Aborting!\033[0m]"; exit 1; }
-        yum -y install yum-utils bind-utils wget gawk grep cpio swig sed net-tools greenlet rng-tools pcre-devel perl-devel expat-devel openssl-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
+        yum -y install epel-release yum-utils bind-utils || { echo -e "# [\033[31;1mCannot Add EPEL repository! Aborting!\033[0m]"; exit 1; }
+        yum-config-manager --enable epel || { echo -e "# [\033[31;1mCannot Enable EPEL repository! Aborting!\033[0m]"; exit 1; }
+        yum -y install wget gawk grep cpio swig sed net-tools greenlet rng-tools pcre-devel perl-devel expat-devel openssl-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
         yum -y install gcc gettext-devel autoconf automake make zlib-devel libtool xmlto asciidoc git udns-devel libev-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
         yum -y install python-devel python-setuptools python-pip libevent curl curl-devel zlib-devel gevent fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
         [ "$FWS" = "enable" ] && { yum -y install httpd || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server! Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }; }
