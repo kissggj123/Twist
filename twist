@@ -12,7 +12,7 @@ function shadowsocksconfig(){
     TIMEOUT="600"
     METHOD="chacha20-ietf-poly1305"
     OBFS="tls"
-    OBFSHOST="github.com"
+    OBFSHOST="mzstatic.com"
     WORKERS="1024"
     BBR="enable"
     FWS="enable"
