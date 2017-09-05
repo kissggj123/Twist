@@ -274,7 +274,7 @@ function installlibs(){
     if [ "$packagemanagertype" = "a" ]; then
         apt-get -yq update || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
         apt-get -yq upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source, Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
-        apt-get -yq install wget dnsutils git gawk grep sed net-tools rng-tools curl gcc swig make perl cpio || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On, Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
+        apt-get -yq install wget dnsutils git gawk grep sed net-tools rng-tools curl gcc swig make perl cpio libc-ares-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On, Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
         apt-get -yq install gettext autoconf automake libtool openssl libssl-dev zlib1g-dev xmlto asciidoc libpcre3-dev libudns-dev libev-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On, Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
         apt-get -yq install python-dev python-pip python-setuptools python-m2crypto build-essential libevent-dev fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On, Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
         easy_install -q greenlet gevent
@@ -285,7 +285,7 @@ function installlibs(){
         yum -y install epel-release yum-utils bind-utils || { echo -e "# [\033[31;1mCannot Add EPEL repository. Aborting!\033[0m]"; exit 1; }
         yum-config-manager --enable epel || { echo -e "# [\033[31;1mCannot Enable EPEL repository. Aborting!\033[0m]"; exit 1; }
         yum -y install wget gawk grep cpio swig sed net-tools greenlet rng-tools pcre-devel perl-devel expat-devel openssl-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On, Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
-        yum -y install gcc gettext-devel autoconf automake make zlib-devel libtool xmlto asciidoc git udns-devel libev-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On, Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
+        yum -y install gcc gettext-devel autoconf automake make zlib-devel libtool xmlto asciidoc git udns-devel libev-devel c-ares-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On, Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
         yum -y install python-devel python-setuptools python-pip libevent curl curl-devel zlib-devel gevent fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On, Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
         [ "$FWS" = "enable" ] && { yum -y install httpd || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server, Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }; }
     else
