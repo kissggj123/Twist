@@ -47,17 +47,17 @@ function install_twist(){
 function update_twist(){
     clear
     twist
-    echo -e "#[\033[32;1m                Update Twist Shadowsocks-libev                   \033[0m]#"
-    echo -e "#[\033[32;1m                Update will Start in 5 Seconds\033[0m                   ]#"
-    echo "#####################################################################"
+    echo -e "#[\033[32;1m                 Update Twist Shadowsocks-libev                   \033[0m]#"
+    echo -e "#[\033[32;1m                 Update will Start in 5 Seconds\033[0m                   ]#"
+    echo "######################################################################"
     echo ""
     sleep 5
     rootness
     systemconfig
     if [ -e /etc/init.d/shadowsocks ]; then
-        /etc/init.d/shadowsocks stop
+        /etc/init.d/shadowsocks stop && { echo ""; sleep 2; }
     else
-        echo -e "#[\033[31;1m             Twist was Not Find on Your Server!\033[0m                  ]#"
+        echo -e "#[\033[31;1m              Twist was Not Find on Your Server!\033[0m                  ]#"
         echo ""
         exit 1
     fi
@@ -83,7 +83,7 @@ function update_twist(){
     detectsystem
     installlibs
     installsslibev
-    startservices
+    startservices && { echo ""; sleep 2; }
     clear
     twist
     echo -e "#[\033[32;1m                      Twist Update Finished\033[0m                       ]#"
@@ -95,17 +95,17 @@ function update_twist(){
 function uninstall_twist(){
     clear
     twist
-    echo -e "#[\033[31;1m              Uninstall Twist Shadowsocks-libev                  \033[0m]#"
-    echo -e "#[\033[31;1m              Uninstall will Start in 5 Seconds\033[0m                  ]#"
-    echo "#####################################################################"
+    echo -e "#[\033[31;1m               Uninstall Twist Shadowsocks-libev                  \033[0m]#"
+    echo -e "#[\033[31;1m               Uninstall will Start in 5 Seconds\033[0m                  ]#"
+    echo "######################################################################"
     echo ""
     sleep 5
     rootness
     sed -i "/# Twist/d" /etc/sysctl.conf
     if [ -e /etc/init.d/shadowsocks ]; then
-        /etc/init.d/shadowsocks stop
+        /etc/init.d/shadowsocks stop { echo ""; sleep 2; }
     else
-        echo -e "#[\033[31;1m             Twist was Not Find on Your Server!\033[0m                  ]#"
+        echo -e "#[\033[31;1m             Twist was Not Find on Your Server!\033[0m                   ]#"
         echo ""
         exit 1
     fi
