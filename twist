@@ -172,7 +172,7 @@ function notice(){
 
 function rootness(){
     if [ $EUID -ne 0 ]; then
-        echo -e "# [\033[31;1mError:Twist must be run as root. Please Run Twist with root Access!\033[0m]" 1>&2
+        echo -e "# [\033[31;1mError:Twist must be run as root. Please Run Twist with root Access!\033[0m]"
         echo ""
         exit 1
     fi
@@ -417,7 +417,7 @@ function configsslibev(){
 }
 EOF
     if ! grep -qs "Twist" /etc/sysctl.conf; then
-        /bin/cp -f /etc/sysctl.conf "/etc/sysctl.conf.old-${date}" 2>/dev/null
+        /bin/cp -f /etc/sysctl.conf "/etc/sysctl.conf.old-${date}"
         cat >> /etc/sysctl.conf <<EOF
 # Twist
 fs.file-max = 1024000
@@ -480,7 +480,7 @@ function configiptables(){
         iptables -I FORWARD 2 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j ACCEPT
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j ACCEPT
-        /bin/cp -f /etc/ip6tables.rules "/etc/ip6tables.rules.old-${date}" 2>/dev/null
+        /bin/cp -f /etc/ip6tables.rules "/etc/ip6tables.rules.old-${date}"
         [ -f /etc/iptables/rules.v6 ] || cat > /etc/ip6tables.rules <<EOF
 *filter
 :INPUT ACCEPT [0:0]
