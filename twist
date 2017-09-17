@@ -777,7 +777,19 @@ EOF
     sysctl -p
     ldconfig
     rngd -r /dev/urandom
-    [ "$FWS" = "enable" ] && { a2enmod ssl; systemctl restart apache2; }
+    if [ "$FWS" = "enable" ]; then
+        a2enmod ssl rewrite
+        [ -e /var/www/html/.htaccess ] || echo "" /var/www/html/.htaccess
+        cat >> /var/www/html/.htaccess <<EOF
+RewriteEngine On
+RewriteCond %{HTTP_HOST} ^$(echo $PUBLICIP | cut -d'.' -f1)\.$(echo $PUBLICIP | cut -d'.' -f2)\.$(echo $PUBLICIP | cut -d'.' -f3)\.$(echo $PUBLICIP | cut -d'.' -f4)
+RewriteRule (.*) http://${OBFSHOST}/$1 [R=301,L]
+
+EOF
+        rm -f /var/www/html/index.html
+        echo "<head><meta http-equiv="refresh" content="0;url=${OBFSHOST}"></head>" > /var/www/html/index.html
+        systemctl restart apache2
+    fi
     service fail2ban restart
     /etc/init.d/shadowsocks start && { echo ""; sleep 2; }
 }
