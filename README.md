@@ -36,11 +36,15 @@ TCP 443
 
 ## Custom
 Change the Default Settings by Editing Twish before install, Manual of Shadowsocks-libev Configurations is at <a href="https://github.com/shadowsocks/shadowsocks/wiki/Configuration-via-Config-File" target="_blank">Shadowsocks-libev Wiki</a>
-```TWIST
+```bash
 sudo nano twist.sh  # Edit the value below on 'function *config'
 ```
+If you have already Installed Twist, Try this by Editing Shadowsocks Config File that Installed on your Server Instead the Install Script 
+```bash
+sudo twistconfig custom  # Edit the value in json format
+```
 Edit Values in Value="**HERE**", Save and Run Twist after You have Confirmed it is Correct
-```shadowsocksconfig
+```txt
  PORT="443"                       # Server port
  LOACL="127.0.0.1"                # The address that server listens
  LOCALPORT="1080"                 # Local port of loacl address that server listens
@@ -60,19 +64,19 @@ Edit Values in Value="**HERE**", Save and Run Twist after You have Confirmed it 
 Here is the Deafult Configuration of Simple Obfs, Simple Obfs will not be Running without Configure it on Your Clients Manually. And You Can also Use Shadowsocks without Set Up Simple Obfs on Your Clients. If You Use Schemes or QR Code Configurations on Your Clients, Simple Obfs will not be Configured
 ```Simple-Obfs
 OBFS="tls"
-OBFSHOST="github.com"
+OBFSHOST="mzstatic.com"
 ```
 
 ## Check and Change Shadowsocks-libev Status
 - Check If Shadowsocks-libev is Running on Your Server
-```shell
-/etc/init.d/shadowsocks status
+```bash
+twistconfig status                # Check Shadowsocks status
 ```
 - Change the Status of Shadowsocks-libev by these Command
-```shell
-/etc/init.d/shadowsocks start    # Start Shadowsocks Service
-/etc/init.d/shadowsocks stop     # Stop Shadowsocks Service
-/etc/init.d/shadowsocks restart  # Restart Shadowsocks Service
+```bash
+sudo twistconfig start    # Start Shadowsocks Service
+sudo twistconfig stop     # Stop Shadowsocks Service
+sudo twistconfig restart  # Restart Shadowsocks Service
 ```
 
 ## Setup Shadowsocks-libev for Connect on your Devices
@@ -81,21 +85,13 @@ It is Required a Shadowsocks Client on Your Device for Manually Set up or Use UR
 ## Update Twist
 Please **Run Bash Command** to Update Twist While You Once Downloaded it on Your Server
 ```bash
-sudo twist.sh update
-```
-or Update by Download the Install Script Again
-```bash
-sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh update
+sudo twistconfig update
 ```
 
 ## Uninstall Twist
 Please **Run Bash Command** to Uninstall Twist While You Once Downloaded it on Your Server
 ```bash
-sudo twist.sh uninstall
-```
-or Uninstall by Download the Install Script Again
-```bash
-sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh uninstall
+sudo twistconfig uninstall
 ```
 
 ## Author
