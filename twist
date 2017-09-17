@@ -56,21 +56,26 @@ function update_twist(){
     systemconfig
     if [ -e /etc/init.d/shadowsocks ]; then
         /etc/init.d/shadowsocks stop && { echo ""; sleep 2; }
+        if [ -f /usr/local/bin/ss-server ]; then
+            ssinstallpath="/usr/local/bin"
+        else
+            ssinstallpath="/usr/bin"
+        fi
     else
         echo -e "#[\033[31;1m              Twist was Not Find on Your Server!\033[0m                  ]#"
         echo ""
         exit 1
     fi
-    rm -f /usr/local/bin/ss-local
-    rm -f /usr/local/bin/ss-tunnel
-    rm -f /usr/local/bin/ss-server
-    rm -f /usr/local/bin/ss-manager
-    rm -f /usr/local/bin/ss-redir
-    rm -f /usr/local/bin/ss-nat
+    rm -f ${ssinstallpath}/ss-local
+    rm -f ${ssinstallpath}/ss-tunnel
+    rm -f ${ssinstallpath}/ss-server
+    rm -f ${ssinstallpath}/ss-manager
+    rm -f ${ssinstallpath}/ss-redir
+    rm -f ${ssinstallpath}/ss-nat
     rm -f /usr/local/lib/libshadowsocks-libev.a
     rm -f /usr/local/lib/libshadowsocks-libev.la
-    rm -f /usr/local/include/shadowsocks.h
     rm -f /usr/local/lib/pkgconfig/shadowsocks-libev.pc
+    rm -f /usr/local/include/shadowsocks.h
     rm -f /usr/local/share/man/man1/ss-local.1
     rm -f /usr/local/share/man/man1/ss-tunnel.1
     rm -f /usr/local/share/man/man1/ss-server.1
@@ -137,8 +142,8 @@ function uninstall_twist(){
     rm -f ${ssinstallpath}/ss-nat
     rm -f /usr/local/lib/libshadowsocks-libev.a
     rm -f /usr/local/lib/libshadowsocks-libev.la
-    rm -f /usr/local/include/shadowsocks.h
     rm -f /usr/local/lib/pkgconfig/shadowsocks-libev.pc
+    rm -f /usr/local/include/shadowsocks.h
     rm -f /usr/local/share/man/man1/ss-local.1
     rm -f /usr/local/share/man/man1/ss-tunnel.1
     rm -f /usr/local/share/man/man1/ss-server.1
@@ -290,7 +295,7 @@ function installlibs(){
         yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
         yum -y upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source, Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
         [ ! -f /etc/yum.repos.d/epel.repo ] && { yum -y install epel-release yum-utils bind-utils || { echo -e "# [\033[31;1mCannot Add EPEL repository. Aborting!\033[0m]"; exit 1; }; }
-        [ ! -f /etc/yum.repos.d/epel.repo ] && { yum-config-manager --enable epel || { echo -e "# [\033[31;1mCannot Enable EPEL repository. Aborting!\033[0m]"; exit 1; }; }
+        yum-config-manager --enable epel || { echo -e "# [\033[31;1mCannot Enable EPEL repository. Aborting!\033[0m]"; exit 1; }
         yum -y install wget gawk grep cpio swig sed net-tools greenlet rng-tools pcre-devel perl-devel expat-devel openssl-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On, Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
         yum -y install gcc gettext-devel autoconf automake make zlib-devel libtool xmlto asciidoc git udns-devel libev-devel c-ares-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On, Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
         yum -y install python-devel python-setuptools python-pip libevent curl curl-devel zlib-devel gevent fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Depends On, Please Check Your Network or Errors Noticed!\033[0m]"; echo ""; exit 1; }
