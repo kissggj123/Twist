@@ -37,7 +37,7 @@ TCP 443
 ## Custom
 Change the Default Settings by Editing Twish before install, Manual of Shadowsocks-libev Configurations is at <a href="https://github.com/shadowsocks/shadowsocks/wiki/Configuration-via-Config-File" target="_blank">Shadowsocks-libev Wiki</a>
 ```bash
-sudo nano twist.sh  # Edit the value below on 'function *config'
+sudo nano twist.sh       # Edit the value below on 'function *config'
 ```
 If you have already Installed Twist, Try this by Editing Shadowsocks Config File that Installed on your Server Instead the Install Script 
 ```bash
@@ -70,7 +70,7 @@ OBFSHOST="mzstatic.com"
 ## Check and Change Shadowsocks-libev Status
 - Check If Shadowsocks-libev is Running on Your Server
 ```bash
-twistconfig status                # Check Shadowsocks status
+twistconfig status        # Check Shadowsocks status
 ```
 - Change the Status of Shadowsocks-libev by these Command
 ```bash
