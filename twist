@@ -133,7 +133,7 @@ function uninstall_twist(){
     fi
     ps -ef | grep -v grep | grep -i "ss-server"
     update-rc.d -f shadowsocks remove
-    rm -f /usr/bin/twistconfig
+    rm -f /usr/local/bin/twistconfig
     rm -f ${ssinstallpath}/ss-local
     rm -f ${ssinstallpath}/ss-tunnel
     rm -f ${ssinstallpath}/ss-server
@@ -713,7 +713,7 @@ esac
 exit \$exitstatus
 
 EOF
-    cat > /etc/bin/twistconfig <<EOF
+    cat > /usr/local/bin/twistconfig <<EOF
 #!/bin/bash
 
 twist_status() {
@@ -754,9 +754,8 @@ case "\$1" in
 esac
 
 EOF
-    sysctl -p
     chmod +x /etc/init.d/shadowsocks
-    chmod +x /etc/bin/twistconfig
+    chmod +x /etc/local/bin/twistconfig
     chmod +x /etc/network/if-pre-up.d/iptablesload
     chmod +x /etc/network/if-pre-up.d/ip6tablesload
     if [ "$systemtype" = "1" ]; then
@@ -770,6 +769,7 @@ EOF
         systemctl --now mask firewalld
         systemctl enable iptables fail2ban
     fi
+    sysctl -p
     ldconfig
     rngd -r /dev/urandom
     [ "$FWS" = "enable" ] && { a2enmod ssl; systemctl restart apache2; }
