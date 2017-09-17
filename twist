@@ -104,6 +104,11 @@ function uninstall_twist(){
     sed -i "/# Twist/d" /etc/sysctl.conf
     if [ -e /etc/init.d/shadowsocks ]; then
         /etc/init.d/shadowsocks stop { echo ""; sleep 2; }
+        if [ -f /usr/local/bin/ss-server ]; then
+            ssinstallpath="/usr/local/bin"
+        else
+            ssinstallpath="/usr/bin"
+        fi
     else
         echo -e "#[\033[31;1m             Twist was Not Find on Your Server!\033[0m                   ]#"
         echo ""
@@ -123,13 +128,13 @@ function uninstall_twist(){
     fi
     ps -ef | grep -v grep | grep -i "ss-server"
     update-rc.d -f shadowsocks remove
-    rm -fr /etc/shadowsocks-libev
-    rm -f /usr/local/bin/ss-local
-    rm -f /usr/local/bin/ss-tunnel
-    rm -f /usr/local/bin/ss-server
-    rm -f /usr/local/bin/ss-manager
-    rm -f /usr/local/bin/ss-redir
-    rm -f /usr/local/bin/ss-nat
+    rm -f /usr/bin/twistconfig
+    rm -f ${ssinstallpath}/ss-local
+    rm -f ${ssinstallpath}/ss-tunnel
+    rm -f ${ssinstallpath}/ss-server
+    rm -f ${ssinstallpath}/ss-manager
+    rm -f ${ssinstallpath}/ss-redir
+    rm -f ${ssinstallpath}/ss-nat
     rm -f /usr/local/lib/libshadowsocks-libev.a
     rm -f /usr/local/lib/libshadowsocks-libev.la
     rm -f /usr/local/include/shadowsocks.h
@@ -142,7 +147,9 @@ function uninstall_twist(){
     rm -f /usr/local/share/man/man1/ss-nat.1
     rm -f /usr/local/share/man/man8/shadowsocks-libev.8
     rm -fr /usr/local/share/doc/shadowsocks-libev
+    rm -fr /etc/shadowsocks-libev
     rm -f /etc/init.d/shadowsocks
+    ldconfig
     clear
     twist
     echo -e "#[\033[32;1m                Twist Uninstallation Finished\033[0m                     ]#"
@@ -631,7 +638,7 @@ if [ ! -f /etc/shadowsocks-libev/config.json ]; then
     exit 1
 fi
 
-sslibev_running() {
+ssserver_running() {
     if [ -r /var/run/shadowsocks-libev.pid ]; then
         read PID < /var/run/shadowsocks-libev.pid
         if [ -d "/proc/\${PID}" ]; then
@@ -645,8 +652,8 @@ sslibev_running() {
     fi
 }
 
-sslibev_status() {
-    sslibev_running
+sssserver_status() {
+    ssserver_running
     case \$? in
         0)
         echo -e "# \033[32;1mShadowsocks-libev is Running...\033[0m"
@@ -658,13 +665,13 @@ sslibev_status() {
     esac
 }
 
-sslibev_start() {
-    if sslibev_running; then
+ssserver_start() {
+    if ssserver_running; then
         echo -e "# \033[32;1mShadowsocks-libev is Running...\033[0m"
         return 0
     fi
     ${ssserverpath} -u -c /etc/shadowsocks-libev/config.json -f /var/run/shadowsocks-libev.pid
-    if sslibev_running; then
+    if ssserver_running; then
         echo -e "# \033[32;1mStarting Shadowsocks-libev Success...\033[0m"
     else
         echo -e "# \033[31;1mStarting Shadowsocks-libev Failed...\033[0m"
@@ -672,8 +679,8 @@ sslibev_start() {
     fi
 }
 
-sslibev_stop() {
-    if sslibev_running; then
+ssserver_stop() {
+    if ssserver_running; then
         kill -9 \$PID
         rm -f /var/run/shadowsocks-libev.pid
         echo -e "# \033[32;1mStopping Shadowsocks-libev Success...\033[0m"
@@ -683,14 +690,14 @@ sslibev_stop() {
     fi
 }
 
-sslibev_restart() {
-    sslibev_stop
-    sslibev_start
+ssserver_restart() {
+    ssserver_stop
+    ssserver_start
 }
 
 case "\$1" in
     start|stop|restart|status)
-    sslibev_\${1}
+    ssserver_\${1}
     ;;
     *)
     echo "Usage: \$0 { start | stop | restart | status }"
@@ -701,8 +708,50 @@ esac
 exit \$exitstatus
 
 EOF
+    cat > /etc/bin/twistconfig <<EOF
+#!/bin/bash
+
+twist_status() {
+    sudo /etc/init.d/shadowsocks status
+}
+
+twist_start() {
+    sudo /etc/init.d/shadowsocks start
+}
+
+twist_stop() {
+    sudo /etc/init.d/shadowsocks stop
+}
+
+twist_restart() {
+    sudo /etc/init.d/shadowsocks restart
+}
+
+twist_custom() {
+    sudo nano /etc/shadowsocks-libev/config.json && /etc/init.d/shadowsocks restart
+}
+
+twist_update() {
+    sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh update && rm twist.sh
+}
+
+twist_uninstall() {
+    sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh uninstall && rm twist.s
+}
+
+action=\$1
+case "\$action" in
+    status|start|stop|restart|custom|update|uninstall)
+        twist_\${action}
+        ;;
+    *)
+        echo "Usage: \$0 { status | start | stop | restart | custom | update | uninstall }"
+        ;;
+esac
+EOF
     sysctl -p
     chmod +x /etc/init.d/shadowsocks
+    chmod +x /etc/bin/twistconfig
     chmod +x /etc/network/if-pre-up.d/iptablesload
     chmod +x /etc/network/if-pre-up.d/ip6tablesload
     if [ "$systemtype" = "1" ]; then
@@ -720,7 +769,7 @@ EOF
     rngd -r /dev/urandom
     [ "$FWS" = "enable" ] && { a2enmod ssl; systemctl restart apache2; }
     service fail2ban restart
-    /etc/init.d/shadowsocks start
+    /etc/init.d/shadowsocks start && { echo ""; sleep 2; }
 }
 
 function twiststatus(){
