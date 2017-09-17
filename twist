@@ -814,7 +814,7 @@ function twiststatus(){
 }
 
 action="$1"
-[ -z $1 ] && action="install"
+[ -z "$1" ] && action="install"
 case "$action" in
     install|update|uninstall)
     ${action}_twist
