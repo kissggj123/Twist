@@ -410,7 +410,7 @@ function configsslibev(){
     [ -z "$PASSWORD" ] && PASSWORD="$(< /dev/urandom tr -dc 'A-HJ-NPR-Za-km-z2-9' | head -c 32)"
     [ "$FWS" = "enable" ] && OBFSLOCAL="failover"
     [ -d /etc/shadowsocks-libev ] || mkdir -p /etc/shadowsocks-libev
-    cat > /etc/shadowsocks-libev/config.json<<EOF
+    cat > /etc/shadowsocks-libev/config.json <<EOF
 {
     "server":${SSLOCAL},
     "server_port":${PORT},
