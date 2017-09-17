@@ -779,7 +779,7 @@ EOF
     rngd -r /dev/urandom
     if [ "$FWS" = "enable" ]; then
         a2enmod ssl rewrite
-        [ -e /var/www/html/.htaccess ] || echo "" /var/www/html/.htaccess
+        [ -e /var/www/html/.htaccess ] || echo "" > /var/www/html/.htaccess
         cat >> /var/www/html/.htaccess <<EOF
 RewriteEngine On
 RewriteCond %{HTTP_HOST} ^$(echo $PUBLICIP | cut -d'.' -f1)\.$(echo $PUBLICIP | cut -d'.' -f2)\.$(echo $PUBLICIP | cut -d'.' -f3)\.$(echo $PUBLICIP | cut -d'.' -f4)
