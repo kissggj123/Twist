@@ -2,6 +2,7 @@
 
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
+#######################################################################################################
 function shadowsocksconfig(){
     SSLOCAL="[\"[::0]\",\"0.0.0.0\"]"
     PORT="443"
@@ -25,6 +26,7 @@ function systemconfig(){
     PUBLICIP=""
     PUBLICIPv6=""
 }
+#######################################################################################################
 
 function install_twist(){
     clear
@@ -800,8 +802,8 @@ function twiststatus(){
     fi
 }
 
-action=$1
-[ -z $1 ] && action=install
+action="$1"
+[ -z $1 ] && action="install"
 case "$action" in
     install|update|uninstall)
     ${action}_twist
