@@ -652,7 +652,7 @@ ssserver_running() {
     fi
 }
 
-sssserver_status() {
+ssserver_status() {
     ssserver_running
     case \$? in
         0)
@@ -712,7 +712,7 @@ EOF
 #!/bin/bash
 
 twist_status() {
-    sudo /etc/init.d/shadowsocks status
+    /etc/init.d/shadowsocks status
 }
 
 twist_start() {
@@ -739,15 +739,15 @@ twist_uninstall() {
     sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh uninstall && rm twist.s
 }
 
-action=\$1
-case "\$action" in
+case "\$1" in
     status|start|stop|restart|custom|update|uninstall)
-        twist_\${action}
-        ;;
+    twist_\${1}
+    ;;
     *)
-        echo "Usage: \$0 { status | start | stop | restart | custom | update | uninstall }"
-        ;;
+    echo "Usage: \$0 { status | start | stop | restart | custom | update | uninstall }"
+    ;;
 esac
+
 EOF
     sysctl -p
     chmod +x /etc/init.d/shadowsocks
