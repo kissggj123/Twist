@@ -429,7 +429,7 @@ function configsslibev(){
 }
 EOF
     if ! grep -qs "Twist" /etc/sysctl.conf; then
-        /bin/cp -f /etc/sysctl.conf "/etc/sysctl.conf.old-${date}"
+        /bin/cp -f "/etc/sysctl.conf" "/etc/sysctl.conf.old-${date}"
         cat >> /etc/sysctl.conf <<EOF
 # Twist
 fs.file-max = 1024000
@@ -492,7 +492,7 @@ function configiptables(){
         iptables -I FORWARD 2 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j ACCEPT
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j ACCEPT
-        /bin/cp -f /etc/ip6tables.rules "/etc/ip6tables.rules.old-${date}"
+        /bin/cp -f "/etc/ip6tables.rules" "/etc/ip6tables.rules.old-${date}"
         [ -f /etc/iptables/rules.v6 ] || cat > /etc/ip6tables.rules <<EOF
 *filter
 :INPUT ACCEPT [0:0]
@@ -506,8 +506,8 @@ function configiptables(){
 -A INPUT -j DROP
 COMMIT
 EOF
-        [ -f /etc/iptables/rules.v6 ] && /bin/cp -f /etc/iptables/rules.v6 "/etc/iptables/rules.v6.old-${date}"
-        [ -f /etc/iptables/rules.v6 ] && /bin/cp -f /etc/ip6tables.rules /etc/iptables/rules.v6  
+        [ -f /etc/iptables/rules.v6 ] && /bin/cp -f "/etc/iptables/rules.v6" "/etc/iptables/rules.v6.old-${date}"
+        [ -f /etc/iptables/rules.v6 ] && /bin/cp -f "/etc/ip6tables.rules" "/etc/iptables/rules.v6"
         if [ "$systemtype" = "0" ]; then
             systemctl start firewalld
             firewall-cmd --permanent --zone=public --add-port=${PORT}/tcp
@@ -716,31 +716,31 @@ EOF
     cat > /usr/local/bin/twistconfig <<EOF
 #!/bin/bash
 
-twist_status() {
+function twist_status() {
     /etc/init.d/shadowsocks status
 }
 
-twist_start() {
+function twist_start() {
     sudo /etc/init.d/shadowsocks start
 }
 
-twist_stop() {
+function twist_stop() {
     sudo /etc/init.d/shadowsocks stop
 }
 
-twist_restart() {
+function twist_restart() {
     sudo /etc/init.d/shadowsocks restart
 }
 
-twist_custom() {
+function twist_custom() {
     sudo nano /etc/shadowsocks-libev/config.json && /etc/init.d/shadowsocks restart
 }
 
-twist_update() {
+function twist_update() {
     sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh update && rm twist.sh
 }
 
-twist_uninstall() {
+function twist_uninstall() {
     sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh uninstall && rm twist.sh
 }
 
@@ -801,9 +801,9 @@ action=$1
 [ -z $1 ] && action=install
 case "$action" in
     install|update|uninstall)
-        ${action}_twist
-        ;;
+    ${action}_twist
+    ;;
     *)
-        echo "Usage: $0 { install | update | uninstall }"
-        ;;
+    echo "Usage: $0 { install | update | uninstall }"
+    ;;
 esac
