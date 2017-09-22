@@ -110,7 +110,7 @@ function uninstall_twist(){
     rootness
     sed -i "/# Twist/d" /etc/sysctl.conf
     if [ -e /etc/init.d/shadowsocks ]; then
-        /etc/init.d/shadowsocks stop { echo ""; sleep 2; }
+        /etc/init.d/shadowsocks stop || { echo ""; sleep 2; }
         if [ -f /usr/local/bin/ss-server ]; then
             ssinstallpath="/usr/local/bin"
         else
