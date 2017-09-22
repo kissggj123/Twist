@@ -110,7 +110,7 @@ function uninstall_twist(){
     rootness
     sed -i "/# Twist/d" /etc/sysctl.conf
     if [ -e /etc/init.d/shadowsocks ]; then
-        /etc/init.d/shadowsocks stop || { echo ""; sleep 2; }
+        /etc/init.d/shadowsocks stop && { echo ""; sleep 2; }
         if [ -f /usr/local/bin/ss-server ]; then
             ssinstallpath="/usr/local/bin"
         else
@@ -235,7 +235,7 @@ function detectsystem(){
         [ "$BBR" = "enable" ] && serverrestart="true"
     fi
     if [ -z "$ETH" ]; then
-        ETH="$(route 2>/dev/null | grep '^default' | grep -o '[^ ]*$')"
+        ETH="$(route | grep '^default' | grep -o '[^ ]*$')"
         [ -z "$ETH" ] && ETH="$(ip -4 route list 0/0 | grep -Po '(?<=dev )(\S+)')"
     fi
     ethstatus="$(cat /sys/class/net/${ETH}/operstate)"
