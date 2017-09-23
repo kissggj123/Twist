@@ -310,7 +310,6 @@ function installlibs(){
         yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         yum -y upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         [ ! -f /etc/yum.repos.d/epel.repo ] && { yum -y install epel-release yum-utils bind-utils || { echo -e "# [\033[31;1mCannot Add EPEL repository. Aborting! \033[0m]"; exit 1; }; }
-        yum-config-manager --enable epel || { echo -e "# [\033[31;1mCannot Enable EPEL repository. Aborting! \033[0m]"; exit 1; }
         yum -y install wget gawk grep cpio swig sed net-tools bind-utils greenlet rng-tools pcre-devel perl-devel expat-devel openssl-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         yum -y install gcc gettext-devel autoconf automake make zlib-devel libtool xmlto asciidoc git udns-devel libev-devel c-ares-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         yum -y install python-devel python-setuptools python-pip libevent curl curl-devel zlib-devel gevent fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
