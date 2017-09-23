@@ -193,6 +193,7 @@ function rootness(){
 }
 
 function disableselinux(){
+    [ -z "$(which grep)" ] && { echo ""; echo -e "# [\033[31;1mTwist Required Basic Dependencies\033[0m \033[32;1mgrep\033[0m, \033[31;1mPlease Install Dependencies First. \033[0m]"; echo ""; exit 1; }
     if [ -s /etc/selinux/config ] && grep 'SELINUX=enforcing' /etc/selinux/config; then
         sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
         setenforce 0
@@ -200,7 +201,6 @@ function disableselinux(){
 }
 
 function detectsystem(){
-    [ -z "$(which grep)" ] && { echo ""; echo -e "# [\033[31;1mTwist Required Basic Dependencies\033[0m \033[32;1mgrep\033[0m, \033[31;1mPlease Install Dependencies First. \033[0m]"; echo ""; exit 1; }
     if grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /proc/version; then
         systemtype="1"
     elif grep -Eqi "CentOS|Red Hat|Fedora" /etc/*-release || grep -Eqi "CentOS|Red Hat|Fedora" /proc/version; then
