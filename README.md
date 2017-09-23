@@ -83,13 +83,13 @@ sudo twistconfig restart  # Restart Shadowsocks Service
 It is Required a Shadowsocks Client on Your Device for Manually Set up or Use URL-Scheme & QRCode in Shadowsocks Client Apps
 
 ## Update Twist
-Please **Run Bash Command** to Update Twist While You Once Downloaded it on Your Server
+Please **Run Bash Command** to Update Twist
 ```bash
 sudo twistconfig update
 ```
 
 ## Uninstall Twist
-Please **Run Bash Command** to Uninstall Twist While You Once Downloaded it on Your Server
+Please **Run Bash Command** to Uninstall Twist
 ```bash
 sudo twistconfig uninstall
 ```
