@@ -344,7 +344,7 @@ function configbbr(){
 }
 
 function updatekernel(){
-    if [ "$packagemanagertype" = "a" ]; then        
+    if [ "$packagemanagertype" = "a" ]; then
         KERNELVER="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/ | awk -F'\"v' '/v[4-9]./{print $2}' | cut -d/ -f1 | grep -v -  | sort -V | tail -1)"
         [ -z "$KERNELVER" ] && { BBR="disable"; echo -e "# [\033[31;1mCannot Get Newest Linux KERNEL Verison, BBR will NOT Enabled on Your Server! \033[0m]"; }
         if [ "$BBR" = "enable" ]; then
