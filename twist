@@ -246,7 +246,7 @@ function detectsystem(){
             yum -y install gawk curl net-tools bind-utils || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         else
             pacman -Syy --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-            pacman -Syu --noconfirm gawk curl net-tools || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
+            pacman -S --noconfirm gawk curl net-tools || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         fi
         clear
     fi
@@ -321,8 +321,8 @@ function installlibs(){
         [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         [ "$FWS" = "enable" ] && { yum -y install httpd || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }; }
     else
-        pacman -Syy --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        pacman -Syu --noconfirm wget gawk grep curl sed git gcc swig gettext autoconf automake make libtool pcre perl cpio xmlto asciidoc fail2ban net-tools rng-tools openssl zlib c-ares libev python-devel python-setuptools python-pip python2-m2crypto
+        pacman -Syu --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
+        pacman -S --noconfirm wget gawk grep curl sed git gcc swig gettext autoconf automake make libtool pcre perl cpio xmlto asciidoc fail2ban net-tools rng-tools openssl zlib c-ares libev python-devel python-setuptools python-pip python2-m2crypto
         [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         [ "$FWS" = "enable" ] && { pacman -Syu --noconfirm apache || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }; }
     fi
