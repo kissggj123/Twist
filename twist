@@ -96,7 +96,6 @@ function update_twist(){
     startservices
     echo ""
     sleep 2
-    
     clear
     twist
     echo -e "#[\033[32;1m                      Twist Update Finished                       \033[0m]#"
