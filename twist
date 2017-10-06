@@ -234,13 +234,13 @@ function detectsystem(){
     if [ -z "$(which awk)" ] || [ -z "$(which route)" ] || [ -z "$(which ip)" ] || [ -z "$(which dig)" ] || [ -z "$(which curl)" ]; then
         if [ "$packagemanagertype" = "a" ]; then
             apt-get update || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-            apt-get install -yq dnsutils gawk net-tools curl || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
+            apt-get -yq install gawk curl net-tools dnsutils || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         elif [ "$packagemanagertype" = "y" ]; then
             yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-            yum -y install gawk net-tools bind-utils curl || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
+            yum -y install gawk curl net-tools bind-utils || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         else
             pacman -Syy --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-            pacman -Syu --noconfirm gawk net-tools curl || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
+            pacman -Syu --noconfirm gawk curl net-tools || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         fi
         clear
     fi
