@@ -817,7 +817,9 @@ EOF
         systemctl restart apache2
     fi
     service fail2ban restart
-    /etc/init.d/shadowsocks start && { echo ""; sleep 2; }
+    /etc/init.d/shadowsocks start
+    echo ""
+    sleep 2
 }
 
 function twiststatus(){
