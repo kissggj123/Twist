@@ -491,9 +491,13 @@ EOF
         if ! grep -qs "pam_limits.so" /etc/pam.d/login; then
             [ "$systemtype" = "0" ] && echo "session    required     pam_limits.so" >> /etc/pam.d/login
         fi
-        if grep -Eqi "options timeout|options attempts|options rotate" /etc/resolvconf/resolv.conf.d; then
+        if grep -Eqi "options timeout:" /etc/resolvconf/resolv.conf.d; then
             sed -i '/options timeout:/d' /etc/resolvconf/resolv.conf.d
+        fi
+        if grep -Eqi "options attempts:" /etc/resolvconf/resolv.conf.d; then
             sed -i '/options attempts:/d' /etc/resolvconf/resolv.conf.d
+        fi
+        if grep -Eqi "options rotate" /etc/resolvconf/resolv.conf.d; then
             sed -i '/options rotate/d' /etc/resolvconf/resolv.conf.d
         fi
     fi
