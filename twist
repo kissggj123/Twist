@@ -127,7 +127,7 @@ function uninstall_twist(){
         echo ""
         exit 1
     fi
-    if grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /proc/version; then
+    if grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux|Raspbian" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux|Raspbian" /proc/version; then
         update-rc.d -f shadowsocks remove
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j DROP
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j DROP
@@ -207,7 +207,7 @@ function disableselinux(){
 }
 
 function detectsystem(){
-    if grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /proc/version; then
+    if grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux|Raspbian" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux|Raspbian" /proc/version; then
         systemtype="1"
     elif grep -Eqi "CentOS|Red Hat|Fedora" /etc/*-release || grep -Eqi "CentOS|Red Hat|Fedora" /proc/version; then
         systemtype="0"
@@ -344,7 +344,7 @@ function configbbr(){
 }
 
 function updatekernel(){
-    if [ "$packagemanagertype" = "a" ]; then
+    if [ "$packagemanagertype" = "a" ]; then        
         KERNELVER="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/ | awk -F'\"v' '/v[4-9]./{print $2}' | cut -d/ -f1 | grep -v -  | sort -V | tail -1)"
         [ -z "$KERNELVER" ] && { BBR="disable"; echo -e "# [\033[31;1mCannot Get Newest Linux KERNEL Verison, BBR will NOT Enabled on Your Server! \033[0m]"; }
         if [ "$BBR" = "enable" ]; then
