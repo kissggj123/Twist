@@ -127,7 +127,7 @@ function uninstall_twist(){
         echo ""
         exit 1
     fi
-    if grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux|Raspbian" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux|Raspbian" /proc/version; then
+    if grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /proc/version; then
         update-rc.d -f shadowsocks remove
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j DROP
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j DROP
@@ -207,12 +207,12 @@ function disableselinux(){
 }
 
 function detectsystem(){
-    if grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux|Raspbian" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux|Raspbian" /proc/version; then
+    if grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /proc/version; then
         systemtype="1"
     elif grep -Eqi "CentOS|Red Hat|Fedora" /etc/*-release || grep -Eqi "CentOS|Red Hat|Fedora" /proc/version; then
         systemtype="0"
     else
-        echo -e "# [\033[31;1mThis Script Must be Run on CentOS, Red Hat, Fedora, Ubuntu, Debian or Arch Linux. Aborating! \033[0m]"
+        echo -e "# [\033[31;1mThis Script Must be Run on Ubuntu, Debian, Raspbian, Arch Linux, CentOS, Red Hat or Fedora. Aborating! \033[0m]"
         echo ""
         exit 1
     fi
@@ -223,7 +223,7 @@ function detectsystem(){
     elif [ ! -z "$(which pacman)" ]; then
         packagemanagertype="p"
     else
-        echo -e "# [\033[31;1mThis Script Must be Run on CentOS, Red Hat, Ubuntu, Debian or Arch Linux. Aborating! \033[0m]"
+        echo -e "# [\033[31;1mThis Script Must be Run on Ubuntu, Debian, Raspbian, Arch Linux, CentOS, Red Hat or Fedora. Aborating! \033[0m]"
         echo ""
         exit 1
     fi
