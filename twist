@@ -243,6 +243,8 @@ function detectsystem(){
             pacman -S --noconfirm gawk net-tools curl || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         fi
     fi
+    MAKECORES="$(grep -c ^processor /proc/cpuinfo)"
+    [ -z "$MAKECORES" ] && MAKECORES="1"
     kernelverheader="$(uname -r | grep -oE '[0-9]+\.[0-9]+')"
     if [ $(echo ${kernelverheader} | awk -v ver=4.10 '{print($1>ver)? "1":"0"}') -eq "0" ]; then
         [ "$BBR" = "enable" ] && serverrestart="true"
@@ -379,7 +381,7 @@ function installsslibev(){
     [ -d libsodium-${libsodiumver} ] && rm -rf libsodium-${libsodiumver}
     tar zxf libsodium-${libsodiumver}.tar.gz
     pushd libsodium-${libsodiumver}
-    ./configure --prefix=/usr && make && make install || { echo ""; echo －e "# [\033[31;1mLibsodium Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
+    ./configure --prefix=/usr && make "-j$((MAKECORES+1))" && make install || { echo ""; echo －e "# [\033[31;1mLibsodium Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
     popd
     if ! ldconfig -p | grep -wq "/usr/lib"; then
         echo "/usr/lib" > /etc/ld.so.conf.d/lib.conf
@@ -391,7 +393,7 @@ function installsslibev(){
     [ -d mbedtls-${mbedver} ] && rm -rf mbedtls-${mbedver}
     tar xf mbedtls-${mbedver}-gpl.tgz
     pushd mbedtls-${mbedver}
-    make SHARED=1 CFLAGS=-fPIC
+    make SHARED=1 CFLAGS=-fPIC "-j$((MAKECORES+1))" || { echo ""; echo －e "# [\033[31;1mmbed Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
     make DESTDIR=/usr install || { echo ""; echo －e "# [\033[31;1mmbed Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
     popd
     ldconfig
@@ -403,7 +405,7 @@ function installsslibev(){
     tar zxf ${sslibevver}.tar.gz
     pushd $sslibevver
     ./configure
-    make || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
+    make "-j$((MAKECORES+1))" || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
     make install || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
     popd
     ldconfig
@@ -413,7 +415,7 @@ function installsslibev(){
     git submodule update --init --recursive
     ./autogen.sh
     ./configure
-    make || { echo ""; echo －e "# [\033[31;1mSimple-obfs Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
+    make "-j$((MAKECORES+1))" || { echo ""; echo －e "# [\033[31;1mSimple-obfs Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
     make install || { echo ""; echo －e "# [\033[31;1mSimple-obfs Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
     popd
     ldconfig
