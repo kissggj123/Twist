@@ -15,10 +15,10 @@
 
 ## Server Requirements
 - Ubuntu 17.04(Zesty), 16.10(Yakkety), 16.04(Xenial)
-- Debian 9(Stretch) &  8(Jessie) 
-- Cent OS 7 & 6
-- Red Hat 7 & 6
-- Fedora 26 & 25
+- Debian 9(Stretch), 8(Jessie) 
+- Cent OS 7, 6
+- Red Hat 7, 6
+- Fedora 26, 25
 - Arch Linux
 
 ## Set Up your Shadowsocks-libev Server
@@ -41,7 +41,7 @@ sudo nano twist.sh       # Edit the value below on 'function *config'
 ```
 If you have already Installed Twist, Try this by Editing Shadowsocks Config File that Installed on your Server Instead the Install Script 
 ```bash
-sudo twistconfig custom  # Edit the value in json format
+sudo twist custom  # Edit the value in json format
 ```
 Edit Values in Value="**HERE**", Save and Run Twist after You have Confirmed it is Correct
 ```txt
@@ -70,13 +70,13 @@ OBFSHOST="mzstatic.com"
 ## Check and Change Shadowsocks-libev Status
 - Check If Shadowsocks-libev is Running on Your Server
 ```bash
-twistconfig status        # Check Shadowsocks status
+twist status        # Check Shadowsocks status
 ```
 - Change the Status of Shadowsocks-libev by these Command
 ```bash
-sudo twistconfig start    # Start Shadowsocks Service
-sudo twistconfig stop     # Stop Shadowsocks Service
-sudo twistconfig restart  # Restart Shadowsocks Service
+sudo twist start    # Start Shadowsocks Service
+sudo twist stop     # Stop Shadowsocks Service
+sudo twist restart  # Restart Shadowsocks Service
 ```
 
 ## Setup Shadowsocks-libev for Connect on your Devices
@@ -85,13 +85,13 @@ It is Required a Shadowsocks Client on Your Device for Manually Set up or Use UR
 ## Update Twist
 Please **Run Bash Command** to Update Twist
 ```bash
-sudo twistconfig update
+sudo twist update
 ```
 
 ## Uninstall Twist
 Please **Run Bash Command** to Uninstall Twist
 ```bash
-sudo twistconfig uninstall
+sudo twist uninstall
 ```
 
 ## Author
