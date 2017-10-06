@@ -141,7 +141,7 @@ function uninstall_twist(){
     fi
     ps -ef | grep -v grep | grep -i "ss-server"
     update-rc.d -f shadowsocks remove
-    rm -f /usr/local/bin/twistconfig
+    rm -f /usr/local/bin/twist
     rm -f ${ssinstallpath}/ss-local
     rm -f ${ssinstallpath}/ss-tunnel
     rm -f ${ssinstallpath}/ss-server
