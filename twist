@@ -242,6 +242,7 @@ function detectsystem(){
             pacman -Syu --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
             pacman -S --noconfirm gawk net-tools curl || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         fi
+        clear
     fi
     MAKECORES="$(grep -c ^processor /proc/cpuinfo)"
     [ -z "$MAKECORES" ] && MAKECORES="1"
@@ -303,24 +304,21 @@ function installlibs(){
     if [ "$packagemanagertype" = "a" ]; then
         apt-get -yq update || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         apt-get -yq upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        apt-get -yq install wget dnsutils git gawk grep sed net-tools rng-tools curl gcc swig make perl cpio libc-ares-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        apt-get -yq install gettext autoconf automake libtool openssl libssl-dev zlib1g-dev xmlto asciidoc libpcre3-dev libudns-dev libev-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        apt-get -yq install python-dev python-pip python-setuptools python-m2crypto build-essential libevent-dev fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
+        apt-get -yq install wget gawk grep curl sed git gcc swig gettext autoconf automake make libtool pcre perl cpio xmlto asciidoc fail2ban net-tools dnsutils rng-tools libc-ares-dev libudns-dev libev-dev openssl libssl-dev zlib1g-dev libpcre3-dev libevent-dev build-essential python-dev python-pip python-setuptools python-m2crypto
+        [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         [ "$FWS" = "enable" ] && { apt-get -yq install apache2 || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }; }
     elif [ "$packagemanagertype" = "y" ]; then
         yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         yum -y upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        [ ! -f /etc/yum.repos.d/epel.repo ] && { yum -y install epel-release yum-utils bind-utils || { echo -e "# [\033[31;1mCannot Add EPEL repository. Aborting! \033[0m]"; exit 1; }; }
-        yum -y install wget gawk grep cpio swig sed net-tools bind-utils rng-tools pcre-devel perl-devel expat-devel openssl-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        yum -y install gcc gettext-devel autoconf automake make zlib-devel libtool xmlto asciidoc git udns-devel libev-devel c-ares-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        yum -y install python-devel python-setuptools python-pip libevent curl curl-devel zlib-devel fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
+        [ ! -f /etc/yum.repos.d/epel.repo ] && { yum -y install epel-release yum-utils || { echo -e "# [\033[31;1mCannot Add EPEL repository. Aborting! \033[0m]"; exit 1; }; }
+        yum -y install wget gawk grep curl sed git gcc swig gettext-devel autoconf automake make libtool pcre-devel perl-devel cpio xmlto asciidoc fail2ban net-tools bind-utils rng-tools expat-devel openssl-devel zlib-devel udns-devel libev-devel c-ares-devel python-devel python-setuptools python-pip
+        [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         [ "$FWS" = "enable" ] && { yum -y install httpd || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }; }
     else
-        pacman -Syu --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        pacman -S --noconfirm wget git gawk grep sed net-tools rng-tools curl perl cpio || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        pacman -S --noconfirm gettext gcc autoconf libtool autoconf automake make asciidoc xmlto udns libev || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        pacman -S --noconfirm python python-pip python-setuptools python2-m2crypto openssl fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        [ "$FWS" = "enable" ] && { pacman -S --noconfirm apache || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }; }
+        pacman -Syy --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
+        pacman -Syu --noconfirm wget gawk grep curl sed git gcc swig gettext autoconf automake make libtool pcre perl cpio xmlto asciidoc fail2ban net-tools rng-tools openssl zlib udns libev python-devel python-setuptools python-pip python2-m2crypto
+        [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
+        [ "$FWS" = "enable" ] && { pacman -Syu --noconfirm apache || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }; }
     fi
     pip install -q qrcode || { echo ""; echo -e "# [\033[31;1mCannot Install QRCode, You are Unable to Configure Clients by Using QRCode! \033[0m]"; echo ""; sleep 3; }
 }
@@ -393,8 +391,7 @@ function installsslibev(){
     [ -d mbedtls-${mbedver} ] && rm -rf mbedtls-${mbedver}
     tar xf mbedtls-${mbedver}-gpl.tgz
     pushd mbedtls-${mbedver}
-    make SHARED=1 CFLAGS=-fPIC "-j$((MAKECORES+1))" || { echo ""; echo －e "# [\033[31;1mmbed Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
-    make DESTDIR=/usr install || { echo ""; echo －e "# [\033[31;1mmbed Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
+    make SHARED=1 CFLAGS=-fPIC "-j$((MAKECORES+1))" && make DESTDIR=/usr install || { echo ""; echo －e "# [\033[31;1mmbed Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
     popd
     ldconfig
     sslibevtag="$(wget -qO- https://api.github.com/repos/shadowsocks/shadowsocks-libev/releases/latest | grep 'tag_name' | cut -d\" -f4)"
@@ -405,8 +402,7 @@ function installsslibev(){
     tar zxf ${sslibevver}.tar.gz
     pushd $sslibevver
     ./configure
-    make "-j$((MAKECORES+1))" || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
-    make install || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
+    make "-j$((MAKECORES+1))" && make install || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
     popd
     ldconfig
     [ -d simple-obfs ] && rm -rf simple-obfs
@@ -415,8 +411,7 @@ function installsslibev(){
     git submodule update --init --recursive
     ./autogen.sh
     ./configure
-    make "-j$((MAKECORES+1))" || { echo ""; echo －e "# [\033[31;1mSimple-obfs Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
-    make install || { echo ""; echo －e "# [\033[31;1mSimple-obfs Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
+    make "-j$((MAKECORES+1))" && make install || { echo ""; echo －e "# [\033[31;1mSimple-obfs Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
     popd
     ldconfig
     rm -rf libsodium-${libsodiumver}.tar.gz libsodium-${libsodiumver} mbedtls-${mbedver}-gpl.tgz mbedtls-${mbedver} ${sslibevver}.tar.gz $sslibevver simple-obfs
@@ -660,7 +655,7 @@ if [ ! -f /etc/shadowsocks-libev/config.json ]; then
     exit 1
 fi
 
-ssserver_running() {
+ssserver_check() {
     if [ -r /var/run/shadowsocks-libev.pid ]; then
         read PID < /var/run/shadowsocks-libev.pid
         if [ -d "/proc/\${PID}" ]; then
@@ -675,7 +670,7 @@ ssserver_running() {
 }
 
 ssserver_status() {
-    ssserver_running
+    ssserver_check
     case \$? in
         0)
         echo -e "# \033[32;1mShadowsocks-libev is Running... \033[0m"
@@ -688,12 +683,12 @@ ssserver_status() {
 }
 
 ssserver_start() {
-    if ssserver_running; then
+    if ssserver_check; then
         echo -e "# \033[32;1mShadowsocks-libev is Running... \033[0m"
         return 0
     fi
     ${ssserverpath} -u -c /etc/shadowsocks-libev/config.json -f /var/run/shadowsocks-libev.pid
-    if ssserver_running; then
+    if ssserver_check; then
         echo -e "# \033[32;1mStarting Shadowsocks-libev Success... \033[0m"
     else
         echo -e "# \033[31;1mStarting Shadowsocks-libev Failed... \033[0m"
@@ -702,7 +697,7 @@ ssserver_start() {
 }
 
 ssserver_stop() {
-    if ssserver_running; then
+    if ssserver_check; then
         kill -9 \$PID
         rm -f /var/run/shadowsocks-libev.pid
         echo -e "# \033[32;1mStopping Shadowsocks-libev Success... \033[0m"
@@ -733,31 +728,31 @@ EOF
     cat > /usr/local/bin/twistconfig <<EOF
 #!/bin/bash
 
-function twist_status() {
+twist_status() {
     /etc/init.d/shadowsocks status
 }
 
-function twist_start() {
+twist_start() {
     sudo /etc/init.d/shadowsocks start
 }
 
-function twist_stop() {
+twist_stop() {
     sudo /etc/init.d/shadowsocks stop
 }
 
-function twist_restart() {
+twist_restart() {
     sudo /etc/init.d/shadowsocks restart
 }
 
-function twist_custom() {
+twist_custom() {
     sudo nano /etc/shadowsocks-libev/config.json && /etc/init.d/shadowsocks restart
 }
 
-function twist_update() {
+twist_update() {
     sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh update && rm twist.sh
 }
 
-function twist_uninstall() {
+twist_uninstall() {
     sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh uninstall && rm twist.sh
 }
 
