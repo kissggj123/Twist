@@ -14,7 +14,7 @@
 - **Highly Concealed** Fake as a WebServer using Apache and Enabled Fail2ban to Ban Force Crackers
 
 ## Server Requirements
-- Ubuntu 17.10 (Artful Aardvark), 17.04(Zesty), 16.10(Yakkety), 16.04(Xenial)
+- Ubuntu 17.10(Artful Aardvark), 17.04(Zesty), 16.10(Yakkety), 16.04(Xenial)
 - Debian 9(Stretch), 8(Jessie) 
 - Cent OS 7, 6
 - Red Hat 7, 6
