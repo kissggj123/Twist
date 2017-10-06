@@ -304,19 +304,19 @@ function installlibs(){
     if [ "$packagemanagertype" = "a" ]; then
         apt-get -yq update || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         apt-get -yq upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        apt-get -yq install wget gawk grep curl sed git gcc swig gettext autoconf automake make libtool pcre perl cpio xmlto asciidoc fail2ban net-tools dnsutils rng-tools libc-ares-dev libudns-dev libev-dev openssl libssl-dev zlib1g-dev libpcre3-dev libevent-dev build-essential python-dev python-pip python-setuptools python-m2crypto
+        apt-get -yq install wget gawk grep curl sed git gcc swig gettext autoconf automake make libtool pcre perl cpio xmlto asciidoc fail2ban net-tools dnsutils rng-tools libc-ares-dev libev-dev openssl libssl-dev zlib1g-dev libpcre3-dev libevent-dev build-essential python-dev python-pip python-setuptools python-m2crypto
         [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         [ "$FWS" = "enable" ] && { apt-get -yq install apache2 || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }; }
     elif [ "$packagemanagertype" = "y" ]; then
         yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         yum -y upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         [ ! -f /etc/yum.repos.d/epel.repo ] && { yum -y install epel-release yum-utils || { echo -e "# [\033[31;1mCannot Add EPEL repository. Aborting! \033[0m]"; exit 1; }; }
-        yum -y install wget gawk grep curl sed git gcc swig gettext-devel autoconf automake make libtool pcre-devel perl-devel cpio xmlto asciidoc fail2ban net-tools bind-utils rng-tools expat-devel openssl-devel zlib-devel udns-devel libev-devel c-ares-devel python-devel python-setuptools python-pip
+        yum -y install wget gawk grep curl sed git gcc swig gettext-devel autoconf automake make libtool pcre-devel perl-devel cpio xmlto asciidoc fail2ban net-tools bind-utils rng-tools expat-devel openssl-devel zlib-devel libev-devel c-ares-devel python-devel python-setuptools python-pip
         [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         [ "$FWS" = "enable" ] && { yum -y install httpd || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }; }
     else
         pacman -Syy --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        pacman -Syu --noconfirm wget gawk grep curl sed git gcc swig gettext autoconf automake make libtool pcre perl cpio xmlto asciidoc fail2ban net-tools rng-tools openssl zlib udns libev python-devel python-setuptools python-pip python2-m2crypto
+        pacman -Syu --noconfirm wget gawk grep curl sed git gcc swig gettext autoconf automake make libtool pcre perl cpio xmlto asciidoc fail2ban net-tools rng-tools openssl zlib c-ares libev python-devel python-setuptools python-pip python2-m2crypto
         [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         [ "$FWS" = "enable" ] && { pacman -Syu --noconfirm apache || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }; }
     fi
