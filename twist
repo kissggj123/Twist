@@ -57,7 +57,9 @@ function update_twist(){
     rootness
     systemconfig
     if [ -e /etc/init.d/shadowsocks ]; then
-        /etc/init.d/shadowsocks stop && { echo ""; sleep 2; }
+        /etc/init.d/shadowsocks stop
+        echo ""
+        sleep 2
         if [ -f /usr/local/bin/ss-server ]; then
             ssinstallpath="/usr/local/bin"
         else
@@ -90,7 +92,11 @@ function update_twist(){
     detectsystem
     installlibs
     installsslibev
-    startservices && { echo ""; sleep 2; }
+    echo ""
+    startservices
+    echo ""
+    sleep 2
+    
     clear
     twist
     echo -e "#[\033[32;1m                      Twist Update Finished                       \033[0m]#"
@@ -110,7 +116,9 @@ function uninstall_twist(){
     rootness
     sed -i "/# Twist/d" /etc/sysctl.conf
     if [ -e /etc/init.d/shadowsocks ]; then
-        /etc/init.d/shadowsocks stop && { echo ""; sleep 2; }
+        /etc/init.d/shadowsocks stop
+        echo ""
+        sleep 2
         if [ -f /usr/local/bin/ss-server ]; then
             ssinstallpath="/usr/local/bin"
         else
