@@ -20,6 +20,7 @@
 - Red Hat 7, 6
 - Fedora 26, 25
 - Arch Linux
+- Raspbian
 
 ## Set Up your Shadowsocks-libev Server
 Please **Run Bash Command** Below on Your Server to **Install Twist**
