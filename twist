@@ -737,30 +737,30 @@ EOF
 #!/bin/bash
 
 twist_status() {
-    echo -e "\033[34;1mTWIST Checking Shadowsocks Status:\033[0m"
+    echo -e "# [\033[34;1mTWIST Checking Shadowsocks Status\033[0m]"
     /etc/init.d/shadowsocks status
 }
 
 twist_start() {
-    echo -e "\033[34;1mTWIST Starting Shadowsocks Service:\033[0m"
+    echo -e "# [\033[34;1mTWIST Starting Shadowsocks Service\033[0m]"
     sudo /etc/init.d/shadowsocks start
     /etc/init.d/shadowsocks status
 }
 
 twist_stop() {
-    echo -e "\033[34;1mTWIST Stopping Shadowsocks Service:\033[0m"
+    echo -e "# [\033[34;1mTWIST Stopping Shadowsocks Service\033[0m]"
     sudo /etc/init.d/shadowsocks stop
     /etc/init.d/shadowsocks status
 }
 
 twist_restart() {
-    echo -e "\033[34;1mTWIST Restarting Shadowsocks Service:\033[0m"
+    echo -e "# [\033[34;1mTWIST Restarting Shadowsocks Service\033[0m]"
     sudo /etc/init.d/shadowsocks restart
     /etc/init.d/shadowsocks status
 }
 
 twist_custom() {
-    echo -e "\033[34;1mTWIST Loading Shadowsocks Configuration\033[0m \033[32;1mnano\033[0m \033[32;1mEditor:\033[0m"
+    echo -e "# [\033[34;1mTWIST Loading Shadowsocks Configuration\033[0m \033[32;1mnano\033[0m \033[32;1mEditor\033[0m]"
     sleep 2
     sudo nano /etc/shadowsocks-libev/config.json
     sudo /etc/init.d/shadowsocks restart
@@ -768,13 +768,13 @@ twist_custom() {
 }
 
 twist_update() {
-    echo -e "\033[34;1mTWIST Preparing Update:\033[0m"
+    echo -e "# [\033[34;1mTWIST Preparing Update\033[0m]"
     sleep 2
     sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh update && rm twist.sh
 }
 
 twist_uninstall() {
-    echo -e "\033[31;1mTWIST Preparing Uninstallation:\033[0m"
+    echo -e "# [\033[31;1mTWIST Preparing Uninstallation\033[0m]"
     sleep 2
     sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh uninstall && rm twist.sh
 }
