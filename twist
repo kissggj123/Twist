@@ -131,8 +131,7 @@ function uninstall_twist(){
         update-rc.d -f shadowsocks remove
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j DROP
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j DROP
-    fi
-    if grep -Eqi "CentOS|Red Hat|Fedora" /etc/*-release || grep -Eqi "CentOS|Red Hat|Fedora" /proc/version; then
+    elif grep -Eqi "CentOS|Red Hat|Fedora" /etc/*-release || grep -Eqi "CentOS|Red Hat|Fedora" /proc/version; then
         chkconfig --del shadowsocks
         systemctl start firewalld
         firewall-cmd --permanent --zone=public --remove-port=${PORT}/tcp
@@ -245,8 +244,8 @@ function detectsystem(){
             yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
             yum -y install gawk curl net-tools bind-utils || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         else
-            pacman -Syy --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-            pacman -S --noconfirm gawk curl net-tools || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
+            pacman -Syyu --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
+            pacman -Syu --noconfirm gawk curl net-tools || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         fi
         clear
     fi
@@ -321,8 +320,8 @@ function installlibs(){
         [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         [ "$FWS" = "enable" ] && { yum -y install httpd || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }; }
     else
-        pacman -Syu --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        pacman -S --noconfirm wget gawk grep curl sed git gcc swig gettext autoconf automake make libtool pcre perl cpio xmlto asciidoc fail2ban net-tools rng-tools openssl zlib c-ares libev python-devel python-setuptools python-pip python2-m2crypto
+        pacman -Syyu --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
+        pacman -Syu --noconfirm wget gawk grep curl sed git gcc swig gettext autoconf automake make libtool pcre perl cpio xmlto asciidoc fail2ban net-tools rng-tools openssl zlib c-ares libev python-devel python-setuptools python-pip python2-m2crypto
         [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         [ "$FWS" = "enable" ] && { pacman -Syu --noconfirm apache || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }; }
     fi
@@ -371,7 +370,7 @@ function updatekernel(){
         if grep -Eqi "IgnorePkg|IgnoreGroup" /etc/pacman.conf; then
             sed -i "/IgnorePkg/d;/IgnoreGroup/d" /etc/pacman.conf
         fi
-        pacman -Syu --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Kernel Source, BBR will NOT Enabled on Your Server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
+        pacman -Syyu --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Kernel Source, BBR will NOT Enabled on Your Server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
     fi
     [ "$BBR" = "enable" ] && { kernelupdated="true"; serverrestart="true"; }
     kernelverheader="$(uname -r | grep -oE '[0-9]+\.[0-9]+')"
