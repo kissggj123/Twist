@@ -341,7 +341,13 @@ function configbbr(){
             fi
         else
             echo "net.ipv4.tcp_congestion_control = hybla" >> /etc/sysctl.conf
-            updatekernel
+            if grep -Eqi "Ubuntu|Arch Liunx|CentOS|Red Hat" /etc/*-release || grep -Eqi "Ubuntu|Arch Liunx|CentOS|Red Hat" /proc/version; then
+                updatekernel
+            else
+                echo ""
+                echo -e "# [\033[34;1mYou may Update Server Kernel And Enable BBR Manually. Aborting! \033[0m]"
+                sleep 3
+            fi
         fi
     fi
 }
@@ -364,10 +370,14 @@ function updatekernel(){
             [ "$BBR" = "enable" ] && { dpkg -l | grep linux-image; rm -f $KERNEL; update-grub; }
         fi
     elif [ "$packagemanagertype" = "y" ]; then
-        yum --enablerepo=elrepo-kernel install kernel-ml kernel-ml-devel || { echo ""; echo -e "# [\033[31;1mCannot Update Kernel, BBR will NOT Enabled on Your Server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
+        rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org || { echo ""; echo -e "# [\033[31;1mCannot Get ELREPO Key, May Unable to Install ELREPO Package! \033[0m]"; echo ""; sleep 3; }
         if grep -qs "release 7" /etc/*-release; then
+            rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm || { echo ""; echo -e "# [\033[31;1mCannot Install ELREPO Package, BBR will NOT Enabled on Your Server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            [ "$BBR" = "enable" ] && yum --enablerepo=elrepo-kernel install kernel-ml kernel-ml-devel || { echo ""; echo -e "# [\033[31;1mCannot Update Kernel, BBR will NOT Enabled on Your Server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
             [ "$BBR" = "enable" ] && grub2-set-default 0
         elif grep -qs "release 6" /etc/*-release; then
+            rpm -Uvh http://www.elrepo.org/elrepo-release-6-8.el6.elrepo.noarch.rpm || { echo ""; echo -e "# [\033[31;1mCannot Install ELREPO Package, BBR will NOT Enabled on Your Server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            [ "$BBR" = "enable" ] && yum --enablerepo=elrepo-kernel install kernel-ml kernel-ml-devel || { echo ""; echo -e "# [\033[31;1mCannot Update Kernel, BBR will NOT Enabled on Your Server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
             [ "$BBR" = "enable" ] && sed -i 's/^default=.*/default=0/g' /boot/grub/grub.conf
         fi
     elif [ "$packagemanagertype" = "p" ]; then
