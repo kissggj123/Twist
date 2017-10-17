@@ -33,6 +33,11 @@ function install_twist(){
     twist
     notice
     rootness
+    if grep -qs "Twist" /etc/sysctl.conf; then
+        echo -e "# [\033[31;1mDetected that Twist was Installed. Please Uninstall Twist First If you want to Reinstall or Overwrite! \033[0m]"
+        echo ""
+        exit
+    fi
     disableselinux
     shadowsocksconfig
     systemconfig
