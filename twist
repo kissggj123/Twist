@@ -70,6 +70,8 @@ function update_twist(){
         echo ""
         exit 1
     fi
+    rm -f ${ssinstallpath}/obfs-local
+    rm -f ${ssinstallpath}/obfs-server
     rm -f ${ssinstallpath}/ss-local
     rm -f ${ssinstallpath}/ss-tunnel
     rm -f ${ssinstallpath}/ss-server
@@ -141,6 +143,8 @@ function uninstall_twist(){
     ps -ef | grep -v grep | grep -i "ss-server"
     update-rc.d -f shadowsocks remove
     rm -f /usr/bin/twist
+    rm -f ${ssinstallpath}/obfs-local
+    rm -f ${ssinstallpath}/obfs-server
     rm -f ${ssinstallpath}/ss-local
     rm -f ${ssinstallpath}/ss-tunnel
     rm -f ${ssinstallpath}/ss-server
@@ -425,9 +429,11 @@ function installsslibev(){
 function configsslibev(){
     date="$(date +%Y-%m-%d-%H:%M:%S)"
     OBFSLOCAL="obfs-host"
-    [ -z "$PASSWORD" ] && PASSWORD="$(< /dev/urandom tr -dc 'A-HJ-NPR-Za-km-z2-9' | head -c 32)"
     [ "$FWS" = "enable" ] && OBFSLOCAL="failover"
+    [ -z "$PASSWORD" ] && PASSWORD="$(< /dev/urandom tr -dc 'A-HJ-NPR-Za-km-z2-9' | head -c 32)"
+    [ -d /etc/twistbackup ] || { mkdir -p /etc/twistbackup; echo "$date" > /etc/twistbackup/backuptime; }
     [ -d /etc/shadowsocks-libev ] || mkdir -p /etc/shadowsocks-libev
+    [ -f /etc/shadowsocks-libev/config.json ] && cp -f "/etc/shadowsocks-libev/config.json" "/etc/twistbackup/config.json.old-${date}"
     cat > /etc/shadowsocks-libev/config.json <<EOF
 {
     "server":${SSLOCAL},
@@ -447,7 +453,8 @@ function configsslibev(){
 }
 EOF
     if ! grep -qs "Twist" /etc/sysctl.conf; then
-        /bin/cp -f "/etc/sysctl.conf" "/etc/sysctl.conf.old-${date}"
+        cp -f "/etc/sysctl.conf" "/etc/twistbackup/sysctl.conf"
+        cp -f "/etc/sysctl.conf" "/etc/twistbackup/sysctl.conf.old-${date}"
         cat >> /etc/sysctl.conf <<EOF
 # Twist
 fs.file-max = 1024000
@@ -492,10 +499,14 @@ net.ipv6.conf.all.autoconf = 1
 net.ipv6.conf.all.accept_ra = 2
 net.ipv6.conf.${ETH}.accept_ra = 2
 EOF
+        cp -f "/etc/security/limits.conf" "/etc/twistbackup/security/limits.conf"
+        cp -f "/etc/security/limits.conf" "/etc/twistbackup/security/limits.conf.old-${date}"
         echo "*                soft    nofile           512000" >> /etc/security/limits.conf
         echo "*                hard    nofile          1024000" >> /etc/security/limits.conf
         echo "" >> /etc/security/limits.conf
         if ! grep -qs "pam_limits.so" /etc/pam.d/login; then
+            cp -f "/etc/pam.d/login" "/etc/twistbackup/login"
+            cp -f "/etc/pam.d/login" "/etc/twistbackup/login.old-${date}"
             [ "$systemtype" = "0" ] && echo "session    required     pam_limits.so" >> /etc/pam.d/login
         fi
     fi
@@ -503,7 +514,8 @@ EOF
 
 function configiptables(){
     if ! grep -qs "Twist" /etc/sysctl.conf; then
-        iptables-save > "/etc/iptables.rules.old-${date}"
+        iprables-save > "/etc/twistbackup/iptables.rules"
+        iptables-save > "/etc/twistbackup/iptables.rules.old-${date}"
         iptables -I INPUT 1 -m conntrack --ctstate INVALID -j DROP
         iptables -I INPUT 2 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
         iptables -I INPUT 3 -p udp -m multiport --dports $PORT -j ACCEPT
@@ -511,8 +523,9 @@ function configiptables(){
         iptables -I FORWARD 2 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j ACCEPT
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j ACCEPT
-        /bin/cp -f "/etc/ip6tables.rules" "/etc/ip6tables.rules.old-${date}"
-        [ -f /etc/iptables/rules.v6 ] || cat > /etc/ip6tables.rules <<EOF
+        [ -f /etc/ip6tables.rules ] && cp -f "/etc/ip6tables.rules" "/etc/twistbackup/ip6tables.rules"
+        [ -f /etc/ip6tables.rules ] && cp -f "/etc/ip6tables.rules" "/etc/twistbackup/ip6tables.rules.old-${date}"
+        cat > /etc/ip6tables.rules <<EOF
 *filter
 :INPUT ACCEPT [0:0]
 :FORWARD DROP [0:0]
@@ -525,13 +538,17 @@ function configiptables(){
 -A INPUT -j DROP
 COMMIT
 EOF
-        [ -f /etc/iptables/rules.v6 ] && /bin/cp -f "/etc/iptables/rules.v6" "/etc/iptables/rules.v6.old-${date}"
-        [ -f /etc/iptables/rules.v6 ] && /bin/cp -f "/etc/ip6tables.rules" "/etc/iptables/rules.v6"
+        [ -f /etc/iptables/rules.v6 ] && cp -f "/etc/iptables/rules.v6" "/etc/twistbackup/rules.v6"
+        [ -f /etc/iptables/rules.v6 ] && cp -f "/etc/iptables/rules.v6" "/etc/twistbackup/rules.v6.old-${date}"
+        [ -f /etc/iptables/rules.v6 ] && cp -f "/etc/ip6tables.rules" "/etc/iptables/rules.v6"
         if [ "$systemtype" = "0" ]; then
             systemctl start firewalld
             firewall-cmd --permanent --zone=public --add-port=${PORT}/tcp
             firewall-cmd --permanent --zone=public --add-port=${PORT}/udp
             firewall-cmd --reload
+            [ -f /etc/network/if-pre-up.d/iptablesload ] && cp -f "/etc/network/if-pre-up.d/iptablesload" "/etc/twistbackup/iptablesload"
+            [ -f /etc/network/if-pre-up.d/iptablesload ] && cp -f "/etc/network/if-pre-up.d/iptablesload" "/etc/twistbackup/iptablesload.old-${date}"
+            [ -d /etc/network/if-pre-up.d ] || mkdir -p /etc/network/if-pre-up.d
             cat > /etc/network/if-pre-up.d/iptablesload <<EOF
 #!/bin/sh
 
