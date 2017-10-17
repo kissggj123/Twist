@@ -431,7 +431,7 @@ function configsslibev(){
     OBFSLOCAL="obfs-host"
     [ "$FWS" = "enable" ] && OBFSLOCAL="failover"
     [ -z "$PASSWORD" ] && PASSWORD="$(< /dev/urandom tr -dc 'A-HJ-NPR-Za-km-z2-9' | head -c 32)"
-    [ -d /etc/twistbackup ] || { mkdir -p /etc/twistbackup; echo "$date" > /etc/twistbackup/backuptime; }
+    [ -d /etc/twistbackup ] || mkdir -p /etc/twistbackup
     [ -d /etc/shadowsocks-libev ] || mkdir -p /etc/shadowsocks-libev
     [ -e /etc/shadowsocks-libev/config.json ] && cp -f "/etc/shadowsocks-libev/config.json" "/etc/twistbackup/config.json.old-${date}"
     cat > /etc/shadowsocks-libev/config.json <<EOF
@@ -499,8 +499,8 @@ net.ipv6.conf.all.autoconf = 1
 net.ipv6.conf.all.accept_ra = 2
 net.ipv6.conf.${ETH}.accept_ra = 2
 EOF
-        cp -f "/etc/security/limits.conf" "/etc/twistbackup/security/limits.conf"
-        cp -f "/etc/security/limits.conf" "/etc/twistbackup/security/limits.conf.old-${date}"
+        cp -f "/etc/security/limits.conf" "/etc/twistbackup/limits.conf"
+        cp -f "/etc/security/limits.conf" "/etc/twistbackup/limits.conf.old-${date}"
         echo "*                soft    nofile           512000" >> /etc/security/limits.conf
         echo "*                hard    nofile          1024000" >> /etc/security/limits.conf
         echo "" >> /etc/security/limits.conf
