@@ -114,7 +114,6 @@ function uninstall_twist(){
     echo ""
     sleep 5
     rootness
-    sed -i "/# Twist/d" /etc/sysctl.conf
     if [ -e /etc/init.d/shadowsocks ]; then
         /etc/init.d/shadowsocks stop
         echo ""
@@ -171,7 +170,7 @@ function uninstall_twist(){
     [ -e /etc/twistbackup/iptables.rules ] && { cp -f "/etc/twistbackup/iptables.rules" "/etc/iptables.rules"; iptables-restore < /etc/iptables.rules; }
     [ -e /etc/twistbackup/rules.v6 ] && { cp -f "/etc/twistbackup/rules.v6" "/etc/iptables/rules.v6"; iptables-restore < /etc/iptables/rules.v6; }
     if [ -e /etc/ip6tables.rules ]; then
-        [ -e "/etc/twistbackup/rules.v6 ] && cp -f "/etc/twistbackup/rules.v6" "/etc/ip6tables.rules"
+        [ -e /etc/twistbackup/rules.v6 ] && cp -f "/etc/twistbackup/rules.v6" "/etc/ip6tables.rules"
     fi
     if [ -e /etc/twistbackup/iptablesload ]; then
         cp -f "/etc/twistbackup/iptablesload" "/etc/network/if-pre-up.d/iptablesload"
@@ -188,6 +187,7 @@ function uninstall_twist(){
     [ -e /etc/twistbackup/.htaccess ] && cp -f "/etc/twistbackup/.htaccess" "/var/www/html/.htaccess"
     [ -e /etc/twistbackup/index.html ] && cp -f "/etc/twistbackup/index.html" "/var/www/html/index.html"
     rm -fr /etc/twistbackup
+    sed -i "/# Twist/d" /etc/sysctl.conf
     service fail2ban restart
     systemctl restart apache2
     ldconfig
