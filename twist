@@ -370,7 +370,8 @@ function configbbr(){
                 updatekernel
             else
                 echo ""
-                echo -e "# [\033[34;1mYou may Update Server Kernel And Enable BBR Manually. Aborting! \033[0m]"
+                echo -e "# [\033[34;1mYou may Update Server Kernel and Enable BBR Manually. Aborting! \033[0m]"
+                BBR="disable"
                 sleep 3
             fi
         fi
