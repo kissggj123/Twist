@@ -433,7 +433,7 @@ function configsslibev(){
     [ -z "$PASSWORD" ] && PASSWORD="$(< /dev/urandom tr -dc 'A-HJ-NPR-Za-km-z2-9' | head -c 32)"
     [ -d /etc/twistbackup ] || { mkdir -p /etc/twistbackup; echo "$date" > /etc/twistbackup/backuptime; }
     [ -d /etc/shadowsocks-libev ] || mkdir -p /etc/shadowsocks-libev
-    [ -f /etc/shadowsocks-libev/config.json ] && cp -f "/etc/shadowsocks-libev/config.json" "/etc/twistbackup/config.json.old-${date}"
+    [ -e /etc/shadowsocks-libev/config.json ] && cp -f "/etc/shadowsocks-libev/config.json" "/etc/twistbackup/config.json.old-${date}"
     cat > /etc/shadowsocks-libev/config.json <<EOF
 {
     "server":${SSLOCAL},
@@ -523,8 +523,8 @@ function configiptables(){
         iptables -I FORWARD 2 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j ACCEPT
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j ACCEPT
-        [ -f /etc/ip6tables.rules ] && cp -f "/etc/ip6tables.rules" "/etc/twistbackup/ip6tables.rules"
-        [ -f /etc/ip6tables.rules ] && cp -f "/etc/ip6tables.rules" "/etc/twistbackup/ip6tables.rules.old-${date}"
+        [ -e /etc/ip6tables.rules ] && cp -f "/etc/ip6tables.rules" "/etc/twistbackup/ip6tables.rules"
+        [ -e /etc/ip6tables.rules ] && cp -f "/etc/ip6tables.rules" "/etc/twistbackup/ip6tables.rules.old-${date}"
         cat > /etc/ip6tables.rules <<EOF
 *filter
 :INPUT ACCEPT [0:0]
@@ -538,17 +538,17 @@ function configiptables(){
 -A INPUT -j DROP
 COMMIT
 EOF
-        [ -f /etc/iptables/rules.v6 ] && cp -f "/etc/iptables/rules.v6" "/etc/twistbackup/rules.v6"
-        [ -f /etc/iptables/rules.v6 ] && cp -f "/etc/iptables/rules.v6" "/etc/twistbackup/rules.v6.old-${date}"
-        [ -f /etc/iptables/rules.v6 ] && cp -f "/etc/ip6tables.rules" "/etc/iptables/rules.v6"
+        [ -e /etc/iptables/rules.v6 ] && cp -f "/etc/iptables/rules.v6" "/etc/twistbackup/rules.v6"
+        [ -e /etc/iptables/rules.v6 ] && cp -f "/etc/iptables/rules.v6" "/etc/twistbackup/rules.v6.old-${date}"
+        [ -e /etc/iptables/rules.v6 ] && cp -f "/etc/ip6tables.rules" "/etc/iptables/rules.v6"
+        [ -e /etc/network/if-pre-up.d/iptablesload ] && cp -f "/etc/network/if-pre-up.d/iptablesload" "/etc/twistbackup/iptablesload"
+        [ -e /etc/network/if-pre-up.d/iptablesload ] && cp -f "/etc/network/if-pre-up.d/iptablesload" "/etc/twistbackup/iptablesload.old-${date}"
+        [ -d /etc/network/if-pre-up.d ] || mkdir -p /etc/network/if-pre-up.d
         if [ "$systemtype" = "0" ]; then
             systemctl start firewalld
             firewall-cmd --permanent --zone=public --add-port=${PORT}/tcp
             firewall-cmd --permanent --zone=public --add-port=${PORT}/udp
             firewall-cmd --reload
-            [ -f /etc/network/if-pre-up.d/iptablesload ] && cp -f "/etc/network/if-pre-up.d/iptablesload" "/etc/twistbackup/iptablesload"
-            [ -f /etc/network/if-pre-up.d/iptablesload ] && cp -f "/etc/network/if-pre-up.d/iptablesload" "/etc/twistbackup/iptablesload.old-${date}"
-            [ -d /etc/network/if-pre-up.d ] || mkdir -p /etc/network/if-pre-up.d
             cat > /etc/network/if-pre-up.d/iptablesload <<EOF
 #!/bin/sh
 
@@ -562,6 +562,8 @@ EOF
 iptables-restore < /etc/iptables.rules
 exit 0
 EOF
+            [ -e /etc/network/if-pre-up.d/ip6tablesload ] && cp -f "/etc/network/if-pre-up.d/ip6tablesload" "/etc/twistbackup/ip6tablesload"
+            [ -e /etc/network/if-pre-up.d/ip6tablesload ] && cp -f "/etc/network/if-pre-up.d/ip6tablesload" "/etc/twistbackup/ip6tablesload.old-${date}"
             cat > /etc/network/if-pre-up.d/ip6tablesload <<EOF
 #!/bin/sh
 
@@ -569,7 +571,9 @@ ip6tables-restore < /etc/ip6tables.rules
 exit 0
 EOF
         fi
-        [ ! -f /etc/fail2ban/jail.local ] && echo "" > /etc/fail2ban/jail.local
+        [ -e /etc/fail2ban/jail.local ] && cp -f "/etc/fail2ban/jail.local" "/etc/twistbackup/jail.local"
+        [ -e /etc/fail2ban/jail.local ] && cp -f "/etc/fail2ban/jail.local" "/etc/twistbackup/jail.local.old-${date}"
+        [ -e /etc/fail2ban/jail.local ] || echo "" > /etc/fail2ban/jail.local
         [ "$ABB" = "enable" ] && cat >> /etc/fail2ban/jail.local <<EOF
 
 [ssh-iptables]
@@ -749,6 +753,9 @@ esac
 exit \$exitstatus
 
 EOF
+    if ! grep -qs "Twist" /etc/sysctl.conf; then
+        [ -e /uer/bin/twist ] && cp -f "/usr/bin/twist" "/etc/twistbackup/twist"
+    fi
     cat > /usr/bin/twist <<EOF
 #!/bin/bash
 
@@ -825,6 +832,10 @@ EOF
     rngd -r /dev/urandom
     if [ "$FWS" = "enable" ]; then
         a2enmod ssl rewrite
+        if ! grep -qs "Twist" /etc/sysctl.conf; then
+            [ -e /var/www/html/.htaccess ] && cp -f "/var/www/html/.htaccess" "/etc/twistbackup/.htaccess"
+            [ -e /var/www/html/index.html ] && cp -f "/var/www/html/index.html" "/etc/twistbackup/index.html"
+        fi
         [ -e /var/www/html/.htaccess ] || echo "" > /var/www/html/.htaccess
         cat >> /var/www/html/.htaccess <<EOF
 <IfModule mod_rewrite.c>
