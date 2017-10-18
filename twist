@@ -360,7 +360,8 @@ function installlibs(){
 
 function configbbr(){
     if [ "$BBR" = "enable" ]; then
-        if [ $(echo ${kernelverheader} | awk -v ver=4.10 '{print($1>ver)? "1":"0"}') -eq "1" ] || [ "$kernelupdated" = "true" ]; then
+        cp -f "/etc/sysctl.conf" "/etc/twistbackup/sysctl.conf"
+        if [ $(echo ${kernelverheader} | awk -v ver=4.9 '{print($1>ver)? "1":"0"}') -eq "1" ] || [ "$kernelupdated" = "true" ]; then
             if [ ! "$(sysctl net.ipv4.tcp_available_congestion_control | awk '{print $3}')" = "bbr" ]; then
                 sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.conf
                 echo "net.ipv4.tcp_congestion_control = bbr" >> /etc/sysctl.conf
@@ -490,7 +491,7 @@ function configsslibev(){
 }
 EOF
     if ! grep -qs "Twist" /etc/sysctl.conf; then
-        cp -f "/etc/sysctl.conf" "/etc/twistbackup/sysctl.conf"
+        [ -e /etc/twistbackup/sysctl.conf ] || cp -f "/etc/sysctl.conf" "/etc/twistbackup/sysctl.conf"
         cp -f "/etc/sysctl.conf" "/etc/twistbackup/sysctl.conf.old-${date}"
         cat >> /etc/sysctl.conf <<EOF
 # Twist
@@ -918,7 +919,7 @@ function twiststatus(){
     [ ! "$AddrV6" = "false" ] && echo -e "(\033[34;1m${PUBLICIPv6}\033[0m)\c"
     echo -e " \033[32;1mPassWord:\033[0m \033[34;1m${PASSWORD}\033[0m \033[32;1mEncryption:\033[0m \033[34;1m${METHOD}\033[0m \033[32;1mOBFS:\033[0m \033[34;1m${OBFS}\033[0m \033[32;1mOBFS-HOST:\033[0m \033[34;1m${OBFSHOST}\033[0m \033[32;1mLOCALHOST:\033[0m \033[34;1m${LOACL}:${LOCALPORT}\033[0m]"
     if [ "$serverrestart" = "true" ]; then
-        echo -e "# [\033[34;1mThe Server Requires Restart to Enable Google BBR, Please Press Enter to Reboot! \033[0m]"
+        echo -e "# [\033[34;1mThe Server Requires Restart to Finish Installation, Please Press Enter to Reboot! \033[0m]"
         read -p ""
         sleep 3
         reboot
