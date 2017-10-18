@@ -187,6 +187,7 @@ function uninstall_twist(){
     [ -e /etc/twistbackup/jail.local ] && cp -f "/etc/twistbackup/jail.local" "/etc/fail2ban/jail.local"
     [ -e /etc/twistbackup/rc.local ] && cp -f "/etc/twistbackup/rc.local" "/etc/rc.local"
     [ -e /etc/twistbackup/twist ] && cp -f "/etc/twistbackup/twist" "/usr/bin/twist"
+    [ -e /etc/twistbackup/twistprotect ] && cp -f "/etc/twistbackup/twistprotect" "/root/twistprotect"
     [ -e /etc/twistbackup/.htaccess ] && cp -f "/etc/twistbackup/.htaccess" "/var/www/html/.htaccess"
     [ -e /etc/twistbackup/index.html ] && cp -f "/etc/twistbackup/index.html" "/var/www/html/index.html"
     rm -fr /etc/twistbackup
@@ -697,6 +698,7 @@ function startservices(){
     if ! grep -qs "Twist" /etc/sysctl.conf; then
         [ -e /etc/rc.local ] && cp -f "/etc/rc.local" "/etc/twistbackup/rc.local"
     fi
+    [ -e /etc/rc.local ] && cp -f "/etc/rc.local" "/etc/twistbackup/rc.local.old-${date}"
     [ -e /etc/rc.local ] || echo "#!/bin/bash" > /etc/rc.local
     sed --follow-symlinks -i '/^exit 0/d' /etc/rc.local
     cat >> /etc/rc.local <<EOF
