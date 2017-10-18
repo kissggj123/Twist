@@ -885,7 +885,7 @@ EOF
             [ -e /var/www/html/.htaccess ] && cp -f "/var/www/html/.htaccess" "/etc/twistbackup/.htaccess"
             [ -e /var/www/html/index.html ] && cp -f "/var/www/html/index.html" "/etc/twistbackup/index.html"
         fi
-        [ -e /var/www/html/.htaccess ] || echo "" > /var/www/html/.htaccess
+        rm -f /var/www/html/.htaccess && echo "" > /var/www/html/.htaccess
         cat >> /var/www/html/.htaccess <<EOF
 <IfModule mod_rewrite.c>
 RewriteEngine On
@@ -893,7 +893,7 @@ RewriteCond %{HTTP_HOST} ^$(echo $PUBLICIP | cut -d'.' -f1)\.$(echo $PUBLICIP | 
 RewriteRule (.*) http://${OBFSHOST}/\$1 [R=301,L]
 </IfModule>
 EOF
-        rm -f /var/www/html/index.html
+        rm -f /var/www/html/index.html && echo "" > /var/www/html/index.html
         cat >> /var/www/html/index.html <<EOF
 <head><meta http-equiv="refresh" content="0;url=http://${OBFSHOST}"></head>
 EOF
