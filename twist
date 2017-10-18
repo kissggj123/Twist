@@ -35,9 +35,7 @@ function install_twist(){
     rootness
     disableselinux
     if grep -qs "Twist" /etc/sysctl.conf; then
-        echo -e "# [\033[31;1mDetected that Twist was Installed. Please Uninstall Twist First If you want to Reinstall or Overwrite! \033[0m]"
-        echo ""
-        exit
+        OVERWRITE="ture"
     fi
     shadowsocksconfig
     systemconfig
@@ -559,7 +557,8 @@ function configiptables(){
         iptables-save > "/etc/twistbackup/iptables.rules.old-${date}"
         iptables -I INPUT 1 -m conntrack --ctstate INVALID -j DROP
         iptables -I INPUT 2 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-        iptables -I INPUT 3 -p udp -m multiport --dports $PORT -j ACCEPT
+        iptables -I INPUT 3 -p tcp -m multiport --dports $PORT -j ACCEPT
+        iptables -I INPUT 4 -p udp -m multiport --dports $PORT -j ACCEPT
         iptables -I FORWARD 1 -m conntrack --ctstate INVALID -j DROP
         iptables -I FORWARD 2 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j ACCEPT
@@ -672,6 +671,16 @@ filter  = apache-noscript
 action  = shorewall
 logpath = /var/log/httpd/error_log
 EOF
+    elif [ "$OVERWRITE" = "ture" ]; then
+        iptables-save > "/etc/twistbackup/iptables.rules.old-${date}"
+        iptables -I INPUT -p tcp -m multiport --dports $PORT -j ACCEPT
+        iptables -I INPUT -p udp -m multiport --dports $PORT -j ACCEPT
+        iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j ACCEPT
+        iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j ACCEPT
+        firewall-cmd --permanent --zone=public --add-port=${PORT}/tcp
+        firewall-cmd --permanent --zone=public --add-port=${PORT}/udp
+        iptables-save > "/etc/iptables.rules"
+        firewall-cmd --reload
     fi
 }
 
