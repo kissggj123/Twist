@@ -339,19 +339,19 @@ function installlibs(){
     if [ "$packagemanagertype" = "a" ]; then
         apt-get -yq update || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         apt-get -yq upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        apt-get -yq install wget gawk grep curl sed git gcc swig gettext autoconf automake make libtool perl cpio xmlto asciidoc fail2ban net-tools dnsutils rng-tools libc-ares-dev libev-dev openssl libssl-dev zlib1g-dev libpcre3-dev libevent-dev build-essential python-dev python-pip python-setuptools python-m2crypto
+        apt-get -yq install wget gawk grep curl sed git gcc swig gettext autoconf automake make libtool perl cpio xmlto asciidoc cron fail2ban net-tools dnsutils rng-tools libc-ares-dev libev-dev openssl libssl-dev zlib1g-dev libpcre3-dev libevent-dev build-essential python-dev python-pip python-setuptools python-m2crypto
         [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         [ "$FWS" = "enable" ] && { apt-get -yq install apache2 || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }; }
     elif [ "$packagemanagertype" = "y" ]; then
         yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         yum -y upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         [ -e /etc/yum.repos.d/epel.repo ] || { yum -y install epel-release yum-utils || { echo -e "# [\033[31;1mCannot Add EPEL repository. Aborting! \033[0m]"; exit 1; }; }
-        yum -y install wget gawk grep curl sed git gcc swig gettext-devel autoconf automake make libtool pcre-devel perl-devel cpio xmlto asciidoc fail2ban net-tools bind-utils rng-tools expat-devel openssl-devel zlib-devel libev-devel c-ares-devel python-devel python-setuptools python-pip
+        yum -y install wget gawk grep curl sed git gcc swig gettext-devel autoconf automake make libtool pcre-devel perl-devel cpio xmlto asciidoc vixie-cron crontabs fail2ban net-tools bind-utils rng-tools expat-devel openssl-devel zlib-devel libev-devel c-ares-devel python-devel python-setuptools python-pip
         [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         [ "$FWS" = "enable" ] && { yum -y install httpd || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }; }
     else
         pacman -Syyu --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        pacman -Syu --noconfirm wget gawk grep curl sed git gcc swig gettext autoconf automake make libtool pcre perl cpio xmlto asciidoc fail2ban net-tools rng-tools openssl zlib c-ares libev python-devel python-setuptools python-pip python2-m2crypto
+        pacman -Syu --noconfirm wget gawk grep curl sed git gcc swig gettext autoconf automake make libtool pcre perl cpio xmlto asciidoc cronie fail2ban net-tools rng-tools openssl zlib c-ares libev python-devel python-setuptools python-pip python2-m2crypto
         [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
         [ "$FWS" = "enable" ] && { pacman -Syu --noconfirm apache || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }; }
     fi
@@ -547,6 +547,8 @@ EOF
             cp -f "/etc/pam.d/login" "/etc/twistbackup/login.old-${date}"
             [ "$systemtype" = "0" ] && echo "session    required     pam_limits.so" >> /etc/pam.d/login
         fi
+        [ -e /etc/crontab ] || touch /etc/crontab
+        echo "*/5 * * * * root bash /root/twistprotect" >> /etc/crontab
     fi
 }
 
@@ -684,6 +686,30 @@ EOF
 }
 
 function startservices(){
+    if ! grep -qs "Twist" /etc/sysctl.conf; then
+        [ -e /etc/rc.local ] && cp -f "/etc/rc.local" "/etc/twistbackup/rc.local"
+    fi
+    [ -e /etc/rc.local ] || echo "#!/bin/bash" > /etc/rc.local
+    sed --follow-symlinks -i '/^exit 0/d' /etc/rc.local
+    cat >> /etc/rc.local <<EOF
+
+(sleep 5
+sysctl -q -p
+iptables-restore < /etc/iptables.rules
+ip6tables-restore < /etc/ip6tables.rules
+service fail2ban restart
+EOF
+    if [ "$packagemanagertype" = "p" ]; then
+        echo "systemctl start cronie.service" >> /etc/rc.local
+    else
+        echo "systemctl start cron.service" >> /etc/rc.local
+    fi
+    cat >> /etc/rc.local <<EOF
+rngd -r /dev/urandom
+
+exit 0
+
+EOF 
     if [ -f /usr/local/bin/ss-server ]; then
         ssserverpath="/usr/local/bin/ss-server"
     elif [ -f /usr/bin/ss-server ]; then
@@ -716,8 +742,6 @@ EOF
 # Description:       Shadowsocks-libev Service
 ### END INIT INFO
 
-sysctl -q -p
-rngd -r /dev/urandom
 exitstatus=0
 
 if [ ! -d /var/run ]; then
@@ -766,6 +790,9 @@ ssserver_start() {
         return 0
     fi
     ${ssserverpath} -u -c /etc/shadowsocks-libev/config.json -f /var/run/shadowsocks-libev.pid
+    if ! grep -Eqi "twistprotect=" /root/twistprotect; then
+        echo "twistprotect=\"ture\"" >> /root/twistprotect
+    fi
     if ssserver_check; then
         echo -e "# \033[32;1mStarting Shadowsocks-libev Success... \033[0m"
     else
@@ -778,6 +805,7 @@ ssserver_stop() {
     if ssserver_check; then
         kill -9 \$PID
         rm -f /var/run/shadowsocks-libev.pid
+        sed -i '/twistprotect=/d' /root/twistprotect
         echo -e "# \033[32;1mStopping Shadowsocks-libev Success... \033[0m"
     else
         echo -e "# \033[34;1mShadowsocks-libev is Stopped... \033[0m"
@@ -862,24 +890,60 @@ case "\$1" in
 esac
 
 EOF
+    if ! grep -qs "Twist" /etc/sysctl.conf; then
+        [ -e /root/twistprotect ] && cp -f "/root/twistprotect" "/etc/twistbackup/twistprotect"
+    fi
+    cat > /root/twistprotect <<EOF
+#!/bin/bash
+
+date="\$(date +%Y-%m-%d-%H:%M:%S)"
+[ -e /var/log/twistprotect ] || touch /var/log/twistprotect
+echo -e "# [\033[34;1mTWIST Protecting  Shadowsocks Services\033[0m \033[34;1m/var/log/twistprotect\033[0m ]"
+if [ "\$twistprotect" = "ture" ]; then
+    echo -e "# \033[32;1mTWIST Protecting  Shadowsocks Services Enabled \033[0m"
+    echo -e "# \${date} TWIST Protecting  Shadowsocks Services Enabled " >> /var/log/twistprotect
+    status=\$(ps -ef | grep -v grep | grep -i "${ssserverpath}" | awk '{print \$2}')
+    if [ -z \$status ]; then
+        echo -e "# \033[31;1mShadowsocks-libev Stopped Detected... \033[0m"
+        echo -e "# \${date} Shadowsocks-libev Stopped Detected " >> /var/log/twistprotect
+        /etc/init.d/shadowsocks start || echo "# \${date} Shadowsocks-libev Unable to Run " >> /var/log/twistprotect
+    else
+        echo -e "# \033[32;1mShadowsocks-libev Running Detected... \033[0m"
+        echo -e "# \${date} Shadowsocks-libev Running Detected " >> /var/log/twistprotect
+    fi
+else
+    echo -e "# \033[31;1mTWIST Protecting  Shadowsocks Services Disabled \033[0m"
+    echo -e "# \${date} TWIST Protecting  Shadowsocks Services Disabled " >> /var/log/twistprotect
+fi
+
+twistprotect="ture"
+
+EOF
+    chmod +x /etc/rc.local
     chmod +x /etc/init.d/shadowsocks
     chmod +x /usr/bin/twist
+    chmod +x /root/twistprotect
     chmod +x /etc/network/if-pre-up.d/iptablesload
     chmod +x /etc/network/if-pre-up.d/ip6tablesload
     if [ "$systemtype" = "1" ]; then
         update-rc.d -f shadowsocks defaults
-        ip6tables-restore < /etc/ip6tables.rules
-        systemctl enable fail2ban
     else
         chkconfig --add shadowsocks
         chkconfig shadowsocks on
-        iptables-restore < /etc/sysconfig/iptables
         systemctl --now mask firewalld
-        systemctl enable iptables fail2ban
     fi
+    systemctl enable iptables fail2ban
+    if [ "$packagemanagertype" = "p" ]; then
+        systemctl enable cronie.service
+        systemctl start cronie.service
+    else
+        systemctl enable cron.service
+        systemctl start cron.service
+    fi
+    iptables-restore < /etc/iptables.rules
+    ip6tables-restore < /etc/ip6tables.rules
     sysctl -p
     ldconfig
-    rngd -r /dev/urandom
     if [ "$FWS" = "enable" ]; then
         a2enmod ssl rewrite
         if ! grep -qs "Twist" /etc/sysctl.conf; then
@@ -900,6 +964,7 @@ EOF
 EOF
         systemctl restart apache2
     fi
+    rngd -r /dev/urandom
     service fail2ban restart
     /etc/init.d/shadowsocks start
     echo ""
