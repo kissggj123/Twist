@@ -88,6 +88,12 @@ Please **Run Bash Command** to Update Twist
 ```bash
 sudo twist update
 ```
+You can also Update Twist Automaticly by Using ```crond``` Service
+```bash
+echo "0 0 1 * * root bash /usr/bin/twist update" >> /etc/crontab
+```
+The Command means Twist will Automaticly Update on The First Day of Every Month
+
 
 ## Uninstall Twist
 Please **Run Bash Command** to Uninstall Twist
