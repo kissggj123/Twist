@@ -143,6 +143,7 @@ function uninstall_twist(){
     ps -ef | grep -v grep | grep -i "ss-server"
     update-rc.d -f shadowsocks remove
     rm -f /usr/bin/twist
+    rm -f /root/twistprotect
     rm -f ${ssinstallpath}/obfs-local
     rm -f ${ssinstallpath}/obfs-server
     rm -f ${ssinstallpath}/ss-local
@@ -184,11 +185,18 @@ function uninstall_twist(){
         rm -f /etc/network/if-pre-up.d/ip6tablesload
     fi
     [ -e /etc/twistbackup/jail.local ] && cp -f "/etc/twistbackup/jail.local" "/etc/fail2ban/jail.local"
+    [ -e /etc/twistbackup/rc.local ] && cp -f "/etc/twistbackup/rc.local" "/etc/rc.local"
     [ -e /etc/twistbackup/twist ] && cp -f "/etc/twistbackup/twist" "/usr/bin/twist"
     [ -e /etc/twistbackup/.htaccess ] && cp -f "/etc/twistbackup/.htaccess" "/var/www/html/.htaccess"
     [ -e /etc/twistbackup/index.html ] && cp -f "/etc/twistbackup/index.html" "/var/www/html/index.html"
     rm -fr /etc/twistbackup
+    sed -i "/twistprotect/d" /etc/crontab
     sed -i "/# Twist/d" /etc/sysctl.conf
+    if [ "$packagemanagertype" = "p" ]; then
+        systemctl restart cronie.service
+    else
+        systemctl restart cron.service
+    fi
     service fail2ban restart
     systemctl restart apache2
     ldconfig
@@ -693,7 +701,6 @@ function startservices(){
     sed --follow-symlinks -i '/^exit 0/d' /etc/rc.local
     cat >> /etc/rc.local <<EOF
 
-(sleep 5
 sysctl -q -p
 iptables-restore < /etc/iptables.rules
 ip6tables-restore < /etc/ip6tables.rules
@@ -964,8 +971,8 @@ EOF
 EOF
         systemctl restart apache2
     fi
-    rngd -r /dev/urandom
     service fail2ban restart
+    rngd -r /dev/urandom
     /etc/init.d/shadowsocks start
     echo ""
     sleep 2
