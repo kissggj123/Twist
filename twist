@@ -719,7 +719,7 @@ rngd -r /dev/urandom
 
 exit 0
 
-EOF 
+EOF
     if [ -f /usr/local/bin/ss-server ]; then
         ssserverpath="/usr/local/bin/ss-server"
     elif [ -f /usr/bin/ss-server ]; then
@@ -730,27 +730,27 @@ EOF
         echo ""
         echo －e "# [\033[31;1mCannot Find Shadowsocks-libev Install Path. Aborting! \033[0m]"
         echo ""
-        exit 1 
+        exit 1
     fi
     [ -d /etc/init.d/shadowsocks ] && rm -rf /etc/init.d/shadowsocks
     echo "#!/bin/bash" > /etc/init.d/shadowsocks
+    echo "" > /etc/init.d/shadowsocks
     if [ "$systemtype" = "0" ]; then
         cat >> /etc/init.d/shadowsocks <<EOF
-
 # chkconfig: 2345 90 10
 # description: Start, Stop or Restart Shadowsocks-libev Server
+
 EOF
     fi
     cat >> /etc/init.d/shadowsocks <<EOF
-
 ### BEGIN INIT INFO
 # Provides:          Shadowsocks
-# Required-Start:    \$network \$local_fs $remote_fs
-# Required-Stop:     \$network \$local_fs $remote_fs
+# Required-Start:    \$network \$local_fs \$remote_fs
+# Required-Stop:     \$network \$local_fs \$remote_fs
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Shadowsocks-libev
-# Description:       Shadowsocks-libev Service
+# Description:       Shadowsocks-libev Service Console
 ### END INIT INFO
 
 exitstatus=0
@@ -801,9 +801,7 @@ ssserver_start() {
         return 0
     fi
     ${ssserverpath} -u -c /etc/shadowsocks-libev/config.json -f /var/run/shadowsocks-libev.pid
-    if ! grep -Eqi "twistprotect=" /root/twistprotect; then
-        echo "twistprotect=\"ture\"" >> /root/twistprotect
-    fi
+    [ -e /var/log/twistprotect ] || touch /var/log/twistprotect
     if ssserver_check; then
         echo -e "# \033[32;1mStarting Shadowsocks-libev Success... \033[0m"
     else
@@ -816,7 +814,7 @@ ssserver_stop() {
     if ssserver_check; then
         kill -9 \$PID
         rm -f /var/run/shadowsocks-libev.pid
-        sed -i '/twistprotect=/d' /root/twistprotect
+        rm -f /var/log/twistprotect
         echo -e "# \033[32;1mStopping Shadowsocks-libev Success... \033[0m"
     else
         echo -e "# \033[34;1mShadowsocks-libev is Stopped... \033[0m"
@@ -908,9 +906,9 @@ EOF
 #!/bin/bash
 
 date="\$(date +%Y-%m-%d-%H:%M:%S)"
-[ -e /var/log/twistprotect ] || touch /var/log/twistprotect
-echo -e "# [\033[34;1mTWIST Protecting  Shadowsocks Services\033[0m \033[34;1m/var/log/twistprotect\033[0m ]"
-if [ "\$twistprotect" = "ture" ]; then
+echo -e "# [\033[34;1mTWIST Protecting  Shadowsocks Services\033[0m \033[32;1m/var/log/twistprotect\033[0m]"
+
+twistprotectenable() {
     echo -e "# \033[32;1mTWIST Protecting  Shadowsocks Services Enabled \033[0m"
     echo -e "# \${date} TWIST Protecting  Shadowsocks Services Enabled " >> /var/log/twistprotect
     status=\$(ps -ef | grep -v grep | grep -i "${ssserverpath}" | awk '{print \$2}')
@@ -922,12 +920,13 @@ if [ "\$twistprotect" = "ture" ]; then
         echo -e "# \033[32;1mShadowsocks-libev Running Detected... \033[0m"
         echo -e "# \${date} Shadowsocks-libev Running Detected " >> /var/log/twistprotect
     fi
+}
+
+if [ -e /var/log/twistprotect ]; then
+	twistprotectenable
 else
     echo -e "# \033[31;1mTWIST Protecting  Shadowsocks Services Disabled \033[0m"
-    echo -e "# \${date} TWIST Protecting  Shadowsocks Services Disabled " >> /var/log/twistprotect
 fi
-
-twistprotect="ture"
 
 EOF
     chmod +x /etc/rc.local
