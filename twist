@@ -2,6 +2,8 @@
 
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
+date="$(date +%Y-%m-%d-%H:%M:%S)"
+
 function shadowsocksconfig(){
     SSLOCAL="[\"[::0]\",\"0.0.0.0\"]"
     PORT="443"
@@ -135,7 +137,6 @@ function uninstall_twist(){
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j DROP
     elif grep -Eqi "CentOS|Red Hat|Fedora" /etc/*-release || grep -Eqi "CentOS|Red Hat|Fedora" /proc/version; then
         chkconfig --del shadowsocks
-        systemctl start firewalld
         firewall-cmd --permanent --zone=public --remove-port=${PORT}/tcp
         firewall-cmd --permanent --zone=public --remove-port=${PORT}/udp
         firewall-cmd --reload
@@ -143,7 +144,6 @@ function uninstall_twist(){
     ps -ef | grep -v grep | grep -i "ss-server"
     update-rc.d -f shadowsocks remove
     rm -f /usr/bin/twist
-    rm -f /root/twistprotect
     rm -f ${ssinstallpath}/obfs-local
     rm -f ${ssinstallpath}/obfs-server
     rm -f ${ssinstallpath}/ss-local
@@ -192,6 +192,7 @@ function uninstall_twist(){
     [ -e /etc/twistbackup/index.html ] && cp -f "/etc/twistbackup/index.html" "/var/www/html/index.html"
     rm -fr /etc/twistbackup
     sed -i "/twistprotect/d" /etc/crontab
+    rm -f /root/twistprotect
     sed -i "/# Twist/d" /etc/sysctl.conf
     if [ "$packagemanagertype" = "p" ]; then
         systemctl restart cronie.service
@@ -474,7 +475,6 @@ function installsslibev(){
 }
 
 function configsslibev(){
-    date="$(date +%Y-%m-%d-%H:%M:%S)"
     OBFSLOCAL="obfs-host"
     [ "$FWS" = "enable" ] && OBFSLOCAL="failover"
     [ -z "$PASSWORD" ] && PASSWORD="$(< /dev/urandom tr -dc 'A-HJ-NPR-Za-km-z2-9' | head -c 32)"
@@ -503,6 +503,7 @@ EOF
         [ -e /etc/twistbackup/sysctl.conf ] || cp -f "/etc/sysctl.conf" "/etc/twistbackup/sysctl.conf"
         cp -f "/etc/sysctl.conf" "/etc/twistbackup/sysctl.conf.old-${date}"
         cat >> /etc/sysctl.conf <<EOF
+
 # Twist
 fs.file-max = 1024000
 kernel.msgmnb = 65536
@@ -735,6 +736,7 @@ EOF
     echo "#!/bin/bash" > /etc/init.d/shadowsocks
     if [ "$systemtype" = "0" ]; then
         cat >> /etc/init.d/shadowsocks <<EOF
+
 # chkconfig: 2345 90 10
 # description: Start, Stop or Restart Shadowsocks-libev Server
 EOF
