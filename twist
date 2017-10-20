@@ -848,7 +848,7 @@ EOF
     if ! grep -qs "Twist" /etc/sysctl.conf; then
         [ -e /uer/bin/twist ] && cp -f "/usr/bin/twist" "/etc/twistbackup/twist"
     fi
-    cat > /usr/bin/twist <<EOF
+    cat > /usr/bin/twist <<-EOF
 #!/bin/bash
 
 twist_status() {
