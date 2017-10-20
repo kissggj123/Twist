@@ -230,7 +230,7 @@ function notice(){
 }
 
 function rootness(){
-    if [ $EUID -ne 0 ]; then
+    if [ "$(id -u)" != 0 ]; then
         echo -e "# [\033[31;1mError:Twist must be run as root. Please Run Twist with root Access! \033[0m]"
         echo ""
         exit 1
@@ -481,7 +481,7 @@ function configsslibev(){
     [ -d /etc/twistbackup ] || mkdir -p /etc/twistbackup
     [ -d /etc/shadowsocks-libev ] || mkdir -p /etc/shadowsocks-libev
     [ -e /etc/shadowsocks-libev/config.json ] && cp -f "/etc/shadowsocks-libev/config.json" "/etc/twistbackup/config.json.old-${date}"
-    cat > /etc/shadowsocks-libev/config.json <<EOF
+    cat > /etc/shadowsocks-libev/config.json <<-EOF
 {
     "server":${SSLOCAL},
     "server_port":${PORT},
@@ -502,7 +502,7 @@ EOF
     if ! grep -qs "Twist" /etc/sysctl.conf; then
         [ -e /etc/twistbackup/sysctl.conf ] || cp -f "/etc/sysctl.conf" "/etc/twistbackup/sysctl.conf"
         cp -f "/etc/sysctl.conf" "/etc/twistbackup/sysctl.conf.old-${date}"
-        cat >> /etc/sysctl.conf <<EOF
+        cat >> /etc/sysctl.conf <<-EOF
 
 # Twist
 fs.file-max = 1024000
@@ -546,6 +546,7 @@ net.ipv6.conf.default.accept_redirects = 0
 net.ipv6.conf.all.autoconf = 1
 net.ipv6.conf.all.accept_ra = 2
 net.ipv6.conf.${ETH}.accept_ra = 2
+
 EOF
         cp -f "/etc/security/limits.conf" "/etc/twistbackup/limits.conf"
         cp -f "/etc/security/limits.conf" "/etc/twistbackup/limits.conf.old-${date}"
@@ -576,7 +577,7 @@ function configiptables(){
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j ACCEPT
         [ -e /etc/ip6tables.rules ] && cp -f "/etc/ip6tables.rules" "/etc/twistbackup/ip6tables.rules"
         [ -e /etc/ip6tables.rules ] && cp -f "/etc/ip6tables.rules" "/etc/twistbackup/ip6tables.rules.old-${date}"
-        cat > /etc/ip6tables.rules <<EOF
+        cat > /etc/ip6tables.rules <<-EOF
 *filter
 :INPUT ACCEPT [0:0]
 :FORWARD DROP [0:0]
@@ -601,32 +602,35 @@ EOF
             firewall-cmd --permanent --zone=public --add-port=${PORT}/tcp
             firewall-cmd --permanent --zone=public --add-port=${PORT}/udp
             firewall-cmd --reload
-            cat > /etc/network/if-pre-up.d/iptablesload <<EOF
+            cat > /etc/network/if-pre-up.d/iptablesload <<-EOF
 #!/bin/sh
 
 iptables-restore < /etc/iptables.rules
 exit 0
+
 EOF
         else
-            cat > /etc/network/if-pre-up.d/iptablesload <<EOF
+            cat > /etc/network/if-pre-up.d/iptablesload <<-EOF
 #!/bin/sh
 
 iptables-restore < /etc/iptables.rules
 exit 0
+
 EOF
             [ -e /etc/network/if-pre-up.d/ip6tablesload ] && cp -f "/etc/network/if-pre-up.d/ip6tablesload" "/etc/twistbackup/ip6tablesload"
             [ -e /etc/network/if-pre-up.d/ip6tablesload ] && cp -f "/etc/network/if-pre-up.d/ip6tablesload" "/etc/twistbackup/ip6tablesload.old-${date}"
-            cat > /etc/network/if-pre-up.d/ip6tablesload <<EOF
+            cat > /etc/network/if-pre-up.d/ip6tablesload <<-EOF
 #!/bin/sh
 
 ip6tables-restore < /etc/ip6tables.rules
 exit 0
+
 EOF
         fi
         [ -e /etc/fail2ban/jail.local ] && cp -f "/etc/fail2ban/jail.local" "/etc/twistbackup/jail.local"
         [ -e /etc/fail2ban/jail.local ] && cp -f "/etc/fail2ban/jail.local" "/etc/twistbackup/jail.local.old-${date}"
         [ -e /etc/fail2ban/jail.local ] || echo "" > /etc/fail2ban/jail.local
-        [ "$ABB" = "enable" ] && cat >> /etc/fail2ban/jail.local <<EOF
+        [ "$ABB" = "enable" ] && cat >> /etc/fail2ban/jail.local <<-EOF
 
 [ssh-iptables]
 enabled = true
@@ -681,6 +685,7 @@ enabled = true
 filter  = apache-noscript
 action  = shorewall
 logpath = /var/log/httpd/error_log
+
 EOF
     elif [ "$OVERWRITE" = "ture" ]; then
         iptables-save > "/etc/twistbackup/iptables.rules.old-${date}"
@@ -702,7 +707,7 @@ function startservices(){
     [ -e /etc/rc.local ] && cp -f "/etc/rc.local" "/etc/twistbackup/rc.local.old-${date}"
     [ -e /etc/rc.local ] || echo "#!/bin/bash" > /etc/rc.local
     sed --follow-symlinks -i '/^exit 0/d' /etc/rc.local
-    cat >> /etc/rc.local <<EOF
+    cat >> /etc/rc.local <<-EOF
 
 sysctl -q -p
 iptables-restore < /etc/iptables.rules
@@ -714,7 +719,7 @@ EOF
     else
         echo "systemctl start cron.service" >> /etc/rc.local
     fi
-    cat >> /etc/rc.local <<EOF
+    cat >> /etc/rc.local <<-EOF
 rngd -r /dev/urandom
 
 exit 0
@@ -734,15 +739,15 @@ EOF
     fi
     [ -d /etc/init.d/shadowsocks ] && rm -rf /etc/init.d/shadowsocks
     echo "#!/bin/bash" > /etc/init.d/shadowsocks
-    echo "" > /etc/init.d/shadowsocks
     if [ "$systemtype" = "0" ]; then
-        cat >> /etc/init.d/shadowsocks <<EOF
+        cat >> /etc/init.d/shadowsocks <<-EOF
+
 # chkconfig: 2345 90 10
 # description: Start, Stop or Restart Shadowsocks-libev Server
-
 EOF
     fi
-    cat >> /etc/init.d/shadowsocks <<EOF
+    cat >> /etc/init.d/shadowsocks <<-EOF
+
 ### BEGIN INIT INFO
 # Provides:          Shadowsocks
 # Required-Start:    \$network \$local_fs \$remote_fs
@@ -753,7 +758,7 @@ EOF
 # Description:       Shadowsocks-libev Service Console
 ### END INIT INFO
 
-exitstatus=0
+exitstatus="0"
 
 if [ ! -d /var/run ]; then
     mkdir -p /var/run
@@ -790,7 +795,7 @@ ssserver_status() {
         ;;
         1|2)
         echo -e "# \033[34;1mShadowsocks-libev is Stopped... \033[0m"
-        exitstatus=1
+        exitstatus="1"
         ;;
     esac
 }
@@ -806,7 +811,7 @@ ssserver_start() {
         echo -e "# \033[32;1mStarting Shadowsocks-libev Success... \033[0m"
     else
         echo -e "# \033[31;1mStarting Shadowsocks-libev Failed... \033[0m"
-        exitstatus=1
+        exitstatus="1"
     fi
 }
 
@@ -818,7 +823,7 @@ ssserver_stop() {
         echo -e "# \033[32;1mStopping Shadowsocks-libev Success... \033[0m"
     else
         echo -e "# \033[34;1mShadowsocks-libev is Stopped... \033[0m"
-        exitstatus=1
+        exitstatus="1"
     fi
 }
 
@@ -833,7 +838,7 @@ case "\$1" in
     ;;
     *)
     echo "Usage: \$0 { start | stop | restart | status }"
-    exitstatus=1
+    exitstatus="1"
     ;;
 esac
 
@@ -902,7 +907,7 @@ EOF
     if ! grep -qs "Twist" /etc/sysctl.conf; then
         [ -e /root/twistprotect ] && cp -f "/root/twistprotect" "/etc/twistbackup/twistprotect"
     fi
-    cat > /root/twistprotect <<EOF
+    cat > /root/twistprotect <<-EOF
 #!/bin/bash
 
 date="\$(date +%Y-%m-%d-%H:%M:%S)"
@@ -961,7 +966,7 @@ EOF
             [ -e /var/www/html/index.html ] && cp -f "/var/www/html/index.html" "/etc/twistbackup/index.html"
         fi
         rm -f /var/www/html/.htaccess && echo "" > /var/www/html/.htaccess
-        cat >> /var/www/html/.htaccess <<EOF
+        cat >> /var/www/html/.htaccess <<-EOF
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteCond %{HTTP_HOST} ^$(echo $PUBLICIP | cut -d'.' -f1)\.$(echo $PUBLICIP | cut -d'.' -f2)\.$(echo $PUBLICIP | cut -d'.' -f3)\.$(echo $PUBLICIP | cut -d'.' -f4)
@@ -969,7 +974,7 @@ RewriteRule (.*) http://${OBFSHOST}/\$1 [R=301,L]
 </IfModule>
 EOF
         rm -f /var/www/html/index.html && echo "" > /var/www/html/index.html
-        cat >> /var/www/html/index.html <<EOF
+        cat >> /var/www/html/index.html <<-EOF
 <head><meta http-equiv="refresh" content="0;url=http://${OBFSHOST}"></head>
 EOF
         systemctl restart apache2
