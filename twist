@@ -571,11 +571,11 @@ function configiptables(){
         iptables -I INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
         iptables -I INPUT -p tcp -m multiport --dports $PORT -j ACCEPT
         iptables -I INPUT -p udp -m multiport --dports $PORT -j ACCEPT
-	iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j ACCEPT
+        iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j ACCEPT
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j ACCEPT
         iptables -I FORWARD -m conntrack --ctstate INVALID -j DROP
         iptables -I FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
-	iptables -t nat -A POSTROUTING -o $ETH -j MASQUERADE
+        iptables -t nat -A POSTROUTING -o $ETH -j MASQUERADE
         [ -e /etc/ip6tables.rules ] && cp -f "/etc/ip6tables.rules" "/etc/twistbackup/ip6tables.rules"
         [ -e /etc/ip6tables.rules ] && cp -f "/etc/ip6tables.rules" "/etc/twistbackup/ip6tables.rules.old-${date}"
         cat > /etc/ip6tables.rules <<-EOF
@@ -694,7 +694,7 @@ EOF
         iptables -I INPUT -p udp -m multiport --dports $PORT -j ACCEPT
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j ACCEPT
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j ACCEPT
-	iptables -t nat -A POSTROUTING -o $ETH -j MASQUERADE
+        iptables -t nat -A POSTROUTING -o $ETH -j MASQUERADE
         firewall-cmd --permanent --zone=public --add-port=${PORT}/tcp
         firewall-cmd --permanent --zone=public --add-port=${PORT}/udp
         iptables-save > "/etc/iptables.rules"
