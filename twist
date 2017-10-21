@@ -690,15 +690,21 @@ logpath = /var/log/httpd/error_log
 EOF
     elif [ "$OVERWRITE" = "ture" ]; then
         iptables-save > "/etc/twistbackup/iptables.rules.old-${date}"
+        iptables -I INPUT -m conntrack --ctstate INVALID -j DROP
+        iptables -I INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
         iptables -I INPUT -p tcp -m multiport --dports $PORT -j ACCEPT
         iptables -I INPUT -p udp -m multiport --dports $PORT -j ACCEPT
         iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j ACCEPT
         iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j ACCEPT
+        iptables -I FORWARD -m conntrack --ctstate INVALID -j DROP
+        iptables -I FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
         iptables -t nat -A POSTROUTING -o $ETH -j MASQUERADE
-        firewall-cmd --permanent --zone=public --add-port=${PORT}/tcp
-        firewall-cmd --permanent --zone=public --add-port=${PORT}/udp
         iptables-save > "/etc/iptables.rules"
-        firewall-cmd --reload
+        if [ "$systemtype" = "0" ]; then
+            firewall-cmd --permanent --zone=public --add-port=${PORT}/tcp
+            firewall-cmd --permanent --zone=public --add-port=${PORT}/udp
+            firewall-cmd --reload
+        fi
     fi
 }
 
