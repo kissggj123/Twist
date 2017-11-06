@@ -276,6 +276,17 @@ function detectsystem(){
             systemtype="1"
         fi
     fi
+    if [ "$packagemanagertype" = "a" ]; then
+        tries="0"
+        while fuser /var/lib/apt/lists/lock /var/cache/apt/archives/lock /var/lib/dpkg/lock; do
+            [ "$tries" = "0" ] && { echo ""; echo -e "# [\033[31;1mTrying to Lock the Administration Directory, another Process may using it. \033[0m]"; echo ""; }
+            [ "$tries" = "20" ] && { rm -f /var/lib/apt/lists/lock; rm -f /var/cache/apt/archives/lock; rm -f /var/lib/dpkg/lock; }
+            [ "$tries" = "21" ] && dpkg --configure -a
+            [ "$tries" -ge "22" ] && { echo ""; echo -e "# [\033[31;1mUnable to Lock the Administration Directory. \033[0m]"; echo ""; break; }
+            tries=$((tries+1))
+            sleep 3
+        done
+    fi
     if [ -z "$(which awk)" ] || [ -z "$(which route)" ] || [ -z "$(which ip)" ] || [ -z "$(which dig)" ] || [ -z "$(which curl)" ]; then
         if [ "$packagemanagertype" = "a" ]; then
             apt-get update || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
