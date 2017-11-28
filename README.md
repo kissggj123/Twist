@@ -55,7 +55,6 @@ Edit Values in Value="**HERE**", Save and Run Twist after You have Confirmed it 
  METHOD="chacha20-ietf-poly1305"  # Encryption, AEAD is better than OTA
  OBFS="tls"                       # Obfs method using tls or http
  OBFSHOST="mzstatic.com"          # Obfs host address
- WORKERS="1024"                   # Workers using, larger provides faster speed but less memory
  BBR="enable"                     # Google BBR for low delay network to get faster speed
  FWS="enable"                     # Fake as a apache web server for concealing
  ABB="enable"                     # Uses Fail2ban to ban force crackers
