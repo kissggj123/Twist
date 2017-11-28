@@ -15,7 +15,6 @@ function shadowsocksconfig(){
     METHOD="chacha20-ietf-poly1305"
     OBFS="tls"
     OBFSHOST="mzstatic.com"
-    WORKERS="1024"
     BBR="enable"
     FWS="enable"
     ABB="enable"
@@ -419,13 +418,13 @@ function updatekernel(){
             [ "$BBR" = "enable" ] && { dpkg -l | grep linux-image; rm -f $KERNEL; update-grub; }
         fi
     elif [ "$packagemanagertype" = "y" ]; then
-        rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org || { echo ""; echo -e "# [\033[31;1mCannot Get ELREPO Key, May Unable to Install ELREPO Package! \033[0m]"; echo ""; sleep 3; }
+        rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org || { echo ""; echo -e "# [\033[31;1mCannot Get ELRepo Key, May Unable to Install ELREPO Package! \033[0m]"; echo ""; sleep 3; }
         if grep -qs "release 7" /etc/*-release; then
-            rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm || { echo ""; echo -e "# [\033[31;1mCannot Install ELREPO Package, BBR will NOT Enabled on Your Server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm || { echo ""; echo -e "# [\033[31;1mCannot Install ELRepo Repository, BBR will NOT Enabled on Your Server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
             [ "$BBR" = "enable" ] && yum --enablerepo=elrepo-kernel install kernel-ml kernel-ml-devel || { echo ""; echo -e "# [\033[31;1mCannot Update Kernel, BBR will NOT Enabled on Your Server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
             [ "$BBR" = "enable" ] && grub2-set-default 0
         elif grep -qs "release 6" /etc/*-release; then
-            rpm -Uvh http://www.elrepo.org/elrepo-release-6-8.el6.elrepo.noarch.rpm || { echo ""; echo -e "# [\033[31;1mCannot Install ELREPO Package, BBR will NOT Enabled on Your Server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            rpm -Uvh http://www.elrepo.org/elrepo-release-6-8.el6.elrepo.noarch.rpm || { echo ""; echo -e "# [\033[31;1mCannot Install ELRepo Repository, BBR will NOT Enabled on Your Server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
             [ "$BBR" = "enable" ] && yum --enablerepo=elrepo-kernel install kernel-ml kernel-ml-devel || { echo ""; echo -e "# [\033[31;1mCannot Update Kernel, BBR will NOT Enabled on Your Server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
             [ "$BBR" = "enable" ] && sed -i 's/^default=.*/default=0/g' /boot/grub/grub.conf
         fi
@@ -507,7 +506,6 @@ function configsslibev(){
     "plugin_opts":"obfs=${OBFS};fast-open;${OBFSLOCAL}=${OBFSHOST}",
     "mode":"tcp_and_udp",
     "fast_open":true,
-    "workers":${WORKERS},
 }
 EOF
     if ! grep -qs "Twist" /etc/sysctl.conf; then
@@ -824,7 +822,7 @@ ssserver_start() {
         echo -e "# \033[32;1mShadowsocks-libev is Running... \033[0m"
         return 0
     fi
-    ${ssserverpath} -u -c /etc/shadowsocks-libev/config.json -f /var/run/shadowsocks-libev.pid
+    ${ssserverpath} -uv -c /etc/shadowsocks-libev/config.json -f /var/run/shadowsocks-libev.pid
     [ -e /var/log/twistprotect ] || touch /var/log/twistprotect
     if ssserver_check; then
         echo -e "# \033[32;1mStarting Shadowsocks-libev Success... \033[0m"
