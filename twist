@@ -772,7 +772,7 @@ EOF
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Shadowsocks-libev
-# Description:       Shadowsocks-libev Service Console
+# Description:       Shadowsocks-libev Service
 ### END INIT INFO
 
 exitstatus="0"
