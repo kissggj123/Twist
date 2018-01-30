@@ -15,6 +15,7 @@ function shadowsocksconfig(){
     METHOD="chacha20-ietf-poly1305"
     OBFS="tls"
     OBFSHOST="mzstatic.com"
+    OBFSURI="/"
     BBR="enable"
     FWS="enable"
     ABB="enable"
@@ -68,7 +69,7 @@ function update_twist(){
             ssinstallpath="/usr/bin"
         fi
     else
-        echo -e "#[\033[31;1m              Twist was Not Find on Your Server!                  \033[0m]#"
+        echo -e "#[\033[31;1m              Twist was not found on Your Server!                 \033[0m]#"
         echo ""
         exit 1
     fi
@@ -126,7 +127,7 @@ function uninstall_twist(){
             ssinstallpath="/usr/bin"
         fi
     else
-        echo -e "#[\033[31;1m             Twist was Not Find on Your Server!                   \033[0m]#"
+        echo -e "#[\033[31;1m             Twist was not found on Your Server!                  \033[0m]#"
         echo ""
         exit 1
     fi
@@ -230,14 +231,14 @@ function notice(){
 
 function rootness(){
     if [ "$(id -u)" != 0 ]; then
-        echo -e "# [\033[31;1mError:Twist must be run as root. Please Run Twist with root Access! \033[0m]"
+        echo -e "# [\033[31;1mError:Twist must run by root. Please run Twist with root access! \033[0m]"
         echo ""
         exit 1
     fi
 }
 
 function disableselinux(){
-    [ -z "$(which grep)" ] && { echo ""; echo -e "# [\033[31;1mTwist Required Basic Dependencies\033[0m \033[32;1mgrep\033[0m, \033[31;1mPlease Install Dependencies First. \033[0m]"; echo ""; exit 1; }
+    [ -z "$(which grep)" ] && { echo ""; echo -e "# [\033[31;1mTwist requires the basic dependencies\033[0m \033[32;1mgrep\033[0m, \033[31;1mPlease Install the Dependencies first. \033[0m]"; echo ""; exit 1; }
     if [ -s /etc/selinux/config ] && grep 'SELINUX=enforcing' /etc/selinux/config; then
         sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
         setenforce 0
@@ -250,7 +251,7 @@ function detectsystem(){
     elif grep -Eqi "CentOS|Red Hat|Fedora" /etc/*-release || grep -Eqi "CentOS|Red Hat|Fedora" /proc/version; then
         systemtype="0"
     else
-        echo -e "# [\033[31;1mThis Script Must be Run on Ubuntu, Debian, Raspbian, Arch Linux, CentOS, Red Hat or Fedora. Aborating! \033[0m]"
+        echo -e "# [\033[31;1mTwist could only run on Ubuntu, Debian, Raspbian, Arch Linux, CentOS, Red Hat or Fedora. Aborating! \033[0m]"
         echo ""
         exit 1
     fi
@@ -261,7 +262,7 @@ function detectsystem(){
     elif [ ! -z "$(which pacman)" ]; then
         packagemanagertype="p"
     else
-        echo -e "# [\033[31;1mThis Script Must be Run on Ubuntu, Debian, Raspbian, Arch Linux, CentOS, Red Hat or Fedora. Aborating! \033[0m]"
+        echo -e "# [\033[31;1mTwist could only run on Ubuntu, Debian, Raspbian, Arch Linux, CentOS, Red Hat or Fedora. Aborating! \033[0m]"
         echo ""
         exit 1
     fi
@@ -278,24 +279,24 @@ function detectsystem(){
     if [ "$packagemanagertype" = "a" ]; then
         tries="0"
         while fuser /var/lib/apt/lists/lock /var/cache/apt/archives/lock /var/lib/dpkg/lock; do
-            [ "$tries" = "0" ] && { echo ""; echo -e "# [\033[31;1mTrying to Lock the Administration Directory, another Process may using it. \033[0m]"; echo ""; }
+            [ "$tries" = "0" ] && { echo ""; echo -e "# [\033[31;1mTrying to lock the Administration Directory, another Process may using it. \033[0m]"; echo ""; }
             [ "$tries" = "20" ] && { rm -f /var/lib/apt/lists/lock; rm -f /var/cache/apt/archives/lock; rm -f /var/lib/dpkg/lock; }
             [ "$tries" = "21" ] && dpkg --configure -a
-            [ "$tries" -ge "22" ] && { echo ""; echo -e "# [\033[31;1mUnable to Lock the Administration Directory. \033[0m]"; echo ""; break; }
+            [ "$tries" -ge "22" ] && { echo ""; echo -e "# [\033[31;1mUnable to lock the Administration Directory. \033[0m]"; echo ""; break; }
             tries=$((tries+1))
             sleep 3
         done
     fi
     if [ -z "$(which awk)" ] || [ -z "$(which route)" ] || [ -z "$(which ip)" ] || [ -z "$(which dig)" ] || [ -z "$(which curl)" ]; then
         if [ "$packagemanagertype" = "a" ]; then
-            apt-get update || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-            apt-get -yq install gawk curl net-tools dnsutils || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
+            apt-get update || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please check your network or errors displayed! \033[0m]"; echo ""; exit 1; }
+            apt-get -yq install gawk curl net-tools dnsutils || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please check your network or errors displayed! \033[0m]"; echo ""; exit 1; }
         elif [ "$packagemanagertype" = "y" ]; then
-            yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-            yum -y install gawk curl net-tools bind-utils || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
+            yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please check your network or errors displayed! \033[0m]"; echo ""; exit 1; }
+            yum -y install gawk curl net-tools bind-utils || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please check your network or errors displayed! \033[0m]"; echo ""; exit 1; }
         else
-            pacman -Syyu --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-            pacman -Syu --noconfirm gawk curl net-tools || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
+            pacman -Syyu --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please check your network or errors displayed! \033[0m]"; echo ""; exit 1; }
+            pacman -Syu --noconfirm gawk curl net-tools || { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please check your network or errors displayed! \033[0m]"; echo ""; exit 1; }
         fi
         clear
     fi
@@ -311,23 +312,23 @@ function detectsystem(){
     fi
     ethstatus="$(cat /sys/class/net/${ETH}/operstate)"
     if [ -z "$ethstatus" ] || [ "$ethstatus" = "down" ]; then
-        echo -e "# [\033[31;1mNetwork Interface '${ETH}' is Not Available. Please try Another Network Interface Listed Below! \033[0m]"
+        echo -e "# [\033[31;1mNetwork Interface '${ETH}' is not available. Please try another Network Interface listed below! \033[0m]"
         echo ""
         ip link
         echo ""
         echo -e "Please Enter [\033[32;1mNetwork Interface Name\033[0m]:"
-        read -p "Input Devices Name:" eth
+        read -p "Input Interface Name:" eth
      	if [ ! "$eth" = "" ]; then
             ethstatus="$(cat /sys/class/net/${eth}/operstate)"
             if [ -z "$ethstatus" ] || [ "$ethstatus" = "down" ]; then
                 echo ""
-                echo -e "# [\033[31;1mNetwork Interface Your Entered is Not Available. Aborting! \033[0m]"
+                echo -e "# [\033[31;1mThe Network Interface Your entered is not available. Aborting! \033[0m]"
                 echo ""
                 exit 1
             else
                 ETH="$eth"
                 echo ""
-                echo -e "# [\033[33;1mNetwork Interface Check Passed and Using Interface\033[0m \033[32;1m${ETH}\033[0m]"
+                echo -e "# [\033[33;1mNetwork Interface check passed, Using the new Interface\033[0m \033[32;1m${ETH} \033[0m]"
                 echo ""
             fi
         fi
@@ -335,17 +336,17 @@ function detectsystem(){
     [ -z "$PUBLICIP" ] && PUBLICIP="$(dig @resolver1.opendns.com -t A -4 myip.opendns.com +short)"
     if ! printf %s "$PUBLICIP" | grep -Eq "$IPREGEX"; then
         echo ""
-        echo -e "# [\033[31;1mCannot Detect Valid Public IP. Please Fill Your IP Address Below! \033[0m]"
+        echo -e "# [\033[31;1mCannot detect a valid Public IP. Please fill your Public IP address below! \033[0m]"
         read -p "Input Your Public IP:" publicip
         if ! printf %s "$publicip" | grep -Eq "$IPREGEX"; then
             echo ""
-            echo -e "# [\033[31;1mThe IP:${publicip} The IP Address You Entered is Out of Range. You May Unable to Connect! \033[0m]"
+            echo -e "# [\033[31;1mThe IP:${publicip} address you entered is not vailed. You may unable to connect! \033[0m]"
             echo ""
             sleep 3
         else
             PUBLICIP="$publicip"
             echo ""
-            echo -e "# [\033[32;1mYou are now using Public IP:${PUBLICIP}\033[0m]"
+            echo -e "# [\033[32;1mYou are now using Public IP:${PUBLICIP} \033[0m]"
             echo ""
         fi
     fi
@@ -357,25 +358,25 @@ function detectsystem(){
 
 function installlibs(){
     if [ "$packagemanagertype" = "a" ]; then
-        apt-get -yq update || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        apt-get -yq upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
+        apt-get -yq update || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please check your network or errors displayed! \033[0m]"; echo ""; exit 1; }
+        apt-get -yq upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source, Please check your network or errors displayed! \033[0m]"; echo ""; exit 1; }
         apt-get -yq install wget gawk grep curl sed git gcc swig gettext autoconf automake make libtool perl cpio xmlto asciidoc cron fail2ban net-tools dnsutils rng-tools libc-ares-dev libev-dev openssl libssl-dev zlib1g-dev libpcre3-dev libevent-dev build-essential python-dev python-pip python-setuptools python-m2crypto
-        [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        [ "$FWS" = "enable" ] && { apt-get -yq install apache2 || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }; }
+        [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please check your network or errors displayed! \033[0m]"; echo ""; exit 1; }
+        [ "$FWS" = "enable" ] && { apt-get -yq install apache2 || { echo ""; echo -e "# [\033[31;1mCannot Install Apache to fake as a web server, Please check your network or errors displayed! \033[0m]"; echo ""; exit 1; }; }
     elif [ "$packagemanagertype" = "y" ]; then
-        yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        yum -y upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        [ -e /etc/yum.repos.d/epel.repo ] || { yum -y install epel-release yum-utils || { echo -e "# [\033[31;1mCannot Add EPEL repository. Aborting! \033[0m]"; exit 1; }; }
+        yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please check your network or errors displayed! \033[0m]"; echo ""; exit 1; }
+        yum -y upgrade || { echo ""; echo -e "# [\033[31;1mCannot Upgrade Source, Please check your network or errors displayed! \033[0m]"; echo ""; exit 1; }
+        [ -e /etc/yum.repos.d/epel.repo ] || { yum -y install epel-release yum-utils || { echo -e "# [\033[31;1mCannot add EPEL repository. Aborting! \033[0m]"; exit 1; }; }
         yum -y install wget gawk grep curl sed git gcc swig gettext-devel autoconf automake make libtool pcre-devel perl-devel cpio xmlto asciidoc vixie-cron crontabs fail2ban net-tools bind-utils rng-tools expat-devel openssl-devel zlib-devel libev-devel c-ares-devel python-devel python-setuptools python-pip
-        [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        [ "$FWS" = "enable" ] && { yum -y install httpd || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }; }
+        [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please check your network or errors displayed! \033[0m]"; echo ""; exit 1; }
+        [ "$FWS" = "enable" ] && { yum -y install httpd || { echo ""; echo -e "# [\033[31;1mCannot Install Apache to fake as a web server, Please check your network or errors displayed! \033[0m]"; echo ""; exit 1; }; }
     else
-        pacman -Syyu --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
+        pacman -Syyu --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Source, Please check your network or errors displayed! \033[0m]"; echo ""; exit 1; }
         pacman -Syu --noconfirm wget gawk grep curl sed git gcc swig gettext autoconf automake make libtool pcre perl cpio xmlto asciidoc cronie fail2ban net-tools rng-tools openssl zlib c-ares libev python-devel python-setuptools python-pip python2-m2crypto
-        [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }
-        [ "$FWS" = "enable" ] && { pacman -Syu --noconfirm apache || { echo ""; echo -e "# [\033[31;1mCannot Install Apache as Fake Web Server, Please Check Your Network or Errors Noticed! \033[0m]"; echo ""; exit 1; }; }
+        [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Install Dependencies, Please check your network or errors displayed! \033[0m]"; echo ""; exit 1; }
+        [ "$FWS" = "enable" ] && { pacman -Syu --noconfirm apache || { echo ""; echo -e "# [\033[31;1mCannot Install Apache to fake as a web server, Please check your network or errors displayed! \033[0m]"; echo ""; exit 1; }; }
     fi
-    pip install -q qrcode || { echo ""; echo -e "# [\033[31;1mCannot Install QRCode, You are Unable to Configure Clients by Using QRCode! \033[0m]"; echo ""; sleep 3; }
+    pip install -q qrcode || { echo ""; echo -e "# [\033[31;1mCannot Install QRCore, You may unable to configure clients by QRCode! \033[0m]"; echo ""; sleep 3; }
 }
 
 function configbbr(){
@@ -403,7 +404,7 @@ function configbbr(){
 function updatekernel(){
     if [ "$packagemanagertype" = "a" ]; then
         KERNELVER="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/ | awk -F'\"v' '/v[4-9]./{print $2}' | cut -d/ -f1 | grep -v -  | sort -V | tail -1)"
-        [ -z "$KERNELVER" ] && { BBR="disable"; echo -e "# [\033[31;1mCannot Get Newest Linux KERNEL Verison, BBR will NOT Enabled on Your Server! \033[0m]"; }
+        [ -z "$KERNELVER" ] && { BBR="disable"; echo -e "# [\033[31;1mCannot get the newest Linux Kernel Verison, BBR will not enable on your server! \033[0m]"; }
         if [ "$BBR" = "enable" ]; then
             SYSTYPE="$(dpkg --print-architecture)"
             [ "$SYSTYPE" = "amd64" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/amd64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
@@ -412,27 +413,27 @@ function updatekernel(){
             [ "$SYSTYPE" = "arm64" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/arm64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
             [ "$SYSTYPE" = "ppc64el" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/ppc64el.deb/{print $2}' | cut -d'<' -f1 | head -1)"
             [ "$SYSTYPE" = "s390x" ] && KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/s390x.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-            [ -z "$KERNEL" ] && { echo ""; echo -e "[# \033[31;1mUnable to Get New KERNEL, BBR will NOT Enabled on Your Server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
-            [ "$BBR" = "enable" ] && wget -t 3 -T 30 -nv -O "$KERNEL" "http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/${KERNEL}" || { echo ""; echo -e "# [\033[31;1mCannot Download Linux KERNEL, Please Check Your Network or Errors Noticed, BBR will NOT Enabled on Your Server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
-            [ "$BBR" = "enable" ] && { dpkg -i $KERNEL || { echo ""; echo -e "# [\033[31;1mCannot Update Kernel, BBR will NOT Enabled on Your Server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }; }
+            [ -z "$KERNEL" ] && { echo ""; echo -e "[# \033[31;1mUnable to get new Kernel Url, BBR will not enable on your server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            [ "$BBR" = "enable" ] && wget -t 3 -T 30 -nv -O "$KERNEL" "http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/${KERNEL}" || { echo ""; echo -e "# [\033[31;1mCannot Download new Linux Kernel, Please check your network or errors displayed, BBR will not enable on your server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            [ "$BBR" = "enable" ] && { dpkg -i $KERNEL || { echo ""; echo -e "# [\033[31;1mCannot Update Kernel, BBR will not enable on your server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }; }
             [ "$BBR" = "enable" ] && { dpkg -l | grep linux-image; rm -f $KERNEL; update-grub; }
         fi
     elif [ "$packagemanagertype" = "y" ]; then
-        rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org || { echo ""; echo -e "# [\033[31;1mCannot Get ELRepo Key, May Unable to Install ELREPO Package! \033[0m]"; echo ""; sleep 3; }
+        rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org || { echo ""; echo -e "# [\033[31;1mCannot Get ELRepo Key, you may unable to Install ELRepo Packages! \033[0m]"; echo ""; sleep 3; }
         if grep -qs "release 7" /etc/*-release; then
-            rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm || { echo ""; echo -e "# [\033[31;1mCannot Install ELRepo Repository, BBR will NOT Enabled on Your Server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
-            [ "$BBR" = "enable" ] && yum --enablerepo=elrepo-kernel install kernel-ml kernel-ml-devel || { echo ""; echo -e "# [\033[31;1mCannot Update Kernel, BBR will NOT Enabled on Your Server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm || { echo ""; echo -e "# [\033[31;1mCannot Install ELRepo Repository. Aborting! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            [ "$BBR" = "enable" ] && yum --enablerepo=elrepo-kernel install kernel-ml kernel-ml-devel || { echo ""; echo -e "# [\033[31;1mCannot Update Kernel, BBR will not enable on your server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
             [ "$BBR" = "enable" ] && grub2-set-default 0
         elif grep -qs "release 6" /etc/*-release; then
-            rpm -Uvh http://www.elrepo.org/elrepo-release-6-8.el6.elrepo.noarch.rpm || { echo ""; echo -e "# [\033[31;1mCannot Install ELRepo Repository, BBR will NOT Enabled on Your Server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
-            [ "$BBR" = "enable" ] && yum --enablerepo=elrepo-kernel install kernel-ml kernel-ml-devel || { echo ""; echo -e "# [\033[31;1mCannot Update Kernel, BBR will NOT Enabled on Your Server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            rpm -Uvh http://www.elrepo.org/elrepo-release-6-8.el6.elrepo.noarch.rpm || { echo ""; echo -e "# [\033[31;1mCannot Install ELRepo Repository. Aborting! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            [ "$BBR" = "enable" ] && yum --enablerepo=elrepo-kernel install kernel-ml kernel-ml-devel || { echo ""; echo -e "# [\033[31;1mCannot Update Kernel, BBR will not enable on your server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
             [ "$BBR" = "enable" ] && sed -i 's/^default=.*/default=0/g' /boot/grub/grub.conf
         fi
     elif [ "$packagemanagertype" = "p" ]; then
         if grep -Eqi "IgnorePkg|IgnoreGroup" /etc/pacman.conf; then
             sed -i "/IgnorePkg/d;/IgnoreGroup/d" /etc/pacman.conf
         fi
-        pacman -Syyu --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Kernel Source, BBR will NOT Enabled on Your Server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
+        pacman -Syyu --noconfirm || { echo ""; echo -e "# [\033[31;1mCannot Update Kernel and Sources, BBR will not enable on your server! \033[0m]"; echo ""; sleep 3; BBR="disable"; }
     fi
     [ "$BBR" = "enable" ] && { kernelupdated="true"; serverrestart="true"; }
     kernelverheader="$(uname -r | grep -oE '[0-9]+\.[0-9]+')"
@@ -442,11 +443,11 @@ function updatekernel(){
 function installsslibev(){
     libsodiumver="$(wget -qO- https://api.github.com/repos/jedisct1/libsodium/releases/latest | grep 'tag_name' | cut -d\" -f4)"
     wget -t 3 -T 30 -nv -O libsodium-${libsodiumver}.tar.gz https://github.com/jedisct1/libsodium/releases/download/${libsodiumver}/libsodium-${libsodiumver}.tar.gz
-    [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Libsodium Source. Aborting! \033[0m]"; echo ""; exit 1; }
+    [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot download libsodium source. Aborting! \033[0m]"; echo ""; exit 1; }
     [ -d libsodium-${libsodiumver} ] && rm -rf libsodium-${libsodiumver}
     tar zxf libsodium-${libsodiumver}.tar.gz
     pushd libsodium-${libsodiumver}
-    ./configure --prefix=/usr && make "-j$((MAKECORES+1))" && make install || { echo ""; echo －e "# [\033[31;1mLibsodium Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
+    ./configure --prefix=/usr && make "-j$((MAKECORES+1))" && make install || { echo ""; echo －e "# [\033[31;1mlibsodium failed to build. Aborting! \033[0m]"; echo ""; exit 1; }
     popd
     if ! ldconfig -p | grep -wq "/usr/lib"; then
         echo "/usr/lib" > /etc/ld.so.conf.d/lib.conf
@@ -454,31 +455,32 @@ function installsslibev(){
     ldconfig
     mbedver="$(wget -qO- https://tls.mbed.org/download-archive | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f1,2,3 | sort -V | tail -1)"
     wget -t 3 -T 30 -nv -O mbedtls-${mbedver}-gpl.tgz https://tls.mbed.org/download/mbedtls-${mbedver}-gpl.tgz
-    [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download mbed Source. Aborting! \033[0m]"; echo ""; exit 1; }
+    [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot download mbed source. Aborting! \033[0m]"; echo ""; exit 1; }
     [ -d mbedtls-${mbedver} ] && rm -rf mbedtls-${mbedver}
     tar xf mbedtls-${mbedver}-gpl.tgz
     pushd mbedtls-${mbedver}
-    make SHARED=1 CFLAGS=-fPIC "-j$((MAKECORES+1))" && make DESTDIR=/usr install || { echo ""; echo －e "# [\033[31;1mmbed Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
+    make SHARED=1 CFLAGS=-fPIC "-j$((MAKECORES+1))" && make DESTDIR=/usr install || { echo ""; echo －e "# [\033[31;1mmbed failed to build. Aborting! \033[0m]"; echo ""; exit 1; }
     popd
     ldconfig
     sslibevtag="$(wget -qO- https://api.github.com/repos/shadowsocks/shadowsocks-libev/releases/latest | grep 'tag_name' | cut -d\" -f4)"
     sslibevver="shadowsocks-libev-$(echo ${sslibevtag} | sed -e 's/^[a-zA-Z]//g')"
     wget -t 3 -T 30 -nv -O ${sslibevver}.tar.gz https://github.com/shadowsocks/shadowsocks-libev/releases/download/${sslibevtag}/${sslibevver}.tar.gz
-    [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Shadowsocks-libev Source. Aborting! \033[0m]"; echo ""; exit 1; }
+    [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot download shadowsocks-libev source. Aborting! \033[0m]"; echo ""; exit 1; }
     [ -d ${sslibevver} ] && rm -rf $sslibevver
     tar zxf ${sslibevver}.tar.gz
     pushd $sslibevver
     ./configure
-    make "-j$((MAKECORES+1))" && make install || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
+    make "-j$((MAKECORES+1))" && make install || { echo ""; echo －e "# [\033[31;1mshadowsocks-libev failed to build. Aborting! \033[0m]"; echo ""; exit 1; }
     popd
     ldconfig
     [ -d simple-obfs ] && rm -rf simple-obfs
     git clone https://github.com/shadowsocks/simple-obfs.git
+    [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot clone simple-obfs source. Aborting! \033[0m]"; echo ""; exit 1; }
     pushd simple-obfs
     git submodule update --init --recursive
     ./autogen.sh
     ./configure
-    make "-j$((MAKECORES+1))" && make install || { echo ""; echo －e "# [\033[31;1mSimple-obfs Failed to Build. Aborting! \033[0m]"; echo ""; exit 1; }
+    make "-j$((MAKECORES+1))" && make install || { echo ""; echo －e "# [\033[31;1mSimple-obfs failed to build. Aborting! \033[0m]"; echo ""; exit 1; }
     popd
     ldconfig
     [ -f /usr/local/bin/obfs-server ] && ln -s /usr/local/bin/obfs-server /usr/bin
@@ -487,7 +489,10 @@ function installsslibev(){
 
 function configsslibev(){
     OBFSLOCAL="obfs-host"
+    OBFSURL=";obfs-uri=${OBFSURI}"
     [ "$FWS" = "enable" ] && OBFSLOCAL="failover"
+    [ -z "$OBFSURI" ] && OBFSURL=""
+    [ "$OBFSURI" = "/" ] && OBFSURL=""
     [ -z "$PASSWORD" ] && PASSWORD="$(< /dev/urandom tr -dc 'A-HJ-NPR-Za-km-z2-9' | head -c 32)"
     [ -d /etc/twistbackup ] || mkdir -p /etc/twistbackup
     [ -d /etc/shadowsocks-libev ] || mkdir -p /etc/shadowsocks-libev
@@ -504,7 +509,7 @@ function configsslibev(){
     "udp_timeout":${TIMEOUT},
     "method":"${METHOD}",
     "plugin":"obfs-server",
-    "plugin_opts":"obfs=${OBFS};fast-open;${OBFSLOCAL}=${OBFSHOST}",
+    "plugin_opts":"obfs=${OBFS};fast-open;${OBFSLOCAL}=${OBFSHOST}${OBFSURL}",
     "mode":"tcp_and_udp",
     "fast_open":true,
 }
@@ -751,7 +756,7 @@ EOF
         ssserverpath="ss-server"
     else
         echo ""
-        echo －e "# [\033[31;1mCannot Find Shadowsocks-libev Install Path. Aborting! \033[0m]"
+        echo －e "# [\033[31;1mUnable to find shadowsocks-libev Path. Aborting! \033[0m]"
         echo ""
         exit 1
     fi
@@ -870,30 +875,30 @@ EOF
 #!/bin/bash
 
 twist_status() {
-    echo -e "# [\033[34;1mTWIST Checking Shadowsocks Status\033[0m]"
+    echo -e "# [\033[34;1mTWIST Checking Shadowsocks Status...\033[0m]"
     /etc/init.d/shadowsocks status
 }
 
 twist_start() {
-    echo -e "# [\033[34;1mTWIST Starting Shadowsocks Service\033[0m]"
+    echo -e "# [\033[34;1mTWIST Starting Shadowsocks Service...\033[0m]"
     sudo /etc/init.d/shadowsocks start
     /etc/init.d/shadowsocks status
 }
 
 twist_stop() {
-    echo -e "# [\033[34;1mTWIST Stopping Shadowsocks Service\033[0m]"
+    echo -e "# [\033[34;1mTWIST Stopping Shadowsocks Service...\033[0m]"
     sudo /etc/init.d/shadowsocks stop
     /etc/init.d/shadowsocks status
 }
 
 twist_restart() {
-    echo -e "# [\033[34;1mTWIST Restarting Shadowsocks Service\033[0m]"
+    echo -e "# [\033[34;1mTWIST Restarting Shadowsocks Service...\033[0m]"
     sudo /etc/init.d/shadowsocks restart
     /etc/init.d/shadowsocks status
 }
 
 twist_custom() {
-    echo -e "# [\033[34;1mTWIST Loading Shadowsocks Configuration\033[0m \033[32;1mnano\033[0m \033[32;1mEditor\033[0m]"
+    echo -e "# [\033[34;1mTWIST Loading Shadowsocks Configuration...\033[0m \033[32;1mnano\033[0m \033[32;1mEditor\033[0m]"
     sleep 2
     sudo nano /etc/shadowsocks-libev/config.json
     sudo /etc/init.d/shadowsocks restart
@@ -901,13 +906,13 @@ twist_custom() {
 }
 
 twist_update() {
-    echo -e "# [\033[34;1mTWIST Preparing Update\033[0m]"
+    echo -e "# [\033[34;1mTWIST Preparing Update...\033[0m]"
     sleep 2
     sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh update && rm twist.sh
 }
 
 twist_uninstall() {
-    echo -e "# [\033[31;1mTWIST Preparing Uninstallation\033[0m]"
+    echo -e "# [\033[31;1mTWIST Preparing Uninstallation...\033[0m]"
     sleep 2
     sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh uninstall && rm twist.sh
 }
@@ -929,11 +934,11 @@ EOF
 #!/bin/bash
 
 date="\$(date +%Y-%m-%d-%H:%M:%S)"
-echo -e "# [\033[34;1mTWIST Protecting  Shadowsocks Services\033[0m \033[32;1m/var/log/twistprotect\033[0m]"
+echo -e "# [\033[34;1mTWIST Protecting Shadowsocks Services\033[0m \033[32;1m/var/log/twistprotect\033[0m]"
 
 twistprotectenable() {
-    echo -e "# \033[32;1mTWIST Protecting  Shadowsocks Services Enabled \033[0m"
-    echo -e "# \${date} TWIST Protecting  Shadowsocks Services Enabled " >> /var/log/twistprotect
+    echo -e "# \033[32;1mTWIST Protecting Shadowsocks Services Enabled \033[0m"
+    echo -e "# \${date} TWIST Protecting Shadowsocks Services Enabled " >> /var/log/twistprotect
     status=\$(ps -ef | grep -v grep | grep -i "${ssserverpath}" | awk '{print \$2}')
     if [ -z \$status ]; then
         echo -e "# \033[31;1mShadowsocks-libev Stopped Detected... \033[0m"
@@ -948,7 +953,7 @@ twistprotectenable() {
 if [ -e /var/log/twistprotect ]; then
 	twistprotectenable
 else
-    echo -e "# \033[31;1mTWIST Protecting  Shadowsocks Services Disabled \033[0m"
+    echo -e "# \033[31;1mTWIST Protecting Shadowsocks Services Disabled \033[0m"
 fi
 
 EOF
