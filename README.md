@@ -1,20 +1,20 @@
 ## A Light Script For You To Setup Shadowsocks-libev Server with High-Speed Connections
 
 ## Twist Features
-- **Fast, Secured and Stable Connections**
+- **Fast, Secured and Stable Connections by Shadowsocks**
 - **Multithreading** Support
 - **TCP Fast Open** Support
 - **Simple Obfs** Support
-- **IPv4 & IPv6** Environment Supported and Connections
-- **Optimised Performance** Using Google BBR TCP Controler and Supported UDP Transfer
-- **High Security** Supported AEAD Auth & Encryption
-- **Fine Compatibility** and Support Original Shadowsocks Client
-- **One-key Installation** and One-key Setup on your Devices
-- **SS Scheme & QRCode** Login Information Auto Generate 
-- **Highly Concealed** Fake as a WebServer using Apache and Enabled Fail2ban to Ban Force Crackers
+- **IPv4 & IPv6** Support
+- **Optimised Performance** Using Google BBR TCP Controler and Support UDP Transfer
+- **High Security** Support AEAD Cipher & Encryption
+- **Fine Compatibility** Support Various Shadowsocks Based Clients
+- **One-key Installation** and QRCode Scan to Connect on Your Devices
+- **SS Scheme & QRCode** Basic Connect Information Auto Generate and Shows Full Connect Information
+- **Highly Concealed** It is able to Fake as a Web Server Using Apache and Enabled Fail2ban to Ban Force Crackers
 
 ## Server Requirements
-- Ubuntu 17.10(Artful Aardvark), 17.04(Zesty), 16.10(Yakkety), 16.04(Xenial)
+- Ubuntu 18.04(Bionic Beaver), 17.10(Artful Aardvark), 17.04(Zesty), 16.10(Yakkety), 16.04(Xenial)
 - Debian 9(Stretch), 8(Jessie) 
 - Cent OS 7, 6
 - Red Hat 7, 6
@@ -23,24 +23,24 @@
 - Raspbian
 
 ## Set Up your Shadowsocks-libev Server
-Please **Run Bash Command** Below on Your Server to **Install Twist**
+Please **Run Command** below on your server to **Install Twist**
 ```bash
 sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh
 ```
 
 ## Attention
-Please make sure that Your Server was able to **Connect to the Internet And Opened these Inboard Ports** below,It required by Shadowsocks-libev Services. It will be Automatically Configured on Your Server but not on the Server Management Console
+Please make sure that your server was able to **Connect to the Internet and Opened these Inboard & Outboard Ports** below. It required by shadowsocks-libev services based on your configurations. And It will be automatically configured on your System Side but will not be on the Server Management Console
 ```txt
 UDP 443
 TCP 443
 ```
 
 ## Custom
-Change the Default Settings by Editing Twish before install, Manual of Shadowsocks-libev Configurations is at <a href="https://github.com/shadowsocks/shadowsocks/wiki/Configuration-via-Config-File" target="_blank">Shadowsocks-libev Wiki</a>
+Change the default Configurations by editing Twish before install, the manual of shadowsocks-libev Configurations is at <a href="https://github.com/shadowsocks/shadowsocks/wiki/Configuration-via-Config-File" target="_blank">Shadowsocks-libev Wiki</a>
 ```bash
 sudo nano twist.sh       # Edit the value below on 'function *config'
 ```
-If you have already Installed Twist, Try this by Editing Shadowsocks Config File that Installed on your Server Instead the Install Script 
+If you have already Installed Twist, try this by editing Shadowsocks Config File that Installed on your Server Instead the Install Script 
 ```bash
 sudo twist custom  # Edit the value in json format
 ```
@@ -55,22 +55,24 @@ Edit Values in Value="**HERE**", Save and Run Twist after You have Confirmed it 
  METHOD="chacha20-ietf-poly1305"  # Encryption, AEAD is better than OTA
  OBFS="tls"                       # Obfs method using tls or http
  OBFSHOST="mzstatic.com"          # Obfs host address
- BBR="enable"                     # Google BBR for low delay network to get faster speed
+ OBFSURI="/"                      # Obfs specify the client request path uri
+ BBR="enable"                     # Google BBR for low delay network to get faster speed
  FWS="enable"                     # Fake as a apache web server for concealing
  ABB="enable"                     # Uses Fail2ban to ban force crackers
 ```
 
 ## Simple Obfs
-Here is the Deafult Configuration of Simple Obfs, Simple Obfs will not be Running without Configure it on Your Clients Manually. And You Can also Use Shadowsocks without Set Up Simple Obfs on Your Clients. If You Use Schemes or QR Code Configurations on Your Clients, Simple Obfs will not be Configured
+Here is the deafult Configurations of Simple Obfs, Simple Obfs will not be run without configure it on your Clients Side manually. And You could use Shadowsocks without set up Simple Obfs on your Clients. If you used the Schemes or QRCode Configurations to setup your Clients, Simple Obfs will not be Configured
 ```txt
 OBFS="tls"
 OBFSHOST="mzstatic.com"
+OBFSURI="/"
 ```
 
 ## Check and Change Shadowsocks-libev Status
-- Check If Shadowsocks-libev is Running on Your Server
+- Check If Shadowsocks-libev is running on your Server
 ```bash
-twist status        # Check Shadowsocks status
+twist status        # Check Shadowsocks Status
 ```
 - Change the Status of Shadowsocks-libev by these Command
 ```bash
@@ -80,25 +82,25 @@ sudo twist restart  # Restart Shadowsocks Service
 ```
 
 ## Setup Shadowsocks-libev for Connect on your Devices
-It is Required a Shadowsocks Client on Your Device for Manually Set up or Use URL-Scheme & QRCode in Shadowsocks Client Apps
+It requires a Shadowsocks based Client on your Device and you need to manually set up or use the URL-Scheme or QRCode in Shadowsocks Clients
 
 ## Update Twist
-Please **Run Bash Command** to Update Twist
+Please **Run Command** to Update Twist
 ```bash
 sudo twist update
 ```
-You can also Update Twist Automaticly by Using ```crond``` Service
+You can also Update Twist automaticly by using ```crond``` Service
 ```bash
 echo "0 0 1 * * root bash /usr/bin/twist update" >> /etc/crontab
 ```
-The Command means Twist will Automaticly Update on The First Day of Every Month
+The Command means **Twist will automaticly check updates on the first day of every month**
 
 
 ## Uninstall Twist
-Please **Run Bash Command** to Uninstall Twist
+Please **Run Command** to Uninstall Twist
 ```bash
 sudo twist uninstall
 ```
 
 ## Author
-<a href="https://github.com/Unbinilium" target="_blank">Unbinilium</a> --  This Script is Using OpenSource Software <a href="https://github.com/shadowsocks/shadowsocks-libev" target="_blank">Shadowsocks-libev</a>
+<a href="https://github.com/Unbinilium" target="_blank">Unbinilium</a> --  This Script is mainly using OpenSource Software <a href="https://github.com/shadowsocks/shadowsocks-libev" target="_blank">Shadowsocks-libev</a>
