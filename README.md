@@ -1,4 +1,4 @@
-## A Light Script For You To Setup Shadowsocks-libev Server with High-Speed Connections
+## A Light Script For You To Setup Shadowsocks-libev Server with High-Speed Connections and Powerful Features
 
 ## Twist Features
 - **Fast, Secured and Stable Connections by Shadowsocks**
