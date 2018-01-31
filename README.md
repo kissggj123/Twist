@@ -37,7 +37,7 @@ TCP 443
 ```
 
 ## Custom
-Change the default configurations by editing Twish before install, the manual of shadowsocks-libev configurations is at <a href="https://github.com/shadowsocks/shadowsocks/wiki/Configuration-via-Config-File" target="_blank">shadowsocks-libev Wiki</a>
+Change the default configurations by editing Twish before install, the manual and detailed information of shadowsocks-libev configurations is at <a href="https://github.com/shadowsocks/shadowsocks/wiki/Configuration-via-Config-File" target="_blank">shadowsocks-libev Wiki</a>
 ```bash
 sudo nano twist.sh       # Edit the value below on 'function *config'
 ```
@@ -53,13 +53,46 @@ Edit values in typename="**HERE**", save and run Twist after you have confirmed 
  PASSWORD=""                      # Password used for encryption, auto generate if left free 
  DNS="8.8.8.8"                    # Default DNS server address of Google Public DNS
  TIMEOUT="600"                    # Drop connections if it not using in seconds
- METHOD="chacha20-ietf-poly1305"  # Encryption, AEAD is better than OTA
+ METHOD="xchacha20-ietf-poly1305" # Encryption, AEAD is better than OTA
  OBFS="tls"                       # Obfs method using tls or http
  OBFSHOST="mzstatic.com"          # Obfs host address
  OBFSURI="/"                      # Obfs specify the client request path uri
  BBR="enable"                     # Google BBR for low delay network to get faster speed
  FWS="enable"                     # Fake as a apache web server for concealing
  ABB="enable"                     # Uses Fail2ban to ban force crackers
+```
+
+## Encrypt Method Cipher
+- There are some **recommend AEAD Ciphers** to use if the default cipher is not available for the clients on your device
+```txt
+aes-128-gcm
+aes-192-gcm
+aes-256-gcm
+chacha20-ietf-poly1305
+xchacha20-ietf-poly1305
+```
+- Also the Stream Ciphers listed here, which are not recommend. If there is no other choice, please try these
+```txt
+rc4
+rc4-md5
+rc2-cfb
+bf-cfb
+des-cfb
+idea-cfb
+seed-cfb
+cast5-cfb
+camellia-128-cfb
+camellia-192-cfb
+camellia-256-cfb
+aes-128-cfb
+aes-192-cfb
+aes-256-cfb
+aes-128-ctr
+aes-192-ctr
+aes-256-ctr
+salsa20
+chacha20
+chacha20-ietf
 ```
 
 ## Simple Obfs
@@ -82,8 +115,8 @@ sudo twist stop     # Stop Shadowsocks Service
 sudo twist restart  # Restart Shadowsocks Service
 ```
 
-## Setup Shadowsocks-libev for Connect on your Devices
-It requires shadowsocks based clients on your device and you may have to manually set up some features or you can use the URLScheme and QRCode for configuration. Be careful and make sure there is a simple-obfs plugin on your client side if you used this feature
+## Setup Shadowsocks-libev to Connect to the Server on your Devices
+It requires shadowsocks based clients on your device and you may have to manually set up some features or you can use the URLScheme and QRCode for configuration. Be careful and make sure there is a simple-obfs plugin on your client side if you used this feature. Otherwise, if the default cipher is not available on your clients, try other cipher I have mentioned yet. Don't dismiss any useful information for troubleshooting
 
 ## Update Twist
 Please **Run Command** to update Twist
