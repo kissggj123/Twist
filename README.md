@@ -8,6 +8,7 @@
 - **IPv4 & IPv6** Support
 - **Optimised Performance** Using Google BBR TCP Controler and Support UDP Transfer
 - **High Security** Support AEAD Cipher & Encryption
+- **Newest Features** Support TLS Obfs & Obfs URI in simple-obfs
 - **Fine Compatibility** Support Various Shadowsocks Based Clients
 - **One-key Installation** and QRCode Scan to Connect on Your Devices
 - **SS Scheme & QRCode** Basic Connect Information Auto Generate and Shows Full Connect Information
@@ -53,7 +54,7 @@ Edit Values in Value="**HERE**", Save and Run Twist after You have Confirmed it 
  DNS="8.8.8.8"                    # Default DNS server address of Google Public DNS
  TIMEOUT="600"                    # Drop connections if it not using in seconds
  METHOD="chacha20-ietf-poly1305"  # Encryption, AEAD is better than OTA
- OBFS="tls"                       # Obfs method using tls or http
+ OBFS="tls"                       # Obfs method using tls or http
  OBFSHOST="mzstatic.com"          # Obfs host address
  OBFSURI="/"                      # Obfs specify the client request path uri
  BBR="enable"                     # Google BBR for low delay network to get faster speed
@@ -74,7 +75,7 @@ OBFSURI="/"
 ```bash
 twist status        # Check Shadowsocks Status
 ```
-- Change the Status of Shadowsocks-libev by these Command
+- Change the Status of Shadowsocks-libev by these Commands
 ```bash
 sudo twist start    # Start Shadowsocks Service
 sudo twist stop     # Stop Shadowsocks Service
