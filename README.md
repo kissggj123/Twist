@@ -37,15 +37,15 @@ TCP 443
 ```
 
 ## Custom
-Change the default Configurations by editing Twish before install, the manual of shadowsocks-libev Configurations is at <a href="https://github.com/shadowsocks/shadowsocks/wiki/Configuration-via-Config-File" target="_blank">Shadowsocks-libev Wiki</a>
+Change the default configurations by editing Twish before install, the manual of shadowsocks-libev configurations is at <a href="https://github.com/shadowsocks/shadowsocks/wiki/Configuration-via-Config-File" target="_blank">shadowsocks-libev Wiki</a>
 ```bash
 sudo nano twist.sh       # Edit the value below on 'function *config'
 ```
-If you have already Installed Twist, try this by editing Shadowsocks Config File that Installed on your Server Instead the Install Script 
+If you have already installed Twist, try this by editing raw config file that installed on your server instead of the install script 
 ```bash
 sudo twist custom  # Edit the value in json format
 ```
-Edit Values in Value="**HERE**", Save and Run Twist after You have Confirmed it is Correct
+Edit values in typename="**HERE**", save and run Twist after you have confirmed that it is correct
 ```txt
  PORT="443"                       # Server port
  LOACL="127.0.0.1"                # The address that server listens
@@ -63,7 +63,7 @@ Edit Values in Value="**HERE**", Save and Run Twist after You have Confirmed it 
 ```
 
 ## Simple Obfs
-Here is the deafult Configurations of Simple Obfs, Simple Obfs will not be run without configure it on your Clients Side manually. And You could use Shadowsocks without set up Simple Obfs on your Clients. If you used the Schemes or QRCode Configurations to setup your Clients, Simple Obfs will not be Configured
+Here is the deafult configurations of simple-obfs, it will not be run without configure it on your clients side. And you could use shadowsocks without set up simple-obfs on your clients. If you used the URLSchemes or QRCode to setup your clients, simple-obfs may not be configured in some old clients or third-part clients
 ```txt
 OBFS="tls"
 OBFSHOST="mzstatic.com"
@@ -71,11 +71,11 @@ OBFSURI="/"
 ```
 
 ## Check and Change Shadowsocks-libev Status
-- Check If Shadowsocks-libev is running on your Server
+- Check if shadowsocks-libev is running on your server
 ```bash
 twist status        # Check Shadowsocks Status
 ```
-- Change the Status of Shadowsocks-libev by these Commands
+- Change the status of shadowsocks-libev by these commands
 ```bash
 sudo twist start    # Start Shadowsocks Service
 sudo twist stop     # Stop Shadowsocks Service
@@ -83,25 +83,25 @@ sudo twist restart  # Restart Shadowsocks Service
 ```
 
 ## Setup Shadowsocks-libev for Connect on your Devices
-It requires a Shadowsocks based Client on your Device and you need to manually set up or use the URL-Scheme or QRCode in Shadowsocks Clients
+It requires shadowsocks based clients on your device and you may have to manually set up some features or you can use the URLScheme and QRCode for configuration. Be careful and make sure there is a simple-obfs plugin on your client side if you used this feature
 
 ## Update Twist
-Please **Run Command** to Update Twist
+Please **Run Command** to update Twist
 ```bash
 sudo twist update
 ```
-You can also Update Twist automaticly by using ```crond``` Service
+You can also update Twist automaticly by using ```crond``` Service
 ```bash
 echo "0 0 1 * * root bash /usr/bin/twist update" >> /etc/crontab
 ```
-The Command means **Twist will automaticly check updates on the first day of every month**
+The commands means **Twist will automaticly check updates on the first day of every month**
 
 
 ## Uninstall Twist
-Please **Run Command** to Uninstall Twist
+Please **Run Command** to uninstall Twist
 ```bash
 sudo twist uninstall
 ```
 
 ## Author
-<a href="https://github.com/Unbinilium" target="_blank">Unbinilium</a> --  This Script is mainly using OpenSource Software <a href="https://github.com/shadowsocks/shadowsocks-libev" target="_blank">Shadowsocks-libev</a>
+<a href="https://github.com/Unbinilium" target="_blank">Unbinilium</a> --  This Script is mainly using OpenSource Software <a href="https://github.com/shadowsocks" target="_blank">Shadowsocks</a>
