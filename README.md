@@ -68,5 +68,5 @@ or Uninstall by Download the Install Script Again
 sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh uninstall
 ```
 
-## Author
+## Thanks
 <a href="https://github.com/Unbinilium" target="_blank">Unbinilium</a> --  This Project is Using OpenSource Software <a href="https://github.com/shadowsocks/shadowsocks-libev" target="_blank">Shadowsocks-libev</a> and <a href="https://github.com/jedisct1/libsodium" target="_blank">Libsodium</a>.
