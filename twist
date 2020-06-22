@@ -131,11 +131,11 @@ systemtype="0"
     else
         echo "$(cat /etc/issue)" | grep -q "Ubuntu"
         if [ $? -eq 0 ]; then
-            systemtype="0"
+            systemtype="1"
         else
             echo "$(cat /etc/issue)" | grep -q "Debian"
             if [ $? -eq 0 ]; then
-                systemtype="0"
+                systemtype="1"
             else
                 echo -e "# [\033[31;1mThis Script Must be Run on Ubuntu, Debian or CentOS! Aborating!\033[0m]"
                 echo ""
@@ -304,7 +304,7 @@ function installsslibev(){
     installpath="$(pwd)"
     cd $installpath
     libsodiumver="$(wget -qO- https://download.libsodium.org/libsodium/releases/ | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f1,2,3 | sort -V | tail -1)"
-    wget -t 3 -T 30 -nv -O libsodium-${libsodiumver}.tar.gz https://github.com/jedisct1/libsodium/releases/download/${libsodiumver}/libsodium-${libsodiumver}.tar.gz
+    wget -t 3 -T 30 -nv -O libsodium-${libsodiumver}.tar.gz https://download.libsodium.org/libsodium/releases/libsodium-${libsodiumver}.tar.gz
     [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Libsodium Source. Aborting.\033[0m]"; echo ""; exit 1; }
     [ -d libsodium-${libsodiumver} ] && rm -rf libsodium-${libsodiumver}
     tar zxf libsodium-${libsodiumver}.tar.gz
