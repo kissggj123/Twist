@@ -65,7 +65,7 @@ sudo twist.sh uninstall
 ```
 or Uninstall by Download the Install Script Again
 ```bash
-sudo wget https://raw.githubusercontent.com/Unbinilium/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh uninstall
+sudo wget https://raw.githubusercontent.com/kissggj123/Twist/master/twist -O twist.sh && chmod -x twist.sh && bash twist.sh uninstall
 ```
 
 ## Thanks
