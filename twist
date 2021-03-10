@@ -1,640 +1,1039 @@
 #! /bin/bash
 
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+## Twist Ver 0.5.6 beta*
+## Update Ver 1.0 will provide mptcp feature, this script will be rewrite and use standard commands
+
+function shadowsocksconfig(){
+    SSLOCAL="[\"[::0]\",\"0.0.0.0\"]"
+    PORT="443"
+    PASSWORD=""
+    METHOD="xchacha20-ietf-poly1305"
+    TIMEOUT="1800"
+    OBFS="tls"
+    OBFSHOST="mzstatic.com"
+    OBFSURI="/"
+    FASTOPEN="true"
+    REUSEPORT="true"
+    DNS1="8.8.8.8"
+    DNS2="8.8.4.4"
+    DNSv6a="2001:4860:4860::8888"
+    DNSv6b="2001:4860:4860::8844"
+    DSCP="EF"
+    MODE="tcp_and_udp"
+    MTU=""
+    MPTCP="false"
+    IPV6FIRST="false"
+    SYSLOG="true"
+    NODELAY="true"
+    FWS="enable"
+    BBR="enable"
+}
+
+function systemconfig(){
+    libsodiumver=""
+    mbedtlsver=""
+    sslibevtag=""
+    ssobfstag=""
+    elrepover7="7.0-3"
+    elrepover6="6-8"
+    ETH=""
+    PUBLICIP=""
+    PUBLICIPv6=""
+    IPREGEX="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
+}
 
 function install_twist(){
     clear
-    twist
-    notice
+    twistprint
+    echo -e "#[\033[32;1m   A Light Script For You To Setup Shadowsocks-libev Server       \033[0m]#"
+    echo -e "#[\033[32;1m              Twist Script Written By Unbinilium                  \033[0m]#"
+    echo -e "#[\033[32;1m             Installation will Start in 5 Seconds                 \033[0m]#"
+    twistprint banner
+    echo ""
+    sleep 5
     rootness
-    disableselinux
-    defaultvalue
-    detectsystem
-    installlibs
-    installbbr
-    installsslibev
-    configsslibev
-    configiptables
-    startservices
-    twiststatus
+    selinuxdisable
+    [ -d /etc/twist ] || mkdir -p /etc/twist
+    twistlog "[TWIST Installing]"
+    shadowsocksconfig
+    systemconfig
+    systemdetect
+    dependenciesinstall
+    tcpbbrenable
+    sslibevinstall "install"
+    sslibevconfigure
+    firewallconfigure
+    servicesstart
+    servicesstatus
+}
+
+function update_twist(){
+    clear
+    twistprint
+    echo -e "#[\033[32;1m                 Update Twist Shadowsocks-libev                   \033[0m]#"
+    echo -e "#[\033[32;1m                 Update will Start in 5 Seconds                   \033[0m]#"
+    twistprint banner
+    echo ""
+    sleep 5
+    rootness
+    twistlog "[TWIST Updating]"
+    shadowsocksconfig
+    systemconfig
+    selinuxdisable
+    systemdetect
+    if [ "$twistinstalled" = "false" ]; then
+        twistprint banner nofile
+    else
+        if [ -r /var/run/shadowsocks-libev.pid ]; then
+            read pid < /var/run/shadowsocks-libev.pid
+            [ -e /etc/twist/twistprotect ] && { echo -e "# \${date} Shadowsocks-libev Service Stopped Due To Update " >> /var/log/twist; rm -f /etc/twist/twistprotect; }
+            kill -9 $pid
+            rm -f /var/run/shadowsocks-libev.pid
+        fi
+    fi
+    dependenciesinstall
+    sslibevinstall "install"
+    echo ""
+    servicesstart
+    sleep 2
+    clear
+    twistprint
+    echo -e "#[\033[32;1m                      Twist Update Finished                       \033[0m]#"
+    twistprint banner
+    serverrestart "Update"
+    echo ""
+    exit 0
 }
 
 function uninstall_twist(){
     clear
-    twist
-    echo -e "#[\033[31;1m              Uninstall Twist Shadowsocks-libev                 \033[0m]#"
-    echo -e "#[\033[31;1m              Uninstall will Start in 5 Seconds\033[0m                 ]#"
-    echo "#####################################################################"
+    twistprint
+    echo -e "#[\033[31;1m               Uninstall Twist Shadowsocks-libev                  \033[0m]#"
+    echo -e "#[\033[31;1m               Uninstall will Start in 5 Seconds                  \033[0m]#"
+    twistprint banner
+    echo ""
     sleep 5
     rootness
-    if [ -e /etc/init.d/shadowsocks ]; then
-        /etc/init.d/shadowsocks stop
+    if ! grep -qs "Twist" /etc/sysctl.conf; then
+        twistprint banner nofile
     else
-        echo -e "#[\033[31;1m             Twist was Not Find on Your Server!\033[0m                 ]#"
+        sed -i "/# Twist/d" /etc/sysctl.conf
+        sed -i "/twistprotect/d" /etc/crontab
+        if [ "$packagemanagertype" = "p" ]; then
+            systemctl restart cronie.service
+        else
+            systemctl restart cron.service
+        fi
+        rm -f /root/twistprotect
+        twist stop
         echo ""
-        exit 1
+        sleep 2
     fi
-    if grep -Eqi "CentOS|Red Hat|Redhat" /etc/issue || grep -Eq "CentOS|Red Hat|Redhat" /etc/*-release || grep -Eq "CentOS|Red Hat|Redhat" /proc/version; then
-        chkconfig --del shadowsocks
-        systemctl start firewalld
-        firewall-cmd --permanent --zone=public --remove-port=443/tcp
-        firewall-cmd --permanent --zone=public --remove-port=443/udp
-        firewall-cmd --reloa
-    fi
-    if grep -Eqi "Ubuntu|Debian" /etc/issue || grep -Eq "Ubuntu|Debian" /etc/*-release || grep -Eq "Ubuntu|Debian" /proc/version; then
-        update-rc.d -f shadowsocks remove
-        iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j DROP
-        iptables -I INPUT -m state --state NEW -m udp -p udp --dport 443 -j DROP
-    fi
-    ps -ef | grep -v grep | grep -i "ss-server" > /dev/null 2>&1
-    update-rc.d -f shadowsocks remove
-    rm -fr /etc/shadowsocks-libev
-    rm -f /usr/local/bin/ss-local
-    rm -f /usr/local/bin/ss-tunnel
-    rm -f /usr/local/bin/ss-server
-    rm -f /usr/local/bin/ss-manager
-    rm -f /usr/local/bin/ss-redir
-    rm -f /usr/local/bin/ss-nat
-    rm -f /usr/local/lib/libshadowsocks-libev.a
-    rm -f /usr/local/lib/libshadowsocks-libev.la
-    rm -f /usr/local/include/shadowsocks.h
-    rm -f /usr/local/lib/pkgconfig/shadowsocks-libev.pc
-    rm -f /usr/local/share/man/man1/ss-local.1
-    rm -f /usr/local/share/man/man1/ss-tunnel.1
-    rm -f /usr/local/share/man/man1/ss-server.1
-    rm -f /usr/local/share/man/man1/ss-manager.1
-    rm -f /usr/local/share/man/man1/ss-redir.1
-    rm -f /usr/local/share/man/man1/ss-nat.1
-    rm -f /usr/local/share/man/man8/shadowsocks-libev.8
-    rm -fr /usr/local/share/doc/shadowsocks-libev
-    rm -f /etc/init.d/shadowsocks
+    sslibevinstall "uninstall"
+    timemachine "restore" "/etc/twist/sysctl.conf" "/etc/sysctl.conf" && sysctl -e -p
+    timemachine "restore" "/etc/twist/limits.conf" "/etc/security/limits.conf"
+    timemachine "restore" "/etc/twist/login" "/etc/pam.d/login"
+    timemachine "restore" "/etc/twist/resolv.conf" "/etc/resolv.conf"
+    timemachine "restore" "/etc/twist/iptables.rules" "/etc/iptables.rules" && iptables-restore < /etc/iptables.rules
+    timemachine "restore" "/etc/twist/ip6tables.rules" "/etc/ip6tables.rules" && ip6tables-restore < /etc/ip6tables.rules
+    timemachine "restore" "/etc/twist/iptablesload" "/etc/network/if-pre-up.d/iptablesload"
+    timemachine "restore" "/etc/twist/ip6tablesload" "/etc/network/if-pre-up.d/ip6tablesload"
+    timemachine "restore" "/etc/twist/crontab" "/etc/crontab"
+    timemachine "restore" "/etc/twist/rc.local" "/etc/rc.local"
+    timemachine "restore" "/etc/twist/.htaccess" "/var/www/html/.htaccess"
+    timemachine "restore" "/etc/twist/index.html" "/var/www/html/index.html"
+    rm -f /usr/bin/twist /root/twistprotect /var/log/twist
+    rm -fr /etc/twist /etc/shadowsocks-libev
+    systemctl restart fail2ban apache2
+    [ -e /var/www/html/index.html ] || systemctl stop apache2
+    ldconfig
     clear
-    twist
-    echo -e "#[\033[32;1m               Twist Uninstallation Finished\033[0m                    ]#"
-    echo "#####################################################################"
+    twistprint
+    echo -e "#[\033[32;1m                Twist Uninstallation Finished                     \033[0m]#"
+    twistprint banner
     echo ""
     exit 1
 }
 
-function twist(){
-    echo "######################################################################"
-    echo "#####################################################################"
-    echo "       ###       ###         ###     ###      #########    #########"
-    echo "       ###        ###    #  ###     ###      ##               ##"
-    echo "       ###         ###  ## ###     ###      #########        ##"
-    echo "       ###          ### ## ##     ###             ##        ##"
-    echo "       ###           ### ###     ###      #########        ##"
-    echo ""
-}
-
-function notice(){
-    echo -e "#[\033[32;1m         Install Shadowsocks-libev Script By Unbinilium\033[0m          ]#"
-    echo -e "#[\033[32;1m             Installation will Start in 5 Seconds\033[0m                ]#"
-    echo "#####################################################################"
-    sleep 5
-}
-
-function rootness(){
-    if [ $EUID -ne 0 ]; then
-        echo -e "# [\033[31;1mError:This script must be run as root! Please Run this script with root access\033[0m]" 1>&2
+function twistprint(){
+    if [ -z "$1" ]; then
+        echo "######################################################################"
+        echo "#####################################################################"
+        echo "       ###       ###         ###     ###      #########    #########"
+        echo "       ###        ###    #  ###     ###      ##               ##"
+        echo "       ###         ###  ## ###     ###      #########        ##"
+        echo "       ###          ### ## ##     ###             ##        ##"
+        echo "       ###           ### ###     ###      #########        ##"
+        echo ""
+    elif [ -z "$3" ]; then
+        echo "######################################################################"
+    else
+        twistlog "Twist was not found on Your Server"
+        echo -e "#[\033[31;1m              Twist was not found on Your Server!                 \033[0m]#"
         echo ""
         exit 1
     fi
 }
 
-function disableselinux(){
+function twistlog(){
+    [ -e /var/log/twist ] || touch /var/log/twist
+    echo "# ${date} ${1} " >> /var/log/twist
+}
+
+function kernelupdateerr(){
+    BBR="disable"
+    echo ""
+    twistlog "${1}"
+    echo -e "# [\033[31;1m${1}! \033[0m]"
+    echo ""
+    sleep 3
+}
+
+function dependenciesinstallerr(){
+    echo ""
+    twistlog "Cannot ${1} Dependencies"
+    echo -e "# [\033[31;1mCannot ${1} Dependencies, Please check your network or errors displayed! \033[0m]"
+    echo ""
+    exit 1
+}
+
+function sslibevinstallerr(){
+    rm -rf libsodium-${libsodiumver}.tar.gz libsodium-${libsodiumver} mbedtls-${mbedtlsver}-gpl.tgz mbedtls-${mbedtlsver} ${sslibevver}.tar.gz $sslibevver ${ssobfsver}.tar.gz $ssobfsver
+    echo ""
+    if [ -z "$2" ]; then
+        twistlog "Cannot download ${1} source"
+        echo -e "# [\033[31;1mCannot download ${1} source. Aborting! \033[0m]"
+    else
+        twistlog "Error ${1} failed to build"
+        echo -e "# [\033[31;1mError ${1} failed to build. Aborting! \033[0m]"
+    fi
+    echo ""
+    exit 1
+}
+
+function systemdetecterr(){
+    twistlog "Twist could only run on Ubuntu, Debian, Raspbian, Arch Linux, CentOS, Red Hat or Fedora"
+    echo -e "# [\033[31;1mTwist could only run on Ubuntu, Debian, Raspbian, Arch Linux, CentOS, Red Hat or Fedora. Aborating! \033[0m]"
+    echo ""
+    exit 1
+}
+
+function timemachine(){
+    if [ "$1" = "backup" ]; then
+        twistlog "Backing up ${2} to ${3}"
+        if [ -e "$3" ]; then
+            [ -e "$2" ] && cp -f "${2}" "${3}.old-${date}"
+        else
+            [ -e "$2" ] && { cp -f "${2}" "${3}"; cp -f "${2}" "${3}.old-${date}"; }
+        fi
+    else
+        if [ -e "$2" ]; then
+            twistlog "Restore ${3} from ${2}"
+            cp -f "${2}" "${3}"
+        else
+            rm -f "${3}"
+        fi
+    fi
+}
+
+function serverrestart(){
+    if [ "$serverrestart" = "true" ]; then
+        twistlog "[TWIST Required Server Restart]"
+        echo -e "# [\033[31;1mThe Server Requires Restart to Finish ${1}, Please Press Enter to Reboot! \033[0m]"
+        read -p ""
+        sleep 3
+        reboot
+    fi
+}
+
+function rootness(){
+    if [ "$(id -u)" != 0 ]; then
+        echo -e "# [\033[31;1mError:Twist must run by root. Please run Twist with root access! \033[0m]"
+        echo ""
+        exit 1
+    fi
+}
+
+function selinuxdisable(){
+    [ -z "$(which grep)" ] && { echo ""; echo -e "# [\033[31;1mTwist requires the basic dependencies\033[0m \033[32;1mgrep\033[0m, \033[31;1mPlease Install the Dependencies first. \033[0m]"; echo ""; exit 1; }
     if [ -s /etc/selinux/config ] && grep 'SELINUX=enforcing' /etc/selinux/config; then
         sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
         setenforce 0
     fi
 }
 
-function defaultvalue(){
-    BBR="enable"
-    ETH="eth0"
-    SSLOCAL="[\"[::0]\",\"0.0.0.0\"]"
-    IPREGEX="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
-}
-
-<<<<<<< HEAD
-function getsystem(){
-systemtype="0"
-    echo "$(cat /etc/issue)" | grep -q "CentOS"
-    if [ $? -eq 0 ]; then
-        if [ ! -f /etc/redhat-release ] || ! grep -qs -e "release 6" -e "release 7" /etc/redhat-release; then
-            echo -e "# [\033[31;1mPlease Make Sure the Server OS Verison is CentOS/RHEL 6 or 7! Aborting!\033[0m]"
-            echo ""
-            exit 1
-        else
-            systemtype="0"
-        fi
-=======
-function detectsystem(){
-    if grep -Eqi "CentOS|Red Hat|Redhat" /etc/issue || grep -Eq "CentOS|Red Hat|Redhat" /etc/*-release || grep -Eq "CentOS|Red Hat|Redhat" /proc/version; then
-        system_str="0"
-    elif  grep -Eqi "Ubuntu|Debian" /etc/issue || grep -Eq "Ubuntu|Debian" /etc/*-release || grep -Eq "Ubuntu|Debian" /proc/version; then
-        system_str="1"
->>>>>>> TWIST
+function systemdetect(){
+    if grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /etc/*-release || grep -Eqi "Ubuntu|Debian|Raspbian|Arch Linux" /proc/version; then
+        systemtype="1"
+    elif grep -Eqi "CentOS|Red Hat|Fedora" /etc/*-release || grep -Eqi "CentOS|Red Hat|Fedora" /proc/version; then
+        systemtype="0"
     else
-        echo -e "# [\033[31;1mThis Script Must be Run on Ubuntu, Debian or CentOS! Aborating!\033[0m]"
-        echo ""
-        exit 1
+        systemdetecterr
     fi
-    ethstatus="$(cat /sys/class/net/${ETH}/operstate 2>/dev/null)"
+    if [ ! -z "$(which apt)" ]; then
+        packagemanagertype="a"
+        webservername="apache2"
+    elif [ ! -z "$(which yum)" ]; then
+        packagemanagertype="y"
+        webservername="httpd"
+    elif [ ! -z "$(which pacman)" ]; then
+        packagemanagertype="p"
+        webservername="apache"
+    else
+        systemdetecterr
+    fi
+    if [ -f /proc/user_beancounters ]; then
+        BBR="disable"
+        if [ "$packagemanagertype" = "a" ]; then
+            systemtype="1"
+        elif [ "$packagemanagertype" = "y" ]; then
+            systemtype="0"
+        elif [ "$packagemanagertype" = "p" ]; then
+            systemtype="1"
+        fi
+    fi
+    if [ "$packagemanagertype" = "a" ]; then
+        tries="0"
+        while fuser /var/lib/apt/lists/lock /var/cache/apt/archives/lock /var/lib/dpkg/lock; do
+            [ "$tries" = "0" ] && { echo ""; echo -e "# [\033[31;1mTrying to lock the Administration Directory, another Process may using it. \033[0m]"; echo ""; }
+            [ "$tries" = "20" ] && { rm -f /var/lib/apt/lists/lock; rm -f /var/cache/apt/archives/lock; rm -f /var/lib/dpkg/lock; }
+            [ "$tries" = "21" ] && dpkg --configure -a
+            [ "$tries" -ge "22" ] && { echo ""; echo -e "# [\033[31;1mUnable to lock the Administration Directory. \033[0m]"; echo ""; break; }
+            tries=$((tries+1))
+            sleep 3
+        done
+    fi
+    if [ -z "$(which awk)" ] || [ -z "$(which route)" ] || [ -z "$(which ip)" ] || [ -z "$(which dig)" ] || [ -z "$(which curl)" ]; then
+        if [ "$packagemanagertype" = "a" ]; then
+            apt-get update || dependenciesinstallerr "Update"
+            apt-get -yq install gawk curl net-tools dnsutils || dependenciesinstallerr "Install"
+        elif [ "$packagemanagertype" = "y" ]; then
+            yum -y update || dependenciesinstallerr "Update"
+            yum -y install gawk curl net-tools bind-utils || dependenciesinstallerr "Install"
+        else
+            pacman -Syyu --noconfirm || dependenciesinstallerr "Update and Upgrade"
+            pacman -Syu --noconfirm gawk curl net-tools || dependenciesinstallerr "Install"
+        fi
+        clear
+    fi
+    if ! grep -qs "Twist" /etc/sysctl.conf; then
+        twistinstalled="false"
+    fi
+    kernelverheader="$(uname -r | grep -oE '[0-9]+\.[0-9]+')"
+    kernelverheaderold="$kernelverheader"
+    if [ $(echo ${kernelverheader} | awk -v ver=4.8 '{print($1>ver)? "1":"0"}') -eq "0" ]; then
+        [ "$BBR" = "enable" ] && serverrestart="true"
+    fi
+    if [ -z "$ETH" ]; then
+        ETH="$(route | grep '^default' | grep -o '[^ ]*$')"
+        [ -z "$ETH" ] && ETH="$(ip -4 route list 0/0 | grep -Po '(?<=dev )(\S+)')"
+        if [ ! "$(echo "$ETH" | xargs | awk '{print $2}')" = "" ]; then
+            if [ ! "$(echo "$ETH" | xargs | awk '{print $1}')" = "$(echo "$ETH" | xargs | awk '{print $2}')" ]; then
+                twistlog "More than 2 Default Network Interface detected"
+                echo -e "# [\033[31;1mThere are more than 2 Default Network Interface. Please choose it manually! \033[0m]"
+                echo ""
+                ip link
+                echo ""
+                echo -e "Please Enter [\033[32;1mNetwork Interface Name\033[0m]:"
+                read -p "Input Interface Name:" ETH
+            else
+                ETH="$(echo "$ETH" | xargs | awk '{print $1}')"
+            fi
+        else
+            ETH="$(echo "$ETH" | xargs | awk '{print $1}')"
+        fi
+    fi
+    ethstatus="$(cat /sys/class/net/${ETH}/operstate)"
     if [ -z "$ethstatus" ] || [ "$ethstatus" = "down" ]; then
-        echo -e "# [\033[31;1mNetwork Interface '${ETH}' is Not Available. Please try Another Network Interface Listed Below.\033[0m]" 1>&2
+        twistlog "The Network Interface:${ETH} is not available"
+        echo -e "# [\033[31;1mNetwork Interface '${ETH}' is not available. Please try another Network Interface listed below! \033[0m]"
         echo ""
         ip link
         echo ""
         echo -e "Please Enter [\033[32;1mNetwork Interface Name\033[0m]:"
-        read -p "Input Devices Name (Default:${ETH}):" eth
+        read -p "Input Interface Name:" eth
      	if [ ! "$eth" = "" ]; then
-            ethstatus="$(cat /sys/class/net/${eth}/operstate 2>/dev/null)"
+            ethstatus="$(cat /sys/class/net/${eth}/operstate)"
             if [ -z "$ethstatus" ] || [ "$ethstatus" = "down" ]; then
                 echo ""
-                echo -e "# [\033[31;1mNetwork Interface Your Entered is Not Available! Aborting!\033[0m]" 1>&2
+                twistlog "The Network Interface:${eth} is not available"
+                echo -e "# [\033[31;1mThe Network Interface:${eth} you entered is not available. Aborting! \033[0m]"
                 echo ""
                 exit 1
             else
                 ETH="$eth"
                 echo ""
-                echo -e "# Network Interface Check Passed, your VPN Will be Setup Using Interface '${ETH}'"
+                twistlog "Using the new Network Interface ${ETH}"
+                echo -e "# [\033[33;1mNetwork Interface check passed, Using the new Interface\033[0m \033[32;1m${ETH} \033[0m]"
                 echo ""
             fi
         fi
     fi
-    if [ -f /proc/user_beancounters ]; then
-        BBR="disable"
-    fi
-    PUBLICIP="$(curl -s diagnostic.opendns.com/myip)"
     [ -z "$PUBLICIP" ] && PUBLICIP="$(dig @resolver1.opendns.com -t A -4 myip.opendns.com +short)"
     if ! printf %s "$PUBLICIP" | grep -Eq "$IPREGEX"; then
         echo ""
-        echo -e "# [\033[31;1mCannot find Valid Public IP. Please Fill Your IP Address Below!\033[0m]"
+        twistlog "Cannot detect a valid Public IP"
+        echo -e "# [\033[31;1mCannot detect a valid Public IP. Please fill your Public IP address below! \033[0m]"
         read -p "Input Your Public IP:" publicip
         if ! printf %s "$publicip" | grep -Eq "$IPREGEX"; then
             echo ""
-            echo -e "# [\033[31;1mThe IP:${publicip} You Entered is Out of Range! Aborting!\033[0m]"
+            twistlog "# The IP:${publicip} is not vailed"
+            echo -e "# [\033[31;1mThe IP:${publicip} you entered is not vailed. Aborting! \033[0m]"
             echo ""
             exit 1
         else
             PUBLICIP="$publicip"
             echo ""
-            echo -e "# [\033[32;1mYour Public IP:${PUBLICIP}, Server will Detect Connection Automaticly.\033[0m]"
+            twistlog "Using Public IP:${PUBLICIP}"
+            echo -e "# [\033[32;1mYou are now using Public IP:${PUBLICIP} \033[0m]"
             echo ""
         fi
     fi
-    if [ -f /proc/net/if_inet6 ]; then
-        if [ "$systemtype" = "1" ]; then
-            echo "iface ${ETH} inet6 dhcp" > /etc/network/interfaces.d/60-default-with-ipv6.cfg
-            ifdown $ETH && ifup $ETH
-        else
-            sed -i "/^\<IPV6INIT=\>/d" /etc/sysconfig/network-scripts/ifcfg-${ETH}
-            cat >> /etc/sysconfig/network-scripts/ifcfg-${ETH} <<EOF
-IPV6INIT="yes"
-DHCPV6C=yes
-NM_CONTROLLED=no
-EOF
-            echo "NETWORKING_IPV6=yes" >> /etc/sysconfig/network
-            sudo service network restart
+    DNS="${DNS1},${DNS2},${DNSv6a},${DNSv6b}"
+    if [ -z "$(ip -6 addr show ${ETH})" ] || [ -z "$PUBLICIPv6" ]; then
+        PUBLICIPv6="$(curl -s diagnostic.opendns.com/myip)"
+        if [ -z "$PUBLICIPv6" ] || [ "$PUBLICIPv6" = "$PUBLICIP" ]; then
+            SSLOCAL="\"0.0.0.0\""
+            DNS="${DNS1},${DNS2}"
+            IPV6ENABLE="false"
+            IPV6FIRST="false"
         fi
+     fi
+     [ -z "$MTU" ] && MTU="$(cat /sys/class/net/${ETH}/mtu)"
+     [ -z "$MTU" ] && MTU="1492"
+}
+
+function dependenciesinstall(){
+    if [ "$packagemanagertype" = "a" ]; then
+        apt-get -yq update || dependenciesinstallerr "Update"
+        apt-get -yq upgrade || dependenciesinstallerr "Upgrade"
+        apt-get -yq install wget gawk grep curl sed git gcc swig gettext autoconf automake make libtool perl cpio xmlto asciidoc cron fail2ban net-tools dnsutils rng-tools libc-ares-dev libev-dev openssl libssl-dev zlib1g-dev libpcre3-dev libevent-dev build-essential python-dev python-pip python-setuptools python-m2crypto
+        [ "$?" != "0" ] && dependenciesinstallerr "Install"
+        [ "$FWS" = "enable" ] && { apt-get -yq install apache2 || dependenciesinstallerr "Apache"; }
+    elif [ "$packagemanagertype" = "y" ]; then
+        yum -y update || dependenciesinstallerr "Update"
+        yum -y upgrade || dependenciesinstallerr "Upgrade"
+        [ -e /etc/yum.repos.d/epel.repo ] || { yum -y install epel-release yum-utils || { twistlog "Cannot add EPEL repository"; echo -e "# [\033[31;1mCannot add EPEL repository. Aborting! \033[0m]"; exit 1; }; }
+        yum -y install wget gawk grep curl sed git gcc swig gettext-devel autoconf automake make libtool pcre-devel perl-devel cpio xmlto asciidoc vixie-cron crontabs fail2ban net-tools bind-utils rng-tools expat-devel openssl-devel zlib-devel libev-devel c-ares-devel python-devel python-setuptools python-pip
+        [ "$?" != "0" ] && dependenciesinstallerr "Install"
+        [ "$FWS" = "enable" ] && { yum -y install ${webservername} || dependenciesinstallerr "Apache"; }
     else
-        SSLOCAL="\"0.0.0.0\""
+        pacman -Syyu --noconfirm || dependenciesinstallerr "Update and Upgrade"
+        pacman -Syu --noconfirm wget gawk grep curl sed git gcc swig gettext autoconf automake make libtool pcre perl cpio xmlto asciidoc cronie fail2ban net-tools rng-tools openssl zlib c-ares libev python-devel python-setuptools python-pip python2-m2crypto
+        [ "$?" != "0" ] && dependenciesinstallerr "Install"
+        [ "$FWS" = "enable" ] && { pacman -Syu --noconfirm apache || dependenciesinstallerr "Apache"; }
     fi
-    [ -z "$(ip -6 addr show ${ETH})" ] && SSLOCAL="\"0.0.0.0\""
+    pip install -q qrcode || { echo ""; twistlog "Cannot Install QRCode"; echo -e "# [\033[31;1mCannot Install QRCode, You may unable to configure clients by QRCode! \033[0m]"; echo ""; sleep 3; }
 }
 
-function installlibs(){
-    if [ "$systemtype" = "0" ]; then
-	yum -y update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        yum -y install wget bind-utils || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        yum -y install gawk grep sed net-tools greenlet || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        yum -y install epel-release
-        yum list installed epel-release >/dev/null 2>&1
-        [ "$?" != "0" ] && { echo -e "# [\033[31;1mCannot Add EPEL repository! Aborting!\033[0m]"; exit 1; }
-        yum -y install swig python python-devel python-setuptools python-pip libevent curl curl-devel zlib-devel gevent || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        yum -y install gcc gettext-devel autoconf automake make zlib-devel libtool xmlto asciidoc udns-devel libev-devel || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        yum -y install pcre pcre-devel perl perl-devel cpio expat-devel openssl-devel mbedtls-devel git || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        yum -y install fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Fail2ban! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        pip install -q qrcode
-        if grep -qs "release 6" /etc/redhat-release; then
-            yum -y install iptables-ipv6
-            yum -y remove libevent-devel
-            yum -y install libevent2-devel
-        elif grep -qs "release 7" /etc/redhat-release; then
-            yum -y install libevent-devel
-        fi
-    else
-        apt-get -yq update || { echo ""; echo -e "# [\033[31;1mCannot Update Source! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        apt-get -yq install wget dnsutils git || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        apt-get -yq install gawk grep sed net-tools || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        apt-get -yq install python python-dev python-pip python-setuptools python-m2crypto curl gcc swig make perl cpio build-essential libevent-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }   
-        apt-get -y --no-install-recommends install gettext build-essential autoconf automake libtool openssl libssl-dev zlib1g-dev xmlto asciidoc libpcre3-dev libudns-dev libev-dev || { echo ""; echo -e "# [\033[31;1mCannot Install Libs! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        apt-get -yq install fail2ban || { echo ""; echo -e "# [\033[31;1mCannot Install Fail2ban! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-        easy_install -q greenlet
-        easy_install -q gevent
-        pip install -q qrcode
-   fi
-}
-
-function installbbr(){
-    [ "$BBR" = "enable" ] && KERNELVER="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/ | awk -F'\"v' '/v[4-9]./{print $2}' | cut -d/ -f1 | grep -v -  | sort -V | tail -1)"
-    [ "$BBR" = "enable" ] && [ -z "$KERNELVER" ] && BBR="disable" && echo -e "# [\033[31;1mCannot Check Linux KERNEL Verison. BBR will NOT Working!\033[0m]"
-    if [ "$BBR" = "enable" ] && [ "$(echo "$KERNELVER" | cut -d'.' -f1,2)">="$(uname -a | grep -oE '[0-9]+\.[0-9]+' | cut -d'.' -f1,2)" ]; then
-        if [ "$systemtype" = "1" ]; then
-            SYSTYPE="$(dpkg --print-architecture)"
-            if [ "$SYSTYPE" = "amd64" ]; then
-                KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/amd64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-            else
-                if [ "$SYSTYPE" = "i386" ]; then
-                    KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/i386.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-                else
-                    if [ "$SYSTYPE" = "armhf" ]; then
-                        KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/armhf.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-                    else
-                        if [ "$SYSTYPE" = "arm64" ]; then
-                            KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/arm64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-                        else
-                            if [ "$SYSTYPE" = "ppc64el" ]; then
-                                KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/ppc64el.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-                            else
-                                if [ "$SYSTYPE" = "s390x" ]; then
-                                    KERNEL="$(wget -qO- http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/s390x.deb/{print $2}' | cut -d'<' -f1 | head -1)"
-                                else
-                                    echo ""
-                                    echo -e "# \033[31;1mUnable to Find New KERNEL! Aborting!\033[0m"
-                                    echo ""
-                                    exit 1
-                                fi
-                            fi
-                        fi
-                    fi
-                fi
+function tcpbbrenable(){
+    if [ "$BBR" = "enable" ]; then
+        timemachine "backup" "/etc/sysctl.conf" "/etc/twist/sysctl.conf"
+        if [ "$(printf '%s\n' ${kernelverheader} "4.8" | sort -V | head -n1)" != ${kernelverheader} ] || [ "$kernelupdated" = "true" ]; then
+            if [ ! "$(sysctl net.ipv4.tcp_available_congestion_control | awk '{print $3}')" = "bbr" ]; then
+                sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.conf
+                echo "net.ipv4.tcp_congestion_control = bbr" >> /etc/sysctl.conf
             fi
-            wget -t 3 -T 30 -nv -O "$KERNEL" "http://kernel.ubuntu.com/~kernel-ppa/mainline/v${KERNELVER}/${KERNEL}"
-            [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Linux KERNEL! Please Check Your Network!\033[0m]"; echo ""; exit 1; }
-            dpkg -i $KERNEL || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
-            dpkg -l | grep linux-image
-            rm -f $KERNEL
-            update-grub
         else
-            yum --enablerepo=elrepo-kernel install kernel-ml || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
+            echo "net.ipv4.tcp_congestion_control = hybla" >> /etc/sysctl.conf
+            kernelupdate
         fi
     fi
 }
 
-function installsslibev(){
-    installpath="$(pwd)"
-    cd $installpath
-    libsodiumver="$(wget -qO- https://download.libsodium.org/libsodium/releases/ | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f1,2,3 | sort -V | tail -1)"
-    wget -t 3 -T 30 -nv -O libsodium-${libsodiumver}.tar.gz https://download.libsodium.org/libsodium/releases/libsodium-${libsodiumver}.tar.gz
-    [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Libsodium Source. Aborting.\033[0m]"; echo ""; exit 1; }
-    [ -d libsodium-${libsodiumver} ] && rm -rf libsodium-${libsodiumver}
-    tar zxf libsodium-${libsodiumver}.tar.gz
-    cd libsodium-${libsodiumver}
-    ./configure --prefix=/usr && make && make install || { echo ""; echo －e "# [\033[31;1mLibsodium Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
-    cd $installpath
-    mbedver="$(wget -qO- https://tls.mbed.org/download-archive | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f1,2,3 | sort -V | tail -1)"
-    wget -t 3 -T 30 -nv -O mbedtls-${mbedver}-gpl.tgz https://tls.mbed.org/download/mbedtls-${mbedver}-gpl.tgz
-    [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download MBED Source. Aborting.\033[0m]"; echo ""; exit 1; }
-    [ -d mbedtls-${mbedver} ] && rm -rf mbedtls-${mbedver}
-    tar xf mbedtls-${mbedver}-gpl.tgz
-    cd mbedtls-${mbedver}
-    make SHARED=1 CFLAGS=-fPIC
-    make DESTDIR=/usr install || { echo ""; echo －e "# [\033[31;1mMBED Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
-    ldconfig
-    cd $installpath
-    sslibevtag="$(wget -qO- https://api.github.com/repos/shadowsocks/shadowsocks-libev/releases/latest | grep 'tag_name' | cut -d\" -f4)"
+function kernelupdate(){
+    if [ "$packagemanagertype" = "a" ]; then
+        KERNELURL="http://kernel.ubuntu.com/~kernel-ppa/mainline/"
+        KERNELVER="$(wget -qO- ${KERNELURL} | awk -F'\"v' '/v[4-9]./{print $2}' | cut -d/ -f1 | grep -v -  | sort -V | tail -1)"
+        [ -z "$KERNELVER" ] && kernelupdateerr "Cannot get the newest linux kernel verison, bbr disabled"
+        if [ "$BBR" = "enable" ]; then
+            case "$(dpkg --print-architecture)" in
+                amd64)
+                    KERNEL="$(wget -qO- ${KERNELURL}v${KERNELVER}/ | grep "linux-image" | grep "lowlatency" | awk -F'\">' '/amd64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+                    ;;
+                i386)
+                    KERNEL="$(wget -qO- ${KERNELURL}v${KERNELVER}/ | grep "linux-image" | grep "lowlatency" | awk -F'\">' '/i386.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+                    ;;
+                armhf)
+                    KERNEL="$(wget -qO- ${KERNELURL}v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/armhf.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+                    ;;
+                arm64)
+                    KERNEL="$(wget -qO- ${KERNELURL}v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/arm64.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+                    ;;
+                ppc64el)
+                    KERNEL="$(wget -qO- ${KERNELURL}v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/ppc64el.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+                    ;;
+                s390x)
+                    KERNEL="$(wget -qO- ${KERNELURL}v${KERNELVER}/ | grep "linux-image" | grep "generic" | awk -F'\">' '/s390x.deb/{print $2}' | cut -d'<' -f1 | head -1)"
+                    ;;
+                *)
+                    kernelupdateerr "Cannot get the newest linux kernel verison, bbr disabled"
+                    ;;
+            esac
+            [ "$BBR" = "enable" ] && wget -t 3 -T 30 -nv -O "$KERNEL" "${KERNELURL}v${KERNELVER}/${KERNEL}"
+            [ "$BBR" = "enable" ] && { dpkg -i $KERNEL || kernelupdateerr "Cannot update linux kernel verison, bbr disabled"; }
+            [ "$BBR" = "enable" ] && { dpkg -l | grep linux-image; rm -f $KERNEL; update-grub; }
+        fi
+    elif [ "$packagemanagertype" = "y" ]; then
+        rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org || kernelupdateerr "Cannot get ELRepo key, you may unable to install ELRepo packages"
+        if grep -qs "release 7" /etc/*-release; then
+            rpm -Uvh "http://www.elrepo.org/elrepo-release-${elrepover7}.el7.elrepo.noarch.rpm" || kernelupdateerr "Cannot Install ELRepo repository. Aborting"
+            [ "$BBR" = "enable" ] && { yum --enablerepo=elrepo-kernel -y install kernel-ml kernel-ml-devel || kernelupdateerr "Cannot update linux kernel verison, bbr disabled"; }
+            [ "$BBR" = "enable" ] && grub2-set-default 0
+        elif grep -qs "release 6" /etc/*-release; then
+            rpm -Uvh "http://www.elrepo.org/elrepo-release-${elrepover6}.e16.elrepo.noarch.rpm" || kernelupdateerr "Cannot Install ELRepo repository. Aborting"
+            [ "$BBR" = "enable" ] && { yum --enablerepo=elrepo-kernel -y install kernel-ml kernel-ml-devel || kernelupdateerr "Cannot update linux kernel verison, bbr disabled"; }
+            [ "$BBR" = "enable" ] && sed -i 's/^default=.*/default=0/g' /boot/grub/grub.conf
+        fi
+    elif [ "$packagemanagertype" = "p" ]; then
+        if grep -Eqi "IgnorePkg|IgnoreGroup" /etc/pacman.conf; then
+            sed -i "/IgnorePkg/d;/IgnoreGroup/d" /etc/pacman.conf
+        fi
+        pacman -Syyu --noconfirm || kernelupdateerr "Cannot update linux kernel verison, bbr disabled"
+    fi
+    [ "$BBR" = "enable" ] && { kernelupdated="true"; serverrestart="true"; }
+    kernelverheader="$(uname -r | grep -oE '[0-9]+\.[0-9]+')"
+    tcpbbrenable
+}
+
+function sslibevinstall(){
+    MAKECORES="$(grep -c ^processor /proc/cpuinfo)"
+    [ -z "$MAKECORES" ] && MAKECORES="1"
+	if [ "$1" = "install" ]; then
+        [ -z "$libsodiumver" ] && libsodiumver="$(wget -qO- https://api.github.com/repos/jedisct1/libsodium/releases/latest | grep 'tag_name' | cut -d\" -f4 | cut -d'-' -f1)"
+        wget -t 3 -T 30 -nv -O libsodium-${libsodiumver}.tar.gz https://github.com/jedisct1/libsodium/releases/download/${libsodiumver}-RELEASE/libsodium-${libsodiumver}.tar.gz
+        [ "$?" != "0" ] && sslibevinstallerr "libsodium-${libsodiumver}"
+        [ -d libsodium-${libsodiumver} ] && rm -rf libsodium-${libsodiumver}
+        tar zxf libsodium-${libsodiumver}.tar.gz
+        pushd libsodium-${libsodiumver}
+        ./configure --prefix=/usr && make "-j$((MAKECORES+1))" && make install || sslibevinstallerr "libsodium-${libsodiumver}" err
+        popd
+        if ! ldconfig -p | grep -wq "/usr/lib"; then
+            echo "/usr/lib" > /etc/ld.so.conf.d/lib.conf
+        fi
+        ldconfig
+        [ -z "$mbedtlsver" ] && mbedtlsver="$(wget -qO- https://tls.mbed.org/download-archive | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | cut -d'.' -f1,2,3 | sort -V | tail -1)"
+        wget -t 3 -T 30 -nv -O mbedtls-${mbedtlsver}-gpl.tgz https://tls.mbed.org/download/mbedtls-${mbedtlsver}-gpl.tgz
+        [ "$?" != "0" ] && sslibevinstallerr "mbedtls-${mbedtlsver}"
+        [ -d mbedtls-${mbedtlsver} ] && rm -rf mbedtls-${mbedtlsver}
+        tar xf mbedtls-${mbedtlsver}-gpl.tgz
+        pushd mbedtls-${mbedtlsver}
+        make SHARED=1 CFLAGS=-fPIC "-j$((MAKECORES+1))" && make DESTDIR=/usr install || sslibevinstallerr "mbedtls-${mbedtlsver}" err
+        popd
+        ldconfig
+        rm -rf libsodium-${libsodiumver}.tar.gz libsodium-${libsodiumver} mbedtls-${mbedtlsver}-gpl.tgz mbedtls-${mbedtlsver}
+    fi
+    [ -z "$sslibevtag" ] && sslibevtag="$(wget -qO- https://api.github.com/repos/shadowsocks/shadowsocks-libev/releases/latest | grep 'tag_name' | cut -d\" -f4)"
     sslibevver="shadowsocks-libev-$(echo ${sslibevtag} | sed -e 's/^[a-zA-Z]//g')"
     wget -t 3 -T 30 -nv -O ${sslibevver}.tar.gz https://github.com/shadowsocks/shadowsocks-libev/releases/download/${sslibevtag}/${sslibevver}.tar.gz
-    [ "$?" != "0" ] && { echo ""; echo -e "# [\033[31;1mCannot Download Shadowsocks-libev Source. Aborting.\033[0m]"; echo ""; exit 1; }
-    [ -d ${sslibevver} ] && rm -rf ${sslibevver}
+    [ "$?" != "0" ] && sslibevinstallerr "shadowsocks-libev-$(echo ${sslibevtag} | sed -e 's/^[a-zA-Z]//g')"
+    [ -d ${sslibevver} ] && rm -rf $sslibevver
     tar zxf ${sslibevver}.tar.gz
-    cd $sslibevver
-    ./configure
-    make || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
-    make install || { echo ""; echo －e "# [\033[31;1mShadowsocks-libev Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
-    cd $installpath
-    [ -d simple-obfs ] && rm -rf simple-obfs
-    git clone https://github.com/shadowsocks/simple-obfs.git
-    cd simple-obfs
-    git submodule update --init --recursive
+    pushd $sslibevver
+    ./configure --disable-documentation
+    make "-j$((MAKECORES+1))" && make ${1} || sslibevinstallerr "shadowsocks-libev-$(echo ${sslibevtag} | sed -e 's/^[a-zA-Z]//g')" err
+    popd
+    ldconfig
+    [ -z "$ssobfstag" ] && ssobfstag="$(wget -qO- https://api.github.com/repos/shadowsocks/simple-obfs/releases/latest | grep 'tag_name' | cut -d\" -f4)"
+    ssobfsver="simple-obfs-$(echo ${ssobfstag} | sed -e 's/^[a-zA-Z]//g')"
+    wget -t 3 -T 30 -nv -O ${ssobfsver}.tar.gz https://github.com/shadowsocks/simple-obfs/archive/${ssobfstag}.tar.gz
+    [ "$?" != "0" ] && sslibevinstallerr "simple-obfs-$(echo ${ssobfstag} | sed -e 's/^[a-zA-Z]//g')"
+    [ -d ${ssobfsver} ] && rm -rf $ssobfsver
+    tar zxf ${ssobfsver}.tar.gz
+    pushd $ssobfsver
+    [ -d libcork ] && rm -rf libcork
+    git clone https://github.com/shadowsocks/libcork.git -b simple-obfs
+    [ "$?" != "0" ] && sslibevinstallerr "libcork"
     ./autogen.sh
     ./configure
-    make || { echo ""; echo －e "# [\033[31;1mShadowsocks-Simple-obfs Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
-    make install || { echo ""; echo －e "# [\033[31;1mShadowsocks-Simple-obfs Failed to Build. Aborting.\033[0m]"; echo ""; exit 1; }
-    cd $installpath
-    rm -rf libsodium-${libsodiumver}.tar.gz libsodium-${libsodiumver} mbedtls-${mbedver}-gpl.tgz mbedtls-${mbedver} ${sslibevver}.tar.gz $sslibevver simple-obfs
+    make "-j$((MAKECORES+1))" && make ${1} || sslibevinstallerr "simple-obfs-$(echo ${ssobfstag} | sed -e 's/^[a-zA-Z]//g')" err
+    popd
+    ldconfig
+    [ -f /usr/local/bin/obfs-server ] && ln -s /usr/local/bin/obfs-server /usr/bin
+    rm -rf ${sslibevver}.tar.gz $sslibevver ${ssobfsver}.tar.gz $ssobfsver
 }
 
-function configsslibev(){
-    date="$(date +%Y-%m-%d-%H:%M:%S)"
-    PASSWORD="$(< /dev/urandom tr -dc 'A-HJ-NPR-Za-km-z2-9' | head -c 32)"
+function sslibevconfigure(){
+    OBFSLOCAL="obfs-host"
+    [ "$FWS" = "enable" ] && OBFSLOCAL="failover"
+    OBFSTFO="fast-open;"
+    [ "$FASTOPEN" = "true" ] || OBFSTFO=""
+    OBFSURL=";obfs-uri=${OBFSURI}"
+    [ -z "$OBFSURI" ] && OBFSURL=""
+    [ "$OBFSURI" = "/" ] && OBFSURL=""
+    [ -z "$PASSWORD" ] && PASSWORD="$(< /dev/urandom tr -dc 'A-HJ-NPR-Za-km-z2-9-._+?%^&*()' | head -c 8)"
     [ -d /etc/shadowsocks-libev ] || mkdir -p /etc/shadowsocks-libev
-    cat > /etc/shadowsocks-libev/config.json<<EOF
+    timemachine "backup" "/etc/shadowsocks-libev/config.json" "/etc/twist/config.json"
+    cat > /etc/shadowsocks-libev/config.json <<-EOF
 {
     "server":${SSLOCAL},
-    "server_port":443,
-    "local_address":"127.0.0.1",
-    "local_port":1080,
+    "server_port":${PORT},
     "password":"${PASSWORD}",
-    "timeout":600,
-    "udp_timeout":600,
-    "method":"chacha20-ietf-poly1305",
+    "method":"${METHOD}",
+    "timeout":${TIMEOUT},
+    "udp_timeout":${TIMEOUT},
     "plugin":"obfs-server",
-    "plugin_opts":"obfs=tls;fast-open;obfs-host=icloud.com",
-    "mode":"tcp_and_udp",
-    "fast_open":true,
-    "workers":256,
+    "plugin_opts":"obfs=${OBFS};${OBFSTFO}${OBFSLOCAL}=${OBFSHOST}:${PORT}${OBFSURL}",
+    "fast_open":${FASTOPEN},
+    "reuse_port":${REUSEPORT},
+    "nofile":512000,
+    "nameserver":"${DNS}",
+    "dscp":"${DSCP}",
+    "mode":"${MODE}",
+    "mtu":${MTU},
+    "mptcp":${MPTCP},
+    "ipv6_first":${IPV6FIRST},
+    "use_syslog":${SYSLOG},
+    "no_delay":${NODELAY},
 }
 EOF
-    if ! grep -qs "Twist" /etc/sysctl.conf; then
-        /bin/cp -f /etc/sysctl.conf "/etc/sysctl.conf.old-${date}" 2>/dev/null
-        cat >> /etc/sysctl.conf <<EOF
-# Twist Configs
-fs.file-max = 1024000
-kernel.msgmnb = 65536
-kernel.msgmax = 65536
-kernel.shmmax = 68719476736
-kernel.shmall = 4294967296
-net.core.wmem_max = 12582912
-net.core.rmem_max = 12582912
-net.ipv4.tcp_rmem = 10240 87380 12582912
-net.ipv4.tcp_wmem = 10240 87380 12582912
+    if [ "$twistinstalled" = "false" ]; then
+        timemachine "backup" "/etc/sysctl.conf" "/etc/twist/sysctl.conf"
+        cat >> /etc/sysctl.conf <<-EOF
+
+# Twist
+fs.file-max = 512000
+net.core.rmem_max = 67108864
+net.core.wmem_max = 67108864
+net.core.netdev_max_backlog = 256000
+net.core.somaxconn = 4096
+net.ipv4.udp_mem = 25600 51200 102400
+net.ipv4.tcp_mem = 25600 51200 102400
+net.ipv4.tcp_rmem = 4096 87380 67108864
+net.ipv4.tcp_wmem = 4096 65536 67108864
+net.ipv4.ip_local_port_range = 49152 65535
+net.ipv4.tcp_max_syn_backlog = 8192
+net.ipv4.tcp_max_tw_buckets = 4096
+net.core.default_qdisc = fq
 net.ipv4.ip_forward = 1
+net.ipv4.tcp_window_scaling = 1
 net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_timestamps = 1
+net.ipv4.tcp_fack = 1
+net.ipv4.tcp_sack = 1
+net.ipv4.tcp_dsack = 1
 net.ipv4.tcp_tw_reuse = 1
-net.ipv4.tcp_tw_recycle = 0
-net.ipv4.tcp_fin_timeout = 30
-net.ipv4.tcp_keepalive_time = 1200
-net.ipv4.tcp_mtu_probing = 1
-net.ipv4.conf.all.accept_source_route = 1
-net.ipv4.conf.all.accept_redirects = 0
-net.ipv4.conf.all.send_redirects = 0
-net.ipv4.conf.all.rp_filter = 0
-net.ipv4.icmp_echo_ignore_broadcasts = 1
-net.ipv4.icmp_ignore_bogus_error_responses = 1
+net.ipv4.tcp_fwmark_accept = 1
+net.ipv4.tcp_stdurg = 1
+net.ipv4.tcp_synack_retries = 30
+net.ipv4.tcp_syn_retries = 30
+net.ipv4.tcp_rfc1337 = 1
+net.ipv4.tcp_fin_timeout = 60
+net.ipv4.tcp_keepalive_time = ${TIMEOUT}
+net.ipv4.tcp_mtu_probing = 2
 net.ipv4.tcp_fastopen = 3
-net.ipv6.conf.all.accept_source_route = 1
-net.ipv6.conf.all.accept_redirects = 0
-net.ipv6.conf.all.autoconf = 1
+net.ipv4.tcp_low_latency = 1
+net.ipv4.udp_l3mdev_accept = 1
+net.ipv4.fib_multipath_hash_policy = 1
+net.ipv4.fib_multipath_use_neigh = 1
+net.ipv4.cipso_rbm_optfmt = 1
+net.ipv4.fwmark_reflect = 1
+net.ipv4.conf.all.accept_source_route = 1
+net.ipv4.conf.all.accept_redirects = 1
+net.ipv4.conf.all.send_redirects = 1
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.all.arp_accept = 1
+net.ipv4.conf.all.arp_announce = 1
+net.ipv4.conf.all.proxy_arp = 1
+net.ipv4.conf.all.proxy_arp_pvlan = 1
+net.ipv4.conf.all.mc_forwarding = 1
 net.ipv6.conf.all.forwarding = 1
+net.ipv6.conf.all.accept_source_route = 1
+net.ipv6.conf.all.accept_redirects = 1
+net.ipv6.conf.all.autoconf = 1
 net.ipv6.conf.all.accept_ra = 2
+net.ipv6.conf.all.seg6_enabled = 1
+
 EOF
-        if [ "$BBR" = "enable" ]; then
-            echo "net.core.default_qdisc = fq" >> /etc/sysctl.conf
-            echo "net.ipv4.tcp_congestion_control = bbr" >> /etc/sysctl.conf
+        timemachine "backup" "/etc/security/limits.conf" "/etc/twist/limits.conf"
+        echo "*                soft    nofile          512000" >> /etc/security/limits.conf
+        echo "*                hard    nofile          512000" >> /etc/security/limits.conf
+        echo "" >> /etc/security/limits.conf
+        if ! grep -qs "pam_limits.so" /etc/pam.d/login; then
+            timemachine "backup" "/etc/pam.d/login" "/etc/twist/login"
+            [ "$systemtype" = "0" ] && echo "session    required     pam_limits.so" >> /etc/pam.d/login
         fi
-	sed -i "/^\<# End of file\>/d" /etc/security/limits.conf
-	echo "*                soft    nofile           512000" >> /etc/security/limits.conf
-	echo "*                hard    nofile          1024000" >> /etc/security/limits.conf
-	echo "" >> /etc/security/limits.conf
-	echo "# End of file" >> /etc/security/limits.conf
-	if [ "$systemtype" = "0" ] && ! grep -qs "pam_limits.so" /etc/pam.d/login; then
-            echo "session    required     pam_limits.so" >> /etc/pam.d/login
-	fi
+        timemachine "backup" "/etc/resolv.conf" "/etc/twist/resolv.conf"
+        echo "nameserver ${DNS1}" >> /etc/resolv.conf
+        echo "nameserver ${DNS2}" >> /etc/resolv.conf
+        [ "$IPV6ENABLE" = "false" ] || echo "nameserver ${DNSv6a}" >> /etc/resolv.conf
+        [ "$IPV6ENABLE" = "false" ] || echo "nameserver ${DNSv6b}" >> /etc/resolv.conf
+        echo "" >> /etc/resolv.conf
     fi
 }
 
-function configiptables(){
-    if ! grep -qs "Twist" /etc/sysctl.conf; then
-        iptables-save > "/etc/iptables.rules.old-${date}"
-        iptables -I INPUT 1 -m conntrack --ctstate INVALID -j DROP
-        iptables -I INPUT 2 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-        iptables -I INPUT 3 -p udp -m multiport --dports 443 -j ACCEPT
-        iptables -I FORWARD 1 -m conntrack --ctstate INVALID -j DROP
-        iptables -I FORWARD 2 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
-        iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j ACCEPT
-        iptables -I INPUT -m state --state NEW -m udp -p udp --dport 443 -j ACCEPT
-        /bin/cp -f /etc/ip6tables.rules "/etc/ip6tables.rules.old-${date}" 2>/dev/null
-        [ -f /etc/iptables/rules.v6 ] || cat > /etc/ip6tables.rules <<EOF
-# Twist Configs
-*filter
-:INPUT ACCEPT [0:0]
-:FORWARD DROP [0:0]
-:OUTPUT ACCEPT [0:0]
--A INPUT -i lo -j ACCEPT
--A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
--A INPUT -m rt --rt-type 0 -j DROP
--A INPUT -s fe80::/10 -j ACCEPT
--A INPUT -p ipv6-icmp -j ACCEPT
--A INPUT -j DROP
-COMMIT
-EOF
-        if [ -f /etc/iptables/rules.v6 ]; then
-            /bin/cp -f /etc/iptables/rules.v6 "/etc/iptables/rules.v6.old-${date}"
-            /bin/cp -f /etc/ip6tables.rules /etc/iptables/rules.v6
-        fi
-    fi
-    if ! grep -qs "Twist" /etc/sysctl.conf && [ "$systemtype" = "0" ]; then
-        iptables -I FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
-        systemctl start firewalld
-        firewall-cmd --permanent --zone=public --add-port=443/tcp
-        firewall-cmd --permanent --zone=public --add-port=443/udp
-        firewall-cmd --reload
-    fi
-    if [ "$systemtype" = "1" ]; then
-        cat > /etc/network/if-pre-up.d/iptablesload <<EOF
+function firewallconfigure(){
+    iptables-save > "/etc/twist/iptables.rules"
+    iptables-save > "/etc/twist/iptables.rules.old-${date}"
+    iptables -I INPUT -m conntrack --ctstate INVALID -j DROP
+    iptables -I INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+    iptables -I INPUT -p tcp -m multiport --dports $PORT -j ACCEPT
+    iptables -I INPUT -p udp -m multiport --dports $PORT -j ACCEPT
+    iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport $PORT -j ACCEPT
+    iptables -I INPUT -m state --state NEW -m udp -p udp --dport $PORT -j ACCEPT
+    iptables -I FORWARD -m conntrack --ctstate INVALID -j DROP
+    iptables -I FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+    iptables -t nat -A POSTROUTING -o $ETH -j MASQUERADE
+    iptables-save > "/etc/iptables.rules"
+    timemachine "backup" "/etc/ip6tables.rules" "/etc/twist/ip6tables.rules"
+    cp -f "/etc/iptables.rules" "/etc/ip6tables.rules"
+    [ -d /etc/network/if-pre-up.d ] || mkdir -p /etc/network/if-pre-up.d
+    timemachine "backup" "/etc/network/if-pre-up.d/iptablesload" "/etc/twist/iptablesload"
+    cat > /etc/network/if-pre-up.d/iptablesload <<-EOF
 #!/bin/sh
+
 iptables-restore < /etc/iptables.rules
 exit 0
+
 EOF
-        cat > /etc/network/if-pre-up.d/ip6tablesload <<EOF
+    timemachine "backup" "/etc/network/if-pre-up.d/ip6tablesload" "/etc/twist/ip6tablesload"
+    cat > /etc/network/if-pre-up.d/ip6tablesload <<-EOF
 #!/bin/sh
+
 ip6tables-restore < /etc/ip6tables.rules
 exit 0
+
 EOF
-    else
-        cat > /etc/network/if-pre-up.d/iptablesload <<EOF
-#!/bin/sh
-iptables-restore < /etc/iptables.rules
-exit 0
-EOF
-    fi
-    if [ "$systemtype" = "0" ] && [ ! -f /etc/fail2ban/jail.local ] ; then
-        cat > /etc/fail2ban/jail.local <<'EOF'
-[ssh-iptables]
-enabled  = true
-filter   = sshd
-action   = iptables[name=SSH, port=ssh, protocol=tcp]
-logpath  = /var/log/secure
-EOF
-    fi
 }
 
-function startservices(){
-    echo "#!/bin/bash" > /etc/init.d/shadowsocks
-    if [  "$systemtype" = "0" ]; then
-        cat >> /etc/init.d/shadowsocks <<EOF
-# chkconfig: 2345 90 10
-# description: Start or stop the Shadowsocks-libev server
-EOF
+function servicesstart(){
+    recheckkernelverheader="$(uname -r | grep -oE '[0-9]+\.[0-9]+')"
+    if [ $(echo ${recheckkernelverheader} | awk -v ver="${kernelverheaderold}" '{print($1>ver)? "1":"0"}') -eq "1" ]; then
+        serverrestart="true"
+        [ "$recheckkernelverheader" = "$kernelverheaderold" ] && serverrestart="false"
     fi
-    cat >> /etc/init.d/shadowsocks <<EOF
-
-### BEGIN INIT INFO
-# Provides:          Shadowsocks-libev
-# Required-Start:    \$network \$local_fs $remote_fs
-# Required-Stop:     \$network \$local_fs $remote_fs
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
-# Short-Description: Shadowsocks-libev
-# Description:       Start or stop the Shadowsocks-libev server
-### END INIT INFO
-
-if [ -f /usr/local/bin/ss-server ]; then
-    SSDIRECTION=/usr/local/bin/ss-server
-elif [ -f /usr/bin/ss-server ]; then
-    SSDIRECTION=/usr/bin/ss-server
-fi
-
-[ -x \$SSDIRECTION ] || exit 0
-
-RETVAL=0
-
-if [ ! -d /var/run ]; then
-    mkdir -p /var/run
-    if [ \$? -ne 0 ]; then
-        echo -e "# \033[31;1mStarting Shadowsocks-libev Failed...\033[0m"
-        exit 1
+    if [ -f /usr/local/bin/ss-server ]; then
+        ssserverpath="/usr/local/bin/ss-server"
+    else
+        ssserverpath="/usr/bin/ss-server"
     fi
-fi
+    if [ "$twistinstalled" = "false" ]; then
+        timemachine "backup" "/etc/rc.local" "/etc/twist/rc.local"
+        [ -e /etc/rc.local ] || echo "#!/bin/bash" > /etc/rc.local
+        sed --follow-symlinks -i '/^exit 0/d' /etc/rc.local
+        cat >> /etc/rc.local <<-EOF
 
-if [ ! -f /etc/shadowsocks-libev/config.json ]; then
-    echo -e "# \033[31;1mStarting Shadowsocks-libev Failed...\033[0m"
-    exit 1
-fi
-
-sslibev_running() {
+sysctl -q -p
+iptables-restore < /etc/iptables.rules
+ip6tables-restore < /etc/ip6tables.rules
+systemctl restart fail2ban cron ${webservername}
+if [ -e /etc/twist/twistprotect ]; then
     if [ -r /var/run/shadowsocks-libev.pid ]; then
-        read PID < /var/run/shadowsocks-libev.pid
-        if [ -d "/proc/\${PID}" ]; then
+        read pid < /var/run/shadowsocks-libev.pid
+        [ -d "/proc/\${pid}" ] || ${ssserverpath} -uv -c /etc/shadowsocks-libev/config.json -f /var/run/shadowsocks-libev.pid
+    else
+        ${ssserverpath} -uv -c /etc/shadowsocks-libev/config.json -f /var/run/shadowsocks-libev.pid
+    fi
+fi
+exit 0
+
+EOF
+    else
+        [ -e /etc/rc.local ] && cp -f "/etc/rc.local" "/etc/twist/rc.local.old-${date}"
+    fi
+    cat > /usr/bin/twist <<-EOF
+#!/bin/bash
+
+date="\$(date +%Y-%m-%d-%H:%M:%S)"
+status="0"
+if [ ! -f /etc/shadowsocks-libev/config.json ]; then
+    twistlog "Shadowsocks-libev Service Error Due To No Config File"
+    echo -e "# \033[31;1mError: Shadowsocks-libev config file\033[0m \033[32;1m/etc/shadowsocks-libev/config.json\033[0m \033[31;1mwas not found \033[0m"
+    exit 1
+else
+    [ -e /var/log/twist ] || touch /var/log/twist
+fi
+
+twistlog(){
+    echo "# \${date} \${1} " >> /var/log/twist
+    [ "\$2" = "echo" ] && echo -e "# \033[\${3};1m\${1} \033[0m"
+}
+
+ssserverstatus(){
+    if [ -r /var/run/shadowsocks-libev.pid ]; then
+        read pid < /var/run/shadowsocks-libev.pid
+        if [ -d "/proc/\${pid}" ]; then
+            twistlog "Shadowsocks-libev Service is Running" "\$1" "32"
+            status="0"
             return 0
         else
+            twistlog "Shadowsocks-libev Service is Stoped" "\$1" "31"
             rm -f /var/run/shadowsocks-libev.pid
+            status="1"
             return 1
         fi
     else
+        twistlog "Shadowsocks-libev Service is Stoped" "\$1" "31"
+        status="2"
         return 2
     fi
 }
 
-sslibev_status() {
-    sslibev_running
-    case \$? in
+componentps(){
+    if [ "\$(pgrep \${1} | wc -l)" = "0" ]; then
+        if [ "\$4" = "enable" ]; then
+            twistlog "\${2} Service is Stoped" "\$3" "31"
+            return 1
+        else
+            twistlog "\${2} Service is Disabled" "\$3" "33"
+            return 2
+        fi
+    else
+        twistlog "\${2} Service is Running" "\$3" "32"
+        return 0
+    fi
+}
+
+echostatus(){
+    if [ "\$2" = "Starting" ]; then
+        statusa="Success" && statusb="Failed"
+        colora="32" && colorb="31"
+    else
+        statusa="Failed" && statusb="Success"
+        colora="31" && colorb="32"
+    fi
+    if [ "\$1" = "0" ]; then
+        twistlog "\${2} \${3} Service \${statusa}" "echo" "\${colora}"
+    else
+        twistlog "\${2} \${3} Service \${statusb}" "echo" "\${colorb}"
+    fi
+}
+
+twist_status(){
+    twistlog "[TWIST Checking Server Status]" "echo" "34"
+    ssserverstatus "echo"
+    componentps "fail2ban" "Fail2ban Protect" "echo" "enable"
+    componentps "$webservername" "Fake Web Redirect" "echo" "$FWS"
+    if [ "\$(lsmod | grep bbr)" = "" ]; then
+        twistlog "TCP BBR Support is Disabled" "echo" "33"
+    else
+        twistlog "TCP BBR Support is Enabled" "echo" "32"
+    fi
+}
+
+twist_start(){
+    twistlog "[TWIST Starting Server Service]" "echo" "34"
+    ssserverstatus
+    if [ "\$?" = "0" ]; then
+       twistlog "Shadowsocks-libev Service is Already Running" "echo" "32"
+        status="0"
+    else
+        ${ssserverpath} -uv -c /etc/shadowsocks-libev/config.json -f /var/run/shadowsocks-libev.pid
+        [ -e /etc/twist/twistprotect ] || echo -e "# \${date} [Shadowsocks Protect Services Enabled] " >> /etc/twist/twistprotect
+        ssserverstatus
+        echostatus "\$?" "Starting" "Shadowsocks-libev"
+    fi
+    componentps "fail2ban" "Fail2ban Protect" "hide" "enable"
+    if [ "\$?" = "0" ]; then
+        twistlog "Fail2ban Protect Service is Already Running" "echo" "32"
+    else
+        systemctl start fail2ban
+        componentps "fail2ban" "Fail2ban Protect" "hide" "enable"
+        echostatus "\$?" "Starting" "Fail2ban Protect"
+    fi
+    componentps "$webservername" "Fake Web Redirect" "hide" "$FWS"
+    case "\$?" in
         0)
-        echo -e "# \033[32;1mShadowsocks-libev is Already Running...\033[0m"
-        ;;
-        1|2)
-        echo -e "# \033[34;1mShadowsocks-libev is Stopped...\033[0m"
-        RETVAL=1
-        ;;
+            twistlog "Fake Web Redirect Service is Already Running" "echo" "32"
+            ;;
+        1)
+            systemctl start ${webservername}
+            componentps "$webservername" "Fake Web Redirect" "hide" "$FWS"
+            echostatus "\$?" "Starting" "Fake Web Redirect"
+            ;;
+        2)
+            componentps "$webservername" "Fake Web Redirect" "echo" "disabled"
+            ;;
     esac
 }
 
-sslibev_start() {
-    if sslibev_running; then
-        echo -e "# \033[32;1mShadowsocks-libev is Already Running...\033[0m"
-        return 0
-    fi
-    \$SSDIRECTION -u -c /etc/shadowsocks-libev/config.json -f /var/run/shadowsocks-libev.pid
-    if sslibev_running; then
-        echo -e "# \033[32;1mStarting Shadowsocks-libev Success...\033[0m"
-    else
-        echo -e "# \033[31;1mStarting Shadowsocks-libev Failed...\033[0m"
-        RETVAL=1
-    fi
-}
-
-sslibev_stop() {
-    if sslibev_running; then
-        kill -9 \$PID
+twist_stop(){
+    twistlog "[TWIST Stopping Server Service]" "echo" "34"
+    ssserverstatus
+    if [ "\$?" = "0" ]; then
+        [ -e /etc/twist/twistprotect ] && { echo -e "# \${date} [Shadowsocks Protect Services Disabled] " >> /var/log/twist; rm -f /etc/twist/twistprotect; }
+        kill -9 \$pid
         rm -f /var/run/shadowsocks-libev.pid
-        echo -e "# \033[32;1mStopping Shadowsocks-libev Success...\033[0m"
+        [ -e /etc/systemd/system/shadowsocks-libev.service ] && systemctl stop shadowsocks-libev
+        ssserverstatus
+        echostatus "\$?" "Stopping" "Shadowsocks-libev"
     else
-        echo -e "# \033[34;1mShadowsocks-libev is Stopped...\033[0m"
-        RETVAL=1
+        twistlog "Shadowsocks-libev is Already Stopped" "echo" "31"
+        status="0"
     fi
+    componentps "fail2ban" "Fail2ban Protect" "hide" "enable"
+    if [ "\$?" = "0" ]; then
+        systemctl stop fail2ban
+        componentps "fail2ban" "Fail2ban Protect" "hide" "enable"
+        echostatus "\$?" "Stopping" "Fail2ban Protect"
+    else
+        twistlog "Fail2ban Protect Service is Already Stopped" "echo" "31"
+    fi
+    componentps "$webservername" "Fake Web Redirect" "hide" "$FWS"
+    case "\$?" in
+        0)
+            systemctl stop ${webservername}
+            componentps "$webservername" "Fake Web Redirect" "hide" "$FWS"
+            echostatus "\$?" "Stopping" "Fake Web Redirect"
+            ;;
+        1)
+            twistlog "Fake Web Redirect Service is Already Stopped" "echo" "31"
+            ;;
+        2)
+            componentps "$webservername" "Fake Web Redirect" "echo" "disabled"
+            ;;
+    esac
 }
 
-sslibev_restart() {
-    sslibev_stop
-    sslibev_start
+twist_restart(){
+    twistlog "[TWIST Restarting Server Service]" "echo" "34"
+    twistlog "Twist Trying to Restart Service" "echo" "32"
+    /usr/bin/twist stop
+    sleep 2
+    /usr/bin/twist start
+}
+
+twist_custom(){
+    twistlog "[TWIST Loading Shadowsocks Configurator]" "echo" "34"
+    sleep 2
+    nano /etc/shadowsocks-libev/config.json
+    /usr/bin/twist restart
+}
+
+twist_do(){
+    twistlog "[TWIST Preparing \${2}]" "echo" "34"
+    sleep 2
+    cd /tmp
+    wget -t 3 -T 30 -nv -O "twist.sh" "https://raw.githubusercontent.com/Unbinilium/Twist/master/twist" && { chmod -x twist.sh; bash twist.sh \${1}; }
+    if [ "\$?" = "0" ]; then
+        status="0"
+    else
+        status="1"
+    fi
 }
 
 case "\$1" in
-    start|stop|restart|status)
-    sslibev_\${1}
-    ;;
-    *)
-    echo "Usage: \$0 { start | stop | restart | status }"
-    RETVAL=1
-    ;;
-esac
-
-exit \$RETVAL
-
-EOF
-    chmod +x /etc/init.d/shadowsocks
-    if [ "$systemtype" = "1" ]; then
-        update-rc.d -f shadowsocks defaults
-        ldconfig
-    else
-        chkconfig --add shadowsocks
-        chkconfig shadowsocks on
-    fi
-    cat >> /etc/rc.local <<EOF
-dhclient -6
-service fail2ban restart
-sysctl -e -p
-EOF
-    sysctl -e -q -p 2>/dev/null
-    chmod +x /etc/rc.local
-    chmod +x /etc/network/if-pre-up.d/iptablesload
-    chmod +x /etc/network/if-pre-up.d/ip6tablesload
-    if [ "$systemtype" = "1" ]; then
-        ip6tables-restore < /etc/ip6tables.rules
-	if grep -qs "release 6" /etc/redhat-release; then
-            chkconfig iptables on
-            chkconfig fail2ban on
-        else
-            systemctl --now mask firewalld 2>/dev/null
-            systemctl enable iptables fail2ban 2>/dev/null
-        fi
-    else
-    iptables-restore < /etc/sysconfig/iptables
-	systemctl --now mask firewalld 2>/dev/null
-    systemctl enable iptables fail2ban 2>/dev/null
-    fi
-    service fail2ban restart
-    /etc/init.d/shadowsocks start
-}
-
-function twiststatus(){
-    clear
-    twist
-    echo -e "                            [\033[32;1mInstall Complete\033[0m]"
-    echo -e "          [\033[32;1mPlease Press Enter to Show Login Infomation and EXIT\033[0m]"
-    echo -e "########################################################################"
-    read -p ""
-    echo -e "# [\033[32;1mss://\033[0m\033[34;1m$(echo -n chacha20-ietf-poly1305:${PASSWORD}@${PUBLICIP}:443 | base64)\033[0m]"
-    echo -n "ss://"$(echo -n chacha20-ietf-poly1305:${PASSWORD}@${PUBLICIP}:443 | base64) | qr
-    echo -e "# [\033[32;1mServer IP:\033[0m \033[34;1m${PUBLICIP}\033[0m \033[32;1mPassWord:\033[0m \033[34;1m${PASSWORD}\033[0m \033[32;1mEncryption:\033[0m \033[34;1mchacha20-ietf-poly1305\033[0m \033[32;1mOBFS:\033[0m \033[34;1mtls\033[0m \033[32;1mOBFS-HOST:\033[0m \033[34;1micloud.com\033[0m \033[32;1mLOCALHOST:\033[0m \033[34;1m127.0.0.1:1080\033[0m]"
-    if [ "$BBR" = "enable" ]; then
-        echo -e "\033[34;1mThe Server Requires Restart to Enable Google BBR,Please Press Enter to Reboot!\033[0m"
-        read -p ""
-        sleep 3
-	reboot
-    fi
-}
-
-action=$1
-[ -z $1 ] && action=install
-case "$action" in
-    install|uninstall)
-        ${action}_twist
+    status|start|stop|restart|custom)
+        twist_\${1}
+        ;;
+    update)
+        twist_do "update" "Update"
+        ;;
+    uninstall)
+        twist_do "uninstall" "Uninstall"
         ;;
     *)
-        echo "Usage: $0 { install | uninstall }"
+        if [ -z "$1" ]; then
+            twist_status
+        else
+            echo "Usage: \$0 { status | start | stop | restart | custom | update | uninstall }"
+            status="0"
+        fi
+        ;;
+esac
+exit \$status
+
+EOF
+    cat > /root/twistprotect <<-EOF
+#!/bin/bash
+
+date="\$(date +%Y-%m-%d-%H:%M:%S)"
+echo -e "# [\033[34;1mTWIST Shadowsocks-libev Service Protect Services\033[0m]"
+
+twistlog(){
+    [ -e /var/log/twist ] || touch /var/log/twist
+    echo "# \${date} \${1} " >> /var/log/twist
+}
+
+twistprotect(){
+    echo -e "# \033[32;1mTWIST Shadowsocks Protect Services Enabled \033[0m"
+    if [ "\$(ps -ef | grep -v grep | grep -i "${ssserverpath}" | awk '{print \$2}')" = "" ]; then
+        echo -e "# \033[31;1mShadowsocks-libev Service Stopped Detected \033[0m"
+        twistlog "Shadowsocks-libev Service Stopped Detected"
+        /usr/bin/twist restart
+        if [ "\$(ps -ef | grep -v grep | grep -i "${ssserverpath}" | awk '{print \$2}')" = "" ]; then
+            twistlog "Shadowsocks-libev Service Restart Failed"
+            twistlog "[Shadowsocks Protect Services Disabled Due To Error]"
+            rm -f /etc/twist/twistprotect
+        else
+            twistlog "Shadowsocks-libev Service Restart Success"
+        fi
+    else
+        echo -e "# \033[32;1mShadowsocks-libev Service Running Detected \033[0m"
+    fi
+}
+
+if [ -e /etc/twist/twistprotect ]; then
+    twistprotect
+else
+    echo -e "# \033[31;1mTWIST Shadowsocks Protect Services Disabled \033[0m"
+fi
+
+EOF
+    chmod +x /etc/network/if-pre-up.d/iptablesload /etc/network/if-pre-up.d/ip6tablesload /etc/rc.local /usr/bin/twist /root/twistprotect
+    chmod 600 /etc/shadowsocks-libev/config.json
+    systemctl enable iptables fail2ban cron
+    systemctl restart iptables fail2ban cron
+    iptables-restore < /etc/iptables.rules
+    ip6tables-restore < /etc/ip6tables.rules
+    sysctl -p
+    ldconfig
+    if [ "$FWS" = "enable" ]; then
+        timemachine "backup" "/var/www/html/.htaccess" "/etc/twist/.htaccess"
+        timemachine "backup" "/var/www/html/index.html" "/etc/twist/index.html"
+        cat > /var/www/html/.htaccess <<-EOF
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule (.*) http://${OBFSHOST}/\$1 [R=301,L]
+</IfModule>
+EOF
+        cat > /var/www/html/index.html <<-EOF
+<head><meta http-equiv="refresh" content="0;url=http://${OBFSHOST}"></head>
+EOF
+        systemctl restart ${webservername}
+    fi
+    twistlog "[TWIST Installed]"
+    sleep 3
+    echo ""
+    twist start
+    sleep 3
+    timemachine "backup" "/etc/crontab" "/etc/twist/crontab"
+    [ -e /etc/crontab ] || touch /etc/crontab
+    echo "*/1 * * * * root bash /root/twistprotect" >> /etc/crontab
+    sleep 2
+}
+
+function servicesstatus(){
+    clear
+    twistprint
+    echo -e "                            [\033[32;1mInstall Complete\033[0m]"
+    echo -e "        [\033[32;1mPlease Press Enter to Show Connect Infomation and EXIT\033[0m]"
+    twistprint banner
+    read -p ""
+    echo "ss://$(echo -n "${METHOD}:${PASSWORD}@${PUBLICIP}:${PORT}?plugin=obfs-local;obfs-host=${OBFSHOST};obfs-uri=${OBFSURI};obfs=${OBFS}#Twist" | base64 -w 0)" | qr
+    echo -e "# [\033[32;1mss://\033[0m\033[34;1m$(echo -n "${METHOD}:${PASSWORD}@${PUBLICIP}:${PORT}?plugin=obfs-local;obfs-host=${OBFSHOST};obfs-uri=${OBFSURI};obfs=${OBFS}#Twist" | base64 -w 0)\033[0m]"
+    echo -e "# [\033[32;1mServer IP:\033[0m \033[34;1m${PUBLICIP}\033[0m\c"
+    [ ! "$IPV6ENABLE" = "false" ] && echo -e "(\033[34;1m${PUBLICIPv6}\033[0m)\c"
+    echo -e " \033[32;1mPassWord:\033[0m \033[34;1m${PASSWORD}\033[0m \033[32;1mEncryption:\033[0m \033[34;1m${METHOD}\033[0m \033[32;1mOBFS:\033[0m \033[34;1m${OBFS}\033[0m \033[32;1mOBFS-HOST:\033[0m \033[34;1m${OBFSHOST}\033[0m \033[32;1mOBFS-URI:\033[0m \033[34;1m${OBFSURI}\033[0m]"
+    serverrestart "Installation"
+}
+
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+date="$(date +%Y-%m-%d-%H:%M:%S)"
+[ -d /tmp ] || mkdir /tmp
+cd /tmp
+
+case "$1" in
+    install|update|uninstall)
+        ${1}_twist
+        exit 0
+        ;;
+    *)
+        if [ -z "$1" ]; then
+            install_twist
+        else
+            echo "Usage: $0 { install | update | uninstall }"
+            exit 1
+        fi
         ;;
 esac
