@@ -46,11 +46,11 @@ function install_twist(){
     clear
     twistprint
     echo -e "#[\033[32;1m   A Light Script For You To Setup Shadowsocks-libev Server       \033[0m]#"
-    echo -e "#[\033[32;1m              Twist Script Written By Unbinilium                  \033[0m]#"
-    echo -e "#[\033[32;1m             Installation will Start in 5 Seconds                 \033[0m]#"
+    echo -e "#[\033[32;1m              Twist Script Written By YumikoToys                 \033[0m]#"
+    echo -e "#[\033[32;1m             Installation will Start in 10 Seconds                 \033[0m]#"
     twistprint banner
     echo ""
-    sleep 5
+    sleep 10
     rootness
     selinuxdisable
     [ -d /etc/twist ] || mkdir -p /etc/twist
