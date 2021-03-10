@@ -9,8 +9,7 @@ function install_twist(){
     rootness
     disableselinux
     defaultvalue
-    getsystem
-    getip
+    detectsystem
     installlibs
     installbbr
     installsslibev
@@ -35,17 +34,17 @@ function uninstall_twist(){
         echo ""
         exit 1
     fi
-    if grep -qs "Ubunut" /etc/issue || grep -qs "Debian" /etc/issue; then
-        update-rc.d -f shadowsocks remove
-        iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j DROP
-        iptables -I INPUT -m state --state NEW -m udp -p udp --dport 443 -j DROP
-    fi
-    if grep -qs "CentOS" /etc/issue; then
+    if grep -Eqi "CentOS|Red Hat|Redhat" /etc/issue || grep -Eq "CentOS|Red Hat|Redhat" /etc/*-release || grep -Eq "CentOS|Red Hat|Redhat" /proc/version; then
         chkconfig --del shadowsocks
         systemctl start firewalld
         firewall-cmd --permanent --zone=public --remove-port=443/tcp
         firewall-cmd --permanent --zone=public --remove-port=443/udp
         firewall-cmd --reloa
+    fi
+    if grep -Eqi "Ubuntu|Debian" /etc/issue || grep -Eq "Ubuntu|Debian" /etc/*-release || grep -Eq "Ubuntu|Debian" /proc/version; then
+        update-rc.d -f shadowsocks remove
+        iptables -I INPUT -m state --state NEW -m tcp -p tcp --dport 443 -j DROP
+        iptables -I INPUT -m state --state NEW -m udp -p udp --dport 443 -j DROP
     fi
     ps -ef | grep -v grep | grep -i "ss-server" > /dev/null 2>&1
     update-rc.d -f shadowsocks remove
@@ -117,6 +116,7 @@ function defaultvalue(){
     IPREGEX="^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
 }
 
+<<<<<<< HEAD
 function getsystem(){
 systemtype="0"
     echo "$(cat /etc/issue)" | grep -q "CentOS"
@@ -128,20 +128,17 @@ systemtype="0"
         else
             systemtype="0"
         fi
+=======
+function detectsystem(){
+    if grep -Eqi "CentOS|Red Hat|Redhat" /etc/issue || grep -Eq "CentOS|Red Hat|Redhat" /etc/*-release || grep -Eq "CentOS|Red Hat|Redhat" /proc/version; then
+        system_str="0"
+    elif  grep -Eqi "Ubuntu|Debian" /etc/issue || grep -Eq "Ubuntu|Debian" /etc/*-release || grep -Eq "Ubuntu|Debian" /proc/version; then
+        system_str="1"
+>>>>>>> TWIST
     else
-        echo "$(cat /etc/issue)" | grep -q "Ubuntu"
-        if [ $? -eq 0 ]; then
-            systemtype="1"
-        else
-            echo "$(cat /etc/issue)" | grep -q "Debian"
-            if [ $? -eq 0 ]; then
-                systemtype="1"
-            else
-                echo -e "# [\033[31;1mThis Script Must be Run on Ubuntu, Debian or CentOS! Aborating!\033[0m]"
-                echo ""
-                exit 1
-            fi
-        fi
+        echo -e "# [\033[31;1mThis Script Must be Run on Ubuntu, Debian or CentOS! Aborating!\033[0m]"
+        echo ""
+        exit 1
     fi
     ethstatus="$(cat /sys/class/net/${ETH}/operstate 2>/dev/null)"
     if [ -z "$ethstatus" ] || [ "$ethstatus" = "down" ]; then
@@ -165,13 +162,10 @@ systemtype="0"
                 echo ""
             fi
         fi
-     fi
-     if [ -f /proc/user_beancounters ]; then
-         BBR="disable"
-     fi
-}
-
-function getip(){
+    fi
+    if [ -f /proc/user_beancounters ]; then
+        BBR="disable"
+    fi
     PUBLICIP="$(curl -s diagnostic.opendns.com/myip)"
     [ -z "$PUBLICIP" ] && PUBLICIP="$(dig @resolver1.opendns.com -t A -4 myip.opendns.com +short)"
     if ! printf %s "$PUBLICIP" | grep -Eq "$IPREGEX"; then
@@ -192,15 +186,12 @@ function getip(){
     fi
     if [ -f /proc/net/if_inet6 ]; then
         if [ "$systemtype" = "1" ]; then
-            echo "iface $ETH inet6 dhcp" > /etc/network/interfaces.d/60-default-with-ipv6.cfg
+            echo "iface ${ETH} inet6 dhcp" > /etc/network/interfaces.d/60-default-with-ipv6.cfg
             ifdown $ETH && ifup $ETH
             PUBLICIPv6="$(ifconfig | grep -E '(Link|inet6)' | grep -v "Scope:Global")"
-            if [ -z "$PUBLICIPv6" ]; then
-                SSLOCAL="\"0.0.0.0\""
-            fi
         else
-            sed -i "/^\<IPV6INIT=\>/d" /etc/sysconfig/network-scripts/ifcfg-eth0
-            cat >> /etc/sysconfig/network-scripts/ifcfg-eth0 <<EOF
+            sed -i "/^\<IPV6INIT=\>/d" /etc/sysconfig/network-scripts/ifcfg-${ETH}
+            cat >> /etc/sysconfig/network-scripts/ifcfg-${ETH} <<EOF
 IPV6INIT="yes"
 DHCPV6C=yes
 NM_CONTROLLED=no
@@ -208,11 +199,11 @@ EOF
             echo "NETWORKING_IPV6=yes" >> /etc/sysconfig/network
             sudo service network restart
             PUBLICIPv6="$(ifconfig | grep -E '(Link|inet6)' | grep -v "Scope:Global")"
-            if [ -z "$PUBLICIPv6" ]; then
-                SSLOCAL="\"0.0.0.0\""
-            fi
         fi
     else
+        SSLOCAL="\"0.0.0.0\""
+    fi
+    if [ -z "$PUBLICIPv6" ]; then
         SSLOCAL="\"0.0.0.0\""
     fi
 }
@@ -291,11 +282,7 @@ function installbbr(){
             rm -f $KERNEL
             update-grub
         else
-            if centosversion 6; then
-                yum --enablerepo=elrepo-kernel install kernel-lt || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
-            elif centosversion 7; then
-                yum --enablerepo=elrepo-kernel install kernel-ml || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
-            fi
+            yum --enablerepo=elrepo-kernel install kernel-ml || { echo ""; echo -e "# [\033[31;1mCannot Update KERNEL! BBR will Not Run on Your Server!\033[0m]"; echo ""; sleep 3; BBR="disable"; }
         fi
     fi
 }
@@ -396,7 +383,7 @@ net.ipv6.conf.all.accept_source_route = 1
 net.ipv6.conf.all.accept_redirects = 0
 net.ipv6.conf.all.autoconf = 1
 net.ipv6.conf.all.forwarding = 1
-net.ipv6.conf.${ETH}.accept_ra = 2
+net.ipv6.conf.all.accept_ra = 2
 EOF
         if [ "$BBR" = "enable" ]; then
             echo "net.core.default_qdisc = fq" >> /etc/sysctl.conf
@@ -619,9 +606,9 @@ EOF
             systemctl enable iptables fail2ban 2>/dev/null
         fi
     else
-        iptables-restore < /etc/sysconfig/iptables
+    iptables-restore < /etc/sysconfig/iptables
 	systemctl --now mask firewalld 2>/dev/null
-        systemctl enable iptables fail2ban 2>/dev/null
+    systemctl enable iptables fail2ban 2>/dev/null
     fi
     service fail2ban restart
     /etc/init.d/shadowsocks start
